@@ -1,5 +1,5 @@
 from pyConfig import *
-import  modules.dataFilters
+
 
 def findExch(sym):
     for exch in exchangeMap:
