@@ -2,6 +2,11 @@ from pyConfig import *
 from modules import syntheticMD
 
 
+def emaUpdate(lastValue, thisValue, decay, invTau):
+    alpha = np.exp(invTau * decay)
+    return alpha * thisValue + (1 - alpha) * lastValue
+
+
 class asset:
     sym = str()
     tickSize = float()
@@ -111,7 +116,7 @@ class target(asset):
 class alpha:
     rawVal = float()
 
-    def __init__(self, target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed):
+    def __init__(self, target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, accel):
         self.target = target
         self.decay = decay
         self.name = name
@@ -119,26 +124,34 @@ class alpha:
         self.zVal = zSeed
         self.smoothInvTau = np.float64(1 / (smoothFactor * zHL * logTwo))
         self.smoothVal = smoothSeed
+        self.lastSmoothVal = smoothSeed
         self.volInvTau = np.float64(1 / (volHL * logTwo))
         self.vol = volSeed
+        self.accel = accel
 
-    def onMdhUpdate(self, md):
-        self.decayCalc(md)
-        self.calcRawVal(md)
+    def onMdhUpdate(self):
+        self.decayCalc()
+        self.calcRawVal()
         self.updateSmoothVal()
         self.updateZVal()
         self.updateVolatility()
         self.updateAlphaVal()
         return
 
-    def decayCalc(self, md):
+    def decayCalc(self):
+        self.decay = self.target.timeDecay
         return
 
-    def calcRawVal(self, md):
+    def calcRawVal(self):
         return
 
     def updateSmoothVal(self):
-        self.smoothVal = emaUpdate(self.smoothVal, self.rawVal, self.decay, self.smoothInvTau)
+        thisSmoothVal = emaUpdate(self.lastSmoothVal, self.rawVal, self.decay, self.smoothInvTau)
+        if self.accel:
+            self.smoothVal = thisSmoothVal - self.lastSmoothVal
+        else:
+            self.smoothVal = thisSmoothVal
+        self.lastSmoothVal = thisSmoothVal
         return
 
     def updateZVal(self):
@@ -154,9 +167,34 @@ class alpha:
         return
 
 
-def emaUpdate(lastValue, thisValue, decay, invTau):
-    alpha = np.exp(invTau * decay)
-    return alpha * thisValue + (1 - alpha) * lastValue
+class move(alpha):
+    def calcRawVal(self):
+        self.rawVal = self.target.annPctChange
+        return
+
+
+class basis(alpha):
+    def __init__(self, target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, front, back):
+        super().__init__(target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed)
+        self.front = front
+        self.lastFrontMid = front.midPrice
+        self.back = back
+        self.lastBackMid = back.midPrice
+
+    def calcRawVal(self):
+        if self.front.contractChange:
+            frontDelta = 0
+        else:
+            frontDelta = (self.front.midPrice - self.lastFrontMid) / self.front.midPrice
+        if self.back.contractChange:
+            backDelta = 0
+        else:
+            backDelta = (self.back.midPrice - self.lastBackMid) / self.back.midPrice
+
+        self.rawVal = frontDelta - backDelta
+        self.lastFrontMid = self.front.midPrice
+        self.lastBackMid = self.back.midPrice
+        return
 
 
 ZL0 = target(sym='ZL0', tickSize=0.01, spreadCutoff=0.14)
