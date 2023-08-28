@@ -6,10 +6,6 @@ class asset:
     sym = str()
     tickSize = float()
     spreadCuttoff = float()
-    bid_price = float()
-    bid_qty = int()
-    ask_price = float()
-    ask_qty = int()
 
     def __init__(self, sym, tickSize, spreadCutoff):
         self.sym = sym
@@ -100,14 +96,34 @@ class traded(asset):
     predictors = {}
     alphaWeights = {}
 
-    def __init__(self, sym, tickSize, spreadCutoff, predictors, volHL, volSeed, initHoldings, alphaWeights, alphas):
-        super().__init__(sym, tickSize, spreadCutoff)
-        self.predictors = predictors
-        self.vol = volSeed
-        self.volInvTau = np.float64(1 / (volHL * logTwo))
+    def __init__(self, sym, cfg, params, refData, seeds, initHoldings=0):
+        super().__init__(sym, params['tickSizes'][sym], params['spreadCutoff'][sym])
+
+        # Params
+        totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
+        notionalPerLot = self.calcNotionalPerLot(refData, sym, self.midPrice)
+        self.maxLots = self.calcMaxLots(totalCapital, params['fitParams']['basket'][f'{sym}_notionalAlloc'],
+                                        notionalPerLot)
+        self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
+        self.kappa = params[sym]['alphaWeights']['kappa']
+        self.hScaler = cfg['hScalers'][sym]
+        self.alphaWeights = params[sym]['alphaWeights']
+
+        # Seeds
+        self.vol = seeds[f'Volatility_timeDR_{sym}']
         self.holdings = initHoldings
-        self.alphaWeights = alphaWeights
-        self.alphas = self.initialiseAlphas()
+        self.hOpt = self.convertHoldingsToHOpt(self.holdings, self.maxLots, self.hScaler)
+
+        # Construct Alpha Objects
+        self.initialiseAlphas(cfg, params)
+
+    @staticmethod
+    def calcMaxLots(totalCapital, notionalAlloc, notionalPerLot):
+        return int(totalCapital * notionalAlloc / notionalPerLot)
+
+    @staticmethod
+    def calcNotionalPerLot(refData, target, midPrice):
+        return refData['notionalMultiplier'][target] * midPrice
 
     def mdUpdate(self, md):
         super().mdUpdate(md)
@@ -129,9 +145,45 @@ class traded(asset):
             self.cumAlpha += self.alphaWeights[alph.name] * alph.alphaVal
         return
 
-    def calcHoldings(self):
+    def calcBuySellCosts(self):
+        self.buyCost = self.askPrice - self.midPrice
+        self.sellCost = self.midPrice - self.bidPrice
         return
 
-    def initialiseAlphas(self):
-        # will need to pass predictor objects in here
+    def calcVar(self):
+        self.var = self.vol ** 2
+        return
+
+    def calcHOpt(self):
+        self.calcBuySellCosts()
+        self.calcVar()
+        buyBound = (self.cumAlpha - self.kappa * self.buyCost) / (self.var)
+        sellBound = (self.cumAlpha + self.kappa * self.sellCost) / (self.var)
+
+        if self.hOpt < buyBound:
+            self.hOpt = buyBound
+        elif self.hOpt > sellBound:
+            self.hOpt = sellBound
+
+        return self.hOpt
+
+    @staticmethod
+    def convertHoldingsToHOpt(holdings, maxLots, hScaler):
+        return np.clip(holdings / maxLots, -1, 1) * hScaler
+
+    @staticmethod
+    def convertHOptToHoldings(maxLots, hOpt, hScaler):
+        return int(maxLots * np.clip(hOpt / hScaler, -1, 1))
+
+    def calcHoldings(self):
+        hOpt = self.calcHOpt()
+        self.holdings = self.convertHOptToHoldings(self.maxLots, hOpt, self.hScaler)
+        return
+
+    def initialiseAlphas(self, cfg, params, predictors):
+        # Construct a list of alpha objects
+        self.alphas = []
+
+        # Also construct a list of predictor objects so we can update them all prior to alpha calcs
+        self.predictors = []
         return

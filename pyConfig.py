@@ -11,7 +11,7 @@ logTwo = 1.4426950408889634
 aggFreq = 60
 
 # Run-time options
-cfg_file = root + "config/cmeAgs.json"
+cfg_file = root + "config/refined.json"
 
 # Global Packages
 import pandas as pd

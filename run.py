@@ -1,33 +1,30 @@
 from pyConfig import *
-from modules import syntheticMD, alphas, assets
+from modules import syntheticMD, assets, utility
 
 
+def initialiseModels(cfg, seeds):
+    refData = utility.loadRefData()
+    targets = []
+    for target in cfg['targets']:
+        targets.append(
+            assets.traded(sym=target, cfg=cfg, params=cfg['fitParams'][target], refData=refData, seeds=seeds))
+
+    return targets
 
 
-ZL0 = assets.traded(sym='ZL0', tickSize=0.01, spreadCutoff=0.14)
-ZC0 = assets.asset(sym='ZC0', tickSize=0.25, spreadCutoff=0.5)
-preds = [ZL0]
+seeds = {f'Volatility_timeDR_ZL0': 1000}
 
-exch = 'cme_refinitiv_v4'
-aggFreq = 60
+with open(cfg_file, 'r') as f:
+    cfg = json.load(f)
+targets = initialiseModels(cfg, seeds=seeds)
 
-# Replace this with the live feed in production
-all = syntheticMD.loadSyntheticMD(ZL0, preds)
-feed = all.head(50)
+for target in targets:
+    # Replace this with the live feed in production
+    feed = syntheticMD.loadSyntheticMD(cfg, target)
+    for i, md in feed.iterrows():
+        target.mdUpdate(md)
 
-for i, md in feed.iterrows():
-    for a in preds:
-        a.mdUpdate(md)
+        # Generate trades -> Apply tradeSizeCap from cfg here
 
-# Call onMDHUpdate for all contracts (targets + assets)
-
-# Update target volatilities
-
-# Update target alphas
-
-# Generate holdings
-
-# Generate trades
-
-# Log
+        # Log
 lg.info("Completed")

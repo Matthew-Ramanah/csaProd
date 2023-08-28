@@ -23,11 +23,10 @@ def loadRawData(sym):
     return addPrefix(raw, sym)
 
 
-def loadSyntheticMD(target, predictors):
+def loadSyntheticMD(cfg, target):
     md = loadRawData(target)
-    for sym in predictors:
+    for sym in cfg['predictors']:
         raw = loadRawData(sym)
-
         md = mergeOnEndTS(md, raw)
-    lg.info("Synthetic Market Data Feed Loaded")
+    lg.info(f"{target} Synthetic Market Data Feed Loaded")
     return md.dropna()
