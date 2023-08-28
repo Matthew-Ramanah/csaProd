@@ -8,6 +8,7 @@ tradingDays = 252
 daysPerYear = 365
 minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
+aggFreq = 60
 
 # Run-time options
 cfg_file = root + "config/cmeAgs.json"
