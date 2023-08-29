@@ -1,6 +1,7 @@
 # Directories
 root = "C:/Users/matth/PycharmProjects/asaProd/"
 data_root = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/"
+proDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/processed/"
 
 # Constants
 signalCap = 3
@@ -90,6 +91,7 @@ exchangeMap = {
         "ICE-LX_C0",
         "ICE-US_CC0",
         "ICE-US_CT0",
+        "ICE-US_CT1",
         "ICE-EU_G0",
         "ICE-US_KC0",
         "ICE-US_MFS0",
@@ -98,10 +100,13 @@ exchangeMap = {
         "ICE-US_SB0",
         "ICE-LL_Z0",
         "RS0",
+        "RS1",
         "W0",
+        "W1",
         "DX0",
         "KMF0",
-        "RC0"
+        "RC0",
+        "RC1"
     ],
     "jse_refinitiv_v4": [
         "ALSI0"
@@ -127,8 +132,7 @@ exchangeMap = {
         "IN0",
         "SGP0",
         "TW0",
-        "TWN0",
-        "NIY0"
+        "TWN0"
     ],
     "taifex_refinitiv_v4": [
         "TX0"
@@ -138,6 +142,10 @@ exchangeMap = {
         "SXF0"
     ],
     "cme_refinitiv_v4": [
+        'HE0',
+        "HE1",
+        "LE1",
+        "GF1",
         "CL0",
         "ES0",
         "GC0",
@@ -190,31 +198,7 @@ exchangeMap = {
         "ZW0",
         "ZW1",
         "KE0",
-        "KE1",
-        "1UB0",
-        "1ZL0",
-        "1ZC0",
-        "1CL0",
-        "1ES0",
-        "1GF0",
-        "1ZF0",
-        "1GC0",
-        "1HG0",
-        "1HO0",
-        "1LE0",
-        "1HE0",
-        "1PA0",
-        "1PL0",
-        "1RB0",
-        "1RTY0",
-        "1ZS0",
-        "1SI0",
-        "1ZM0",
-        "1ZT0",
-        "1ZN0",
-        "1ZB0",
-        "1ZW0",
-        "1YM0"
+        "KE1"
     ],
     "fx_refinitiv_v3": [
         "AUD=",
@@ -376,3 +360,4 @@ exchangeMap = {
         "ESGOV10YZ=R"
     ]
 }
+

@@ -1,0 +1,7 @@
+symbol,description,notionalCurrency,notionalMultiplier,tickValueCurrency,tickValue,feesCurrency,feesPerLot
+ZL0,Soybean Oil,USD,600,USD,6,USD,0.33
+ZC0,Corn,USD,50,USD,12.5,USD,0.33
+ZS0,Soybeans,USD,50,USD,12.5,USD,0.33
+ZM0,Soybean Meal,USD,100,USD,10,USD,0.33
+ZW0,Chicago Wheat,USD,50,USD,12.5,USD,0.33
+KE0,Kansas Wheat,USD,50,USD,12.5,USD,0.33

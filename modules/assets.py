@@ -1,5 +1,5 @@
 from pyConfig import *
-import utility
+from modules import utility
 
 
 class asset:
@@ -7,10 +7,18 @@ class asset:
     tickSize = float()
     spreadCuttoff = float()
 
-    def __init__(self, sym, tickSize, spreadCutoff):
+    def __init__(self, sym, tickSize, spreadCutoff, seeds):
         self.sym = sym
         self.tickSize = tickSize
         self.spreadCuttoff = spreadCutoff
+        self.bidPrice = seeds[f'{sym}_bidPrice']
+        self.askPrice = seeds[f'{sym}_askPrice']
+        self.bidSize = seeds[f'{sym}_bidSize']
+        self.askSize = seeds[f'{sym}_askSize']
+        self.midPrice = self.midPriceCalc(self.bidPrice, self.askPrice)
+        self.microPrice = self.microPriceCalc(self.bidPrice, self.askPrice, self.bidSize, self.askSize)
+        self.lastTS = seeds[f'{self.sym}_end_ts']
+        self.symbol = None
 
     def mdUpdate(self, md):
         # Data Filters

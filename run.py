@@ -12,10 +12,13 @@ def initialiseModels(cfg, seeds):
     return targets
 
 
+
 seeds = {f'Volatility_timeDR_ZL0': 1000}
 
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
+recon = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/recon.h5", key='data', mode='r')
+stats = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/recon.h5", key='stats', mode='r')
 targets = initialiseModels(cfg, seeds=seeds)
 
 for target in targets:
