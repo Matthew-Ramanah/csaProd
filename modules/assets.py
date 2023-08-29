@@ -9,15 +9,15 @@ class asset:
 
     def __init__(self, sym, tickSize, spreadCutoff, seeds):
         self.sym = sym
-        self.tickSize = tickSize
+        self.tickSize = float(tickSize)
         self.spreadCuttoff = spreadCutoff
-        self.bidPrice = seeds[f'{sym}_bidPrice']
-        self.askPrice = seeds[f'{sym}_askPrice']
+        self.bidPrice = seeds[f'{sym}_midPrice'] - 0.5 * self.tickSize
+        self.askPrice = seeds[f'{sym}_midPrice'] + 0.5 * self.tickSize
         self.bidSize = seeds[f'{sym}_bidSize']
         self.askSize = seeds[f'{sym}_askSize']
         self.midPrice = self.midPriceCalc(self.bidPrice, self.askPrice)
         self.microPrice = self.microPriceCalc(self.bidPrice, self.askPrice, self.bidSize, self.askSize)
-        self.lastTS = seeds[f'{self.sym}_end_ts']
+        self.lastTS = seeds['lastTS']
         self.symbol = None
 
     def mdUpdate(self, md):
@@ -105,20 +105,20 @@ class traded(asset):
     alphaWeights = {}
 
     def __init__(self, sym, cfg, params, refData, seeds, initHoldings=0):
-        super().__init__(sym, params['tickSizes'][sym], params['spreadCutoff'][sym])
+        super().__init__(sym, params['tickSizes'][sym], params['spreadCutoff'][sym], seeds)
 
         # Params
         totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
         notionalPerLot = self.calcNotionalPerLot(refData, sym, self.midPrice)
-        self.maxLots = self.calcMaxLots(totalCapital, params['fitParams']['basket'][f'{sym}_notionalAlloc'],
+        self.maxLots = self.calcMaxLots(totalCapital, cfg['fitParams']['basket'][f'{sym}_notionalAlloc'],
                                         notionalPerLot)
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
-        self.kappa = params[sym]['alphaWeights']['kappa']
-        self.hScaler = cfg['hScalers'][sym]
-        self.alphaWeights = params[sym]['alphaWeights']
+        self.kappa = params['alphaWeights']['kappa']
+        self.hScaler = cfg['fitParams']['hScalers'][sym]
+        self.alphaWeights = params['alphaWeights']
 
         # Seeds
-        self.vol = seeds[f'Volatility_timeDR_{sym}']
+        self.vol = seeds[f'Volatility_{sym}_timeDR']
         self.holdings = initHoldings
         self.hOpt = self.convertHoldingsToHOpt(self.holdings, self.maxLots, self.hScaler)
 
@@ -188,7 +188,7 @@ class traded(asset):
         self.holdings = self.convertHOptToHoldings(self.maxLots, hOpt, self.hScaler)
         return
 
-    def initialiseAlphas(self, cfg, params, predictors):
+    def initialiseAlphas(self, cfg, params):
         # Construct a list of alpha objects
         self.alphas = []
 
