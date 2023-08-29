@@ -41,7 +41,19 @@ exchangeMap = {
     "asx_refinitiv_v4": [
         "XT0",
         "YT0",
-        "AP0"
+        "AP0",
+        "IR0",
+        "IR1",
+        "IR2",
+        "IR3",
+        "IR4",
+        "IR5",
+        "IR6",
+        "IR7",
+        "IR8",
+        "IR9",
+        "IR10",
+        "IR11"
     ],
     "bme_refinitiv_v4": [
         "FIBX0"
