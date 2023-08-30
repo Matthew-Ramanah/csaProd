@@ -1,3 +1,5 @@
+import pandas as pd
+
 from pyConfig import *
 
 
@@ -18,15 +20,19 @@ def mergeOnEndTS(md, raw):
 
 def loadRawData(sym):
     exch = findExch(sym)
-    raw = pd.read_hdf(f"{data_root}raw/{exch}/{sym}.h5", key=sym)
+    raw = pd.read_hdf(f"{rawDataRoot}/{exch}/{sym}.h5", key=sym)
     raw = raw.set_index('end_ts', drop=False)
     return addPrefix(raw, sym)
 
 
-def loadSyntheticMD(cfg, target):
-    md = loadRawData(target)
+def loadSyntheticMD(cfg, init=False):
+    md = pd.DataFrame()
     for sym in cfg['predictors']:
         raw = loadRawData(sym)
-        md = mergeOnEndTS(md, raw)
-    lg.info(f"{target} Synthetic Market Data Feed Loaded")
-    return md.dropna()
+        if init:
+            md = mergeOnEndTS(md, raw)
+        else:
+            md = raw
+            init = True
+    lg.info(f"Synthetic Market Data Feed Loaded")
+    return md

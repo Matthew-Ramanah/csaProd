@@ -1,6 +1,6 @@
 # Directories
 root = "C:/Users/matth/PycharmProjects/asaProd/"
-data_root = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/"
+rawDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/raw/minutely/quotes/volRollover/"
 proDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/processed/"
 
 # Constants
@@ -49,11 +49,7 @@ exchangeMap = {
         "IR4",
         "IR5",
         "IR6",
-        "IR7",
-        "IR8",
-        "IR9",
-        "IR10",
-        "IR11"
+        "IR7"
     ],
     "bme_refinitiv_v4": [
         "FIBX0"
@@ -372,4 +368,3 @@ exchangeMap = {
         "ESGOV10YZ=R"
     ]
 }
-

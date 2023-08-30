@@ -1,28 +1,22 @@
 from pyConfig import *
-from modules import utility
+from modules import utility, alphas
 
 
 class asset:
-    sym = str()
-    tickSize = float()
-    spreadCuttoff = float()
+    symbol = str()
 
-    def __init__(self, sym, tickSize, spreadCutoff, seeds):
+    def __init__(self, sym, tickSize, spreadCutoff):
         self.sym = sym
         self.tickSize = float(tickSize)
         self.spreadCuttoff = spreadCutoff
-        self.bidPrice = seeds[f'{sym}_midPrice'] - 0.5 * self.tickSize
-        self.askPrice = seeds[f'{sym}_midPrice'] + 0.5 * self.tickSize
-        self.bidSize = seeds[f'{sym}_bidSize']
-        self.askSize = seeds[f'{sym}_askSize']
-        self.midPrice = self.midPriceCalc(self.bidPrice, self.askPrice)
-        self.microPrice = self.microPriceCalc(self.bidPrice, self.askPrice, self.bidSize, self.askSize)
-        self.lastTS = seeds['lastTS']
-        self.symbol = None
+        self.initialised = False
+        self.contractChange = True
 
     def mdUpdate(self, md):
         # Data Filters
         if self.mdhSane(md):
+            self.initialised = True
+
             # MD Calcs
             self.contractChange = self.isContractChange(md)
             self.thisMid = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
@@ -74,6 +68,7 @@ class asset:
 
     def isContractChange(self, md):
         if md[f'{self.sym}_symbol'] != self.symbol:
+            lg.info(f'{self.sym} ContractChange Flagged')
             return True
         return False
 
@@ -82,11 +77,11 @@ class asset:
             self.timeDecay = 0
             return
 
-        self.timeDecay = (md[f'{self.sym}_lastTS'] - self.lastTS).seconds / aggFreq
+        self.timeDecay = (md[f'{self.sym}_end_ts'] - self.lastTS).seconds / aggFreq
         return
 
     def annualPctChangeCalc(self):
-        if self.contractChange:
+        if self.timeDecay == 0:
             self.annPctChange = 0
             return 0
 
@@ -97,15 +92,10 @@ class asset:
 
 
 class traded(asset):
-    vol = float()
-    volHL = int()
-    alphas = []
-    holdings = int()
-    predictors = {}
-    alphaWeights = {}
-
     def __init__(self, sym, cfg, params, refData, seeds, initHoldings=0):
-        super().__init__(sym, params['tickSizes'][sym], params['spreadCutoff'][sym], seeds)
+        super().__init__(sym, params['tickSizes'][sym], params['spreadCutoff'][sym])
+        self.seeding = True
+        self.midPrice = seeds[f'{sym}_midPrice']
 
         # Params
         totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
@@ -122,8 +112,9 @@ class traded(asset):
         self.holdings = initHoldings
         self.hOpt = self.convertHoldingsToHOpt(self.holdings, self.maxLots, self.hScaler)
 
-        # Construct Alpha Objects
-        self.initialiseAlphas(cfg, params)
+        # Construct Predictors & Alpha Objects
+        self.initialisePreds(params)
+        self.initialiseAlphas(cfg, params, seeds)
 
     @staticmethod
     def calcMaxLots(totalCapital, notionalAlloc, notionalPerLot):
@@ -133,23 +124,40 @@ class traded(asset):
     def calcNotionalPerLot(refData, target, midPrice):
         return refData['notionalMultiplier'][target] * midPrice
 
-    def mdUpdate(self, md):
-        super().mdUpdate(md)
-        for p in self.predictors:
-            p.mdUpdate(md)
+    def checkifSeeded(self):
+        for pred in self.predictors:
+            if not self.predictors[pred].initialised:
+                return
+        self.seeding = False
+        lg.info(f'{self.sym} Successfully Seeded')
 
-        self.updateVolatility()
-        self.updateAlphas()
-        self.calcHoldings()
+        # Make sure first tick after seeding is flagged as a contractChange
+        for pred in self.predictors:
+            self.predictors[pred].symbol = ''
+        return
+
+    def mdUpdate(self, md):
+        if self.seeding:
+            self.checkifSeeded()
+
+        super().mdUpdate(md)
+        for pred in self.predictors:
+            self.predictors[pred].mdUpdate(md)
+
+        if self.mdhSane(md) and not self.seeding:
+            self.updateVolatility()
+            self.updateAlphas()
+            self.calcHoldings()
+        return
 
     def updateVolatility(self):
-        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, self.annPctChange ** 2, self.timeDecay, self.volInvTau))
+        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, (self.annPctChange) ** 2, self.timeDecay, self.volInvTau))
         return
 
     def updateAlphas(self):
         self.cumAlpha = 0
-        for alph in self.alphas:
-            alph.onMdhUpdate(self)
+        for alph in self.alphaList:
+            alph.onMdhUpdate()
             self.cumAlpha += self.alphaWeights[alph.name] * alph.alphaVal
         return
 
@@ -188,10 +196,71 @@ class traded(asset):
         self.holdings = self.convertHOptToHoldings(self.maxLots, hOpt, self.hScaler)
         return
 
-    def initialiseAlphas(self, cfg, params):
-        # Construct a list of alpha objects
-        self.alphas = []
+    @staticmethod
+    def findPredsNeeded(targetSym, feats):
+        predsNeeded = [targetSym]
+        for ft in feats:
+            type = ft.split('_')[3]
+            if type in ['Move', 'Acc', 'RV', 'AccRV']:
+                predsNeeded.append(ft.split('_')[2])
 
-        # Also construct a list of predictor objects so we can update them all prior to alpha calcs
-        self.predictors = []
+            elif type in ['Basis', 'AccBasis']:
+                backSym = ft.split('_')[2]
+                predsNeeded.append(backSym)
+                predsNeeded.append(utility.findBasisFrontSym(backSym))
+
+        return predsNeeded
+
+    def initialisePreds(self, params):
+        self.predictors = {}
+        predsNeeded = self.findPredsNeeded(self.sym, params['feats'])
+
+        for pred in list(set(predsNeeded)):
+            self.predictors[pred] = asset(pred, params['tickSizes'][pred], params['spreadCutoff'][pred])
+        return
+
+    def initialiseAlphas(self, cfg, params, seeds):
+        self.alphaList = []
+        for ft in params['feats']:
+            name = ft.replace('feat_', '')
+            ftType = ft.split('_')[3]
+            pred = ft.split('_')[2]
+            zHL = int(ft.split('_')[-1])
+            smoothFactor = cfg['inputParams']['feats']['smoothFactor']
+            volHL = cfg['inputParams']['volHL']
+            zSeed = seeds[f'{name}_zSeed']
+            smoothSeed = seeds[f'{name}_smoothSeed']
+            volSeed = seeds[f'{name}_volSeed']
+            ncc = params['NCCs'][ft]
+
+            if ftType == 'Move':
+                self.alphaList.append(
+                    alphas.move(self, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed,
+                                ncc, False))
+            elif ftType == 'Acc':
+                self.alphaList.append(
+                    alphas.move(self, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed,
+                                ncc, True))
+            elif ftType == 'RV':
+                self.alphaList.append(
+                    alphas.rv(self, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed,
+                              ncc, False))
+            elif ftType == 'AccRV':
+                self.alphaList.append(
+                    alphas.rv(self, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed,
+                              ncc, True))
+            elif "Basis" in ftType:
+                frontSym = utility.findBasisFrontSym(pred)
+                if ftType == 'Basis':
+                    self.alphaList.append(
+                        alphas.basis(self, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL,
+                                     volSeed, ncc, False, self.predictors[frontSym]))
+
+                elif ftType == 'AccBasis':
+                    self.alphaList.append(
+                        alphas.basis(self, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL,
+                                     volSeed, ncc, True, self.predictors[frontSym]))
+            else:
+                lg.info(f'{ftType} Alpha Type Not Found')
+
         return

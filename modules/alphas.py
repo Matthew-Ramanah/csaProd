@@ -1,13 +1,14 @@
 from pyConfig import *
-import utility
+from modules import utility
 
 
 class alpha:
     rawVal = float()
+    decay = float()
 
-    def __init__(self, target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, accel, ncc):
+    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
         self.target = target
-        self.decay = decay
+        self.predictor = predictor
         self.name = name
         self.zInvTau = np.float64(1 / (zHL * logTwo))
         self.zVal = zSeed
@@ -16,8 +17,8 @@ class alpha:
         self.lastSmoothVal = smoothSeed
         self.volInvTau = np.float64(1 / (volHL * logTwo))
         self.vol = volSeed
-        self.accel = accel
         self.ncc = ncc
+        self.accel = accel
 
     def onMdhUpdate(self):
         self.decayCalc()
@@ -57,7 +58,7 @@ class alpha:
         return
 
     def updateVolatility(self):
-        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, self.zVal ** 2, self.decay, self.volInvTau))
+        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, (self.zVal) ** 2, self.decay, self.volInvTau))
         return
 
     def updateFeatVal(self):
@@ -76,19 +77,18 @@ class move(alpha):
 
 
 class basis(alpha):
-    def __init__(self, target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, front, back):
-        super().__init__(target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed)
+    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel,
+                 front):
+        super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
         self.front = front
-        self.lastFrontMid = front.midPrice
-        self.back = back
-        self.lastBackMid = back.midPrice
+        self.back = predictor
 
     def calcRawVal(self):
-        if self.front.contractChange:
+        if (self.front.contractChange) | (self.front.midPrice == 0):
             frontDelta = 0
         else:
             frontDelta = (self.front.midPrice - self.lastFrontMid) / self.front.midPrice
-        if self.back.contractChange:
+        if (self.back.contractChange) | (self.back.midPrice == 0):
             backDelta = 0
         else:
             backDelta = (self.back.midPrice - self.lastBackMid) / self.back.midPrice
@@ -100,14 +100,12 @@ class basis(alpha):
 
 
 class rv(alpha):
-    def __init__(self, target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, pred):
-        super().__init__(target, name, decay, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed)
-        self.pred = pred
-        self.lastRatio = target.midPrice / pred.midPrice
+    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
+        super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
 
     def calcRawVal(self):
-        thisRatio = self.target.midPrice / self.pred.midPrice
-        if (self.target.contractChange) | (self.pred.contractChange):
+        thisRatio = self.target.midPrice / self.predictor.midPrice
+        if (self.target.contractChange) | (self.predictor.contractChange) | (self.predictor.midPrice == 0):
             self.rawVal = 0
         else:
             self.rawVal = thisRatio - self.lastRatio
