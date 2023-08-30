@@ -18,9 +18,16 @@ for i, md in feed.iterrows():
     lg.info(f"Update: {i}")
     for target in targets:
         target.mdUpdate(md)
-        #lg.info(f'{target.sym} hOpt: {target.hOpt}')
+        # lg.info(f'{target.sym} hOpt: {target.hOpt}')
 
         # Generate trades -> Apply tradeSizeCap from cfg here
 
         # Log
+
+logs = {}
+for target in targets:
+    logs[target.sym] = pd.DataFrame(target.log,
+                                columns=['lastTS', 'symbol', 'bidPrice', 'askPrice', 'bidSize', 'askSize', 'midPrice',
+                                         'microPrice', 'timeDecay', 'vol', 'annPctChange', 'cumAlpha', 'hOpt',
+                                         'holdings'])
 lg.info("Completed")

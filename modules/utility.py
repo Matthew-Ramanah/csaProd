@@ -15,9 +15,8 @@ def loadRefData():
 def initialiseModels(cfg, seeds):
     refData = loadRefData()
     targets = []
-    for target in cfg['targets']:
-        targets.append(
-            assets.traded(sym=target, cfg=cfg, params=cfg['fitParams'][target], refData=refData, seeds=seeds))
+    for sym in cfg['targets']:
+        targets.append(assets.traded(sym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData, seeds=seeds))
     lg.info("Models Initialised.")
     return targets
 

@@ -92,6 +92,8 @@ class asset:
 
 
 class traded(asset):
+    log = []
+
     def __init__(self, sym, cfg, params, refData, seeds, initHoldings=0):
         super().__init__(sym, params['tickSizes'][sym], params['spreadCutoff'][sym])
         self.seeding = True
@@ -148,6 +150,7 @@ class traded(asset):
             self.updateVolatility()
             self.updateAlphas()
             self.calcHoldings()
+            self.updateLog()
         return
 
     def updateVolatility(self):
@@ -263,4 +266,11 @@ class traded(asset):
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 
+        return
+
+    def updateLog(self):
+        thisLog = [self.lastTS, self.symbol, self.bidPrice, self.askPrice, self.bidSize, self.askPrice, self.midPrice,
+                   self.microPrice, self.timeDecay, self.vol, self.annPctChange, self.cumAlpha, self.hOpt,
+                   self.holdings]
+        self.log.append(thisLog)
         return
