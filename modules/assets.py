@@ -4,54 +4,28 @@ from modules import utility, alphas
 
 class asset:
     symbol = str()
+    contractChange = bool()
 
     def __init__(self, sym, tickSize, spreadCutoff):
         self.sym = sym
         self.tickSize = float(tickSize)
-        self.spreadCuttoff = spreadCutoff
+        self.spreadCutoff = spreadCutoff
         self.initialised = False
-        self.contractChange = True
 
-    def mdUpdate(self, md):
-        # Data Filters
-        if self.mdhSane(md):
-            self.initialised = True
-
-            # MD Calcs
-            self.contractChange = self.isContractChange(md)
-            self.thisMid = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
-            self.thisMicro = self.microPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'],
-                                                 md[f'{self.sym}_bid_size'], md[f'{self.sym}_ask_size'])
-            self.decayCalc(md)
-
-            # Update Risk Model
-            self.annualPctChangeCalc()
-
-            # Update contract state
-            self.bidPrice = md[f'{self.sym}_bid_price']
-            self.askPrice = md[f'{self.sym}_ask_price']
-            self.bidSize = md[f'{self.sym}_bid_size']
-            self.askSize = md[f'{self.sym}_ask_size']
-            self.midPrice = self.thisMid
-            self.microPrice = self.thisMicro
-            self.lastTS = md[f'{self.sym}_end_ts']
-            self.symbol = md[f'{self.sym}_symbol']
-
-        return
-
-    def mdhSane(self, md):
+    @staticmethod
+    def mdhSane(md, sym, spreadCutoff):
         """
         DataFilters
         """
-        if md[f'{self.sym}_bid_price'] >= md[f'{self.sym}_ask_price']:
+        if md[f'{sym}_bid_price'] >= md[f'{sym}_ask_price']:
             return False
-        if (md[f'{self.sym}_bid_size'] == 0) | (md[f'{self.sym}_ask_size'] == 0):
+        if (md[f'{sym}_bid_size'] == 0) | (md[f'{sym}_ask_size'] == 0):
             return False
-        if (md[f'{self.sym}_bid_price'] == 0) | (md[f'{self.sym}_ask_price'] == 0):
+        if (md[f'{sym}_bid_price'] == 0) | (md[f'{sym}_ask_price'] == 0):
             return False
-        if math.isnan(md[f'{self.sym}_bid_price']) | math.isnan(md[f'{self.sym}_ask_price']):
+        if math.isnan(md[f'{sym}_bid_price']) | math.isnan(md[f'{sym}_ask_price']):
             return False
-        if (md[f'{self.sym}_ask_price'] - md[f'{self.sym}_bid_price']) > self.spreadCuttoff:
+        if (md[f'{sym}_ask_price'] - md[f'{sym}_bid_price']) > spreadCutoff:
             return False
         return True
 
@@ -66,37 +40,72 @@ class asset:
             return ((bidSize * askPrice) + (askSize * bidPrice)) / sum_qty
         return 0
 
-    def isContractChange(self, md):
-        if md[f'{self.sym}_symbol'] != self.symbol:
+    def updateContractState(self, md):
+        self.bidPrice = md[f'{self.sym}_bid_price']
+        self.askPrice = md[f'{self.sym}_ask_price']
+        self.bidSize = md[f'{self.sym}_bid_size']
+        self.askSize = md[f'{self.sym}_ask_size']
+        self.midPrice = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
+        self.microPrice = self.microPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'],
+                                              md[f'{self.sym}_bid_size'], md[f'{self.sym}_ask_size'])
+        self.timestamp = md[f'{self.sym}_end_ts']
+        self.symbol = md[f'{self.sym}_symbol']
+        return
+
+    def firstSaneUpdate(self, md):
+        self.initialised = True
+        self.contractChange = True
+        self.timeDecay = 0
+        self.annPctChange = 0
+        self.lastMid = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
+        self.lastTS = md[f'{self.sym}_end_ts']
+        self.lastSymbol = md[f'{self.sym}_symbol']
+        return
+
+    def isContractChange(self):
+        if self.lastSymbol != self.symbol:
             lg.info(f'{self.sym} ContractChange Flagged')
+            self.lastSymbol = self.symbol
             return True
         return False
 
-    def decayCalc(self, md):
+    def decayCalc(self):
         if self.contractChange:
             self.timeDecay = 0
             return
 
-        self.timeDecay = (md[f'{self.sym}_end_ts'] - self.lastTS).seconds / aggFreq
+        self.timeDecay = (self.timestamp - self.lastTS).seconds / aggFreq
+        self.lastTS = self.timestamp
         return
 
     def annualPctChangeCalc(self):
-        if self.timeDecay == 0:
+        if (self.timeDecay == 0) | (self.contractChange):
             self.annPctChange = 0
-            return 0
+        else:
+            pctChange = (self.midPrice - self.lastMid) / self.lastMid
+            self.annPctChange = pctChange * np.sqrt(1 / self.timeDecay)
+        self.lastMid = self.midPrice
+        return
 
-        pctChange = (self.thisMid - self.midPrice) / self.thisMid
-        self.annPctChange = pctChange * np.sqrt(1 / self.timeDecay)
+    def mdUpdate(self, md):
+        if not self.mdhSane(md, self.sym, self.spreadCutoff):
+            return
+        self.updateContractState(md)
 
+        if not self.initialised:
+            self.firstSaneUpdate(md)
+        else:
+            self.contractChange = self.isContractChange()
+            self.decayCalc()
+            self.annualPctChangeCalc()
         return
 
 
 class traded(asset):
-    log = []
-
     def __init__(self, sym, cfg, params, refData, seeds, initHoldings=0):
         super().__init__(sym, params['tickSizes'][sym], params['spreadCutoff'][sym])
         self.seeding = True
+        self.log = []
         self.midPrice = seeds[f'{sym}_midPrice']
 
         # Params
@@ -130,23 +139,23 @@ class traded(asset):
         for pred in self.predictors:
             if not self.predictors[pred].initialised:
                 return
+
         self.seeding = False
         lg.info(f'{self.sym} Successfully Seeded')
 
-        # Make sure first tick after seeding is flagged as a contractChange
-        for pred in self.predictors:
-            self.predictors[pred].symbol = ''
+        for alph in self.alphaList:
+            alph.firstSaneUpdate()
         return
 
     def mdUpdate(self, md):
-        if self.seeding:
-            self.checkifSeeded()
-
         super().mdUpdate(md)
         for pred in self.predictors:
             self.predictors[pred].mdUpdate(md)
 
-        if self.mdhSane(md) and not self.seeding:
+        if self.seeding:
+            self.checkifSeeded()
+
+        elif self.mdhSane(md, self.sym, self.spreadCutoff):
             self.updateVolatility()
             self.updateAlphas()
             self.calcHoldings()
@@ -269,8 +278,8 @@ class traded(asset):
         return
 
     def updateLog(self):
-        thisLog = [self.lastTS, self.symbol, self.bidPrice, self.askPrice, self.bidSize, self.askPrice, self.midPrice,
-                   self.microPrice, self.timeDecay, self.vol, self.annPctChange, self.cumAlpha, self.hOpt,
-                   self.holdings]
+        thisLog = [self.lastTS, self.sym, self.contractChange, self.bidPrice, self.askPrice, self.bidSize,
+                   self.askPrice, self.midPrice, self.microPrice, self.timeDecay, self.vol, self.annPctChange,
+                   self.cumAlpha, self.hOpt, self.holdings]
         self.log.append(thisLog)
         return

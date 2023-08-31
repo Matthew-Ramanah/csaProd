@@ -3,8 +3,7 @@ from modules import utility
 
 
 class alpha:
-    rawVal = float()
-    decay = float()
+    log = []
 
     def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
         self.target = target
@@ -20,6 +19,12 @@ class alpha:
         self.ncc = ncc
         self.accel = accel
 
+    def firstSaneUpdate(self):
+        """
+        May get overloaded
+        """
+        return
+
     def onMdhUpdate(self):
         self.decayCalc()
         self.calcRawVal()
@@ -28,6 +33,7 @@ class alpha:
         self.updateVolatility()
         self.updateFeatVal()
         self.updateAlphaVal()
+        self.updateLog()
         return
 
     def decayCalc(self):
@@ -69,6 +75,11 @@ class alpha:
         self.alphaVal = self.ncc * self.featVal * self.target.vol
         return
 
+    def updateLog(self):
+        thisLog = [self.rawVal, self.smoothVal, self.zVal, self.vol]
+        self.log.append(thisLog)
+        return
+
 
 class move(alpha):
     def calcRawVal(self):
@@ -82,6 +93,11 @@ class basis(alpha):
         super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
         self.front = front
         self.back = predictor
+
+    def firstSaneUpdate(self):
+        self.lastFrontMid = self.front.midPrice
+        self.lastBackMid = self.back.midPrice
+        return
 
     def calcRawVal(self):
         if (self.front.contractChange) | (self.front.midPrice == 0):
@@ -102,6 +118,10 @@ class basis(alpha):
 class rv(alpha):
     def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
         super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
+
+    def firstSaneUpdate(self):
+        self.lastRatio = self.target.midPrice / self.predictor.midPrice
+        return
 
     def calcRawVal(self):
         thisRatio = self.target.midPrice / self.predictor.midPrice

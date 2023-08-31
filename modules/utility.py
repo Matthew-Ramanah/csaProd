@@ -2,9 +2,14 @@ from pyConfig import *
 from modules import assets
 
 
+@functools.cache
+def findSmoothFactor(invTau, decay):
+    return np.exp(-invTau * decay)
+
+
 def emaUpdate(lastValue, thisValue, decay, invTau):
-    alpha = np.exp(-invTau * decay)
-    return alpha * thisValue + (1 - alpha) * lastValue
+    alpha = findSmoothFactor(invTau, decay)
+    return alpha * lastValue + (1 - alpha) * thisValue
 
 
 def loadRefData():
@@ -14,11 +19,11 @@ def loadRefData():
 
 def initialiseModels(cfg, seeds):
     refData = loadRefData()
-    targets = []
+    models = {}
     for sym in cfg['targets']:
-        targets.append(assets.traded(sym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData, seeds=seeds))
+        models[sym] = assets.traded(sym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData, seeds=seeds)
     lg.info("Models Initialised.")
-    return targets
+    return models
 
 
 def constructSeeds(recon, cfg):
