@@ -40,14 +40,15 @@ class alpha:
         """
         May get overloaded
         """
-        self.decay = self.target.timeDecay
+        self.decay = self.target.timeDelta
         return
 
     def calcRawVal(self):
         """
         Should always get overriden
         """
-        lg.info(f"{self.name} Has No RawVal Calc")
+        lg.info(f"{self.name} Has No RawVal Calc , setting to 0...")
+        self.rawVal = 0
         return
 
     def updateSmoothVal(self):

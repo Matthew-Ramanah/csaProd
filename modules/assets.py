@@ -55,7 +55,7 @@ class asset:
     def firstSaneUpdate(self, md):
         self.initialised = True
         self.contractChange = True
-        self.timeDecay = 0
+        self.timeDelta = 0
         self.annPctChange = 0
         self.lastMid = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
         self.lastTS = md[f'{self.sym}_end_ts']
@@ -71,19 +71,19 @@ class asset:
 
     def decayCalc(self):
         if self.contractChange:
-            self.timeDecay = 0
+            self.timeDelta = 0
             return
 
-        self.timeDecay = (self.timestamp - self.lastTS).seconds / aggFreq
+        self.timeDelta = (self.timestamp - self.lastTS).seconds / aggFreq
         self.lastTS = self.timestamp
         return
 
     def annualPctChangeCalc(self):
-        if (self.timeDecay == 0) | (self.contractChange):
+        if (self.timeDelta == 0) | (self.contractChange):
             self.annPctChange = 0
         else:
             pctChange = (self.midPrice - self.lastMid) / self.lastMid
-            self.annPctChange = pctChange * np.sqrt(1 / self.timeDecay)
+            self.annPctChange = pctChange * np.sqrt(1 / self.timeDelta)
         self.lastMid = self.midPrice
         return
 
@@ -163,7 +163,7 @@ class traded(asset):
         return
 
     def updateVolatility(self):
-        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, (self.annPctChange) ** 2, self.timeDecay, self.volInvTau))
+        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, (self.annPctChange) ** 2, self.timeDelta, self.volInvTau))
         return
 
     def updateAlphas(self):
@@ -279,7 +279,7 @@ class traded(asset):
 
     def updateLog(self):
         thisLog = [self.lastTS, self.sym, self.contractChange, self.bidPrice, self.askPrice, self.bidSize,
-                   self.askPrice, self.midPrice, self.microPrice, self.timeDecay, self.vol, self.annPctChange,
-                   self.cumAlpha, self.hOpt, self.holdings]
+                   self.askSize, self.midPrice, self.timeDelta, self.vol, self.annPctChange, self.cumAlpha, self.hOpt,
+                   self.holdings]
         self.log.append(thisLog)
         return

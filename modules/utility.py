@@ -26,9 +26,9 @@ def initialiseModels(cfg, seeds):
     return models
 
 
-def constructSeeds(recon, cfg):
-    seeds = dict(recon.iloc[0])
-    seeds['lastTS'] = recon.iloc[0].name
+def constructSeeds(researchFeed, cfg):
+    seeds = dict(researchFeed.iloc[0])
+    seeds['lastTS'] = researchFeed.iloc[0].name
 
     lg.info("Setting zSeed, smoothSeed for all feats to 0 for now. VolSeeds set to 100")
     for target in cfg['targets']:
