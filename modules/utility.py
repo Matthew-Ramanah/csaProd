@@ -1,5 +1,5 @@
 from pyConfig import *
-from modules import assets
+from modules import assets, models
 
 
 @functools.cache
@@ -19,11 +19,11 @@ def loadRefData():
 
 def initialiseModels(cfg, seeds):
     refData = loadRefData()
-    models = {}
+    fitModels = {}
     for sym in cfg['targets']:
-        models[sym] = assets.traded(sym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData, seeds=seeds)
+        fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData, seeds=seeds)
     lg.info("Models Initialised.")
-    return models
+    return fitModels
 
 
 def constructSeeds(researchFeed, cfg):
