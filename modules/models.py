@@ -23,7 +23,7 @@ class assetModel():
         self.hOpt = self.convertHoldingsToHOpt(self.holdings, self.maxLots, self.hScaler)
 
         # Construct Predictors & Alpha Objects
-        self.initialisePreds(params)
+        self.initialisePreds(cfg, params)
         self.initialiseAlphas(cfg, params, seeds)
 
     @staticmethod
@@ -118,12 +118,13 @@ class assetModel():
 
         return predsNeeded
 
-    def initialisePreds(self, params):
+    def initialisePreds(self, cfg, params):
         self.predictors = {}
         predsNeeded = self.findPredsNeeded(self.target.sym, params['feats'])
 
         for pred in list(set(predsNeeded)):
-            self.predictors[pred] = assets.asset(pred, params['tickSizes'][pred], params['spreadCutoff'][pred])
+            self.predictors[pred] = assets.asset(pred, params['tickSizes'][pred], params['spreadCutoff'][pred],
+                                                 cfg['inputParams']['aggFreq'])
         return
 
     def initialiseAlphas(self, cfg, params, seeds):

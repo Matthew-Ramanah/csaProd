@@ -77,7 +77,7 @@ class alpha:
         return
 
     def updateLog(self):
-        thisLog = [self.rawVal, self.smoothVal, self.zVal, self.vol]
+        thisLog = [self.target.timestamp, self.rawVal, self.smoothVal, self.zVal, self.vol, self.featVal]
         self.log.append(thisLog)
         return
 

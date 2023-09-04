@@ -18,7 +18,7 @@ def mergeOnEndTS(md, raw):
 
 def loadRawData(sym):
     exch = findExch(sym)
-    raw = pd.read_hdf(f"{rawDataRoot}/{exch}/{sym}.h5", key=sym)
+    raw = pd.read_hdf(f"{rawDataRoot}{exch}/{sym}.h5", key=sym)
     raw = raw.set_index('end_ts', drop=False)
     return addPrefix(raw, sym)
 
@@ -34,3 +34,10 @@ def loadSyntheticMD(cfg, init=False):
             init = True
     lg.info(f"Synthetic Market Data Feed Loaded")
     return md
+
+
+def sampleFeed(feed, researchFeeds, maxUpdates):
+    start = researchFeeds['recon'].index[0]
+    end = researchFeeds['recon'].index[-1]
+    feed = feed.loc[(feed['end_ts'] >= start) & (feed['end_ts'] <= end)]
+    return feed.iloc[0:maxUpdates]

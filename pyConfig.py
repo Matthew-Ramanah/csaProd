@@ -1,6 +1,6 @@
 # Directories
 root = "C:/Users/matth/PycharmProjects/asaProd/"
-rawDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/raw/minutely/quotes/volRollover/"
+rawDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/raw/minutely/quotes/"
 proDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/processed/"
 
 # Constants
@@ -9,10 +9,9 @@ tradingDays = 252
 daysPerYear = 365
 minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
-aggFreq = 60
 
 # Run-time options
-cfg_file = root + "config/refined.json"
+cfg_file = root + "config/recon.json"
 
 # Global Packages
 import pandas as pd
@@ -158,17 +157,22 @@ exchangeMap = {
         "CL0",
         "ES0",
         "GC0",
+        "GC1",
         "GF0",
         "HG0",
+        "HG1",
         "HO0",
         "LE0",
         "NIY0",
         "NQ0",
         "PA0",
+        "PA1",
         "PL0",
+        "PL1",
         "RB0",
         "RTY0",
         "SI0",
+        "SI1",
         "UB0",
         "YM0",
         "ZT0",

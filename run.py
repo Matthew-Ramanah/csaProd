@@ -1,22 +1,19 @@
 from pyConfig import *
 from modules import md, utility, recon
 
-updatesToRecon = 10000
-
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
-researchFeed = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/recon.h5", key='recon', mode='r')
-researchFeed = researchFeed.head(updatesToRecon)
 
-seeds = utility.constructSeeds(researchFeed, cfg)
+researchFeeds = utility.loadResearchFeeds(cfg)
+seeds = utility.constructSeeds(researchFeeds['recon'], cfg)
 fitModels = utility.initialiseModels(cfg, seeds=seeds)
 
 # Replace this with the live feed in production
-feed = md.loadSyntheticMD(cfg)
-feed = feed.head(updatesToRecon)
+prodFeed = md.loadSyntheticMD(cfg)
+prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=10000)
 lg.info("Feed Loaded.")
 
-for i, md in feed.iterrows():
+for i, md in prodFeed.iterrows():
     for sym in fitModels:
         fitModels[sym].mdUpdate(md)
 
@@ -25,5 +22,5 @@ for i, md in feed.iterrows():
         # Log
 
 prodLogs = recon.processLogs(fitModels)
-recon.reconcile(prodLogs, researchFeed, fitModels)
-recon.plotReconCols(prodLogs, researchFeed, fitModels)
+recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
+# recon.reconcile(cfg, prodLogs, researchFeeds, fitModels)

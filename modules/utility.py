@@ -17,18 +17,27 @@ def loadRefData():
     return refData.set_index('symbol')
 
 
+def loadResearchFeeds(cfg):
+    researchFeeds = {}
+    researchFeeds['recon'] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/recon.h5", key='recon', mode='r')
+    for sym in cfg['targets']:
+        researchFeeds[sym] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/{sym}/featsSelected.h5", key='featsSelected', mode='r')
+    return researchFeeds
+
+
 def initialiseModels(cfg, seeds):
     refData = loadRefData()
     fitModels = {}
     for sym in cfg['targets']:
-        fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData, seeds=seeds)
+        fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData,
+                                           seeds=seeds)
     lg.info("Models Initialised.")
     return fitModels
 
 
-def constructSeeds(researchFeed, cfg):
-    seeds = dict(researchFeed.iloc[0])
-    seeds['lastTS'] = researchFeed.iloc[0].name
+def constructSeeds(reconFeed, cfg):
+    seeds = dict(reconFeed.iloc[0])
+    seeds['lastTS'] = reconFeed.iloc[0].name
 
     lg.info("Setting zSeed, smoothSeed for all feats to 0 for now. VolSeeds set to 100")
     for target in cfg['targets']:

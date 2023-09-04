@@ -1,15 +1,16 @@
 from pyConfig import *
-from modules import utility, alphas
+from modules import utility
 
 
 class asset:
     symbol = str()
     contractChange = bool()
 
-    def __init__(self, sym, tickSize, spreadCutoff):
+    def __init__(self, sym, tickSize, aggFreq, spreadCutoff):
         self.sym = sym
         self.tickSize = float(tickSize)
         self.spreadCutoff = spreadCutoff
+        self.aggFreq = aggFreq
         self.initialised = False
 
     @staticmethod
@@ -64,7 +65,6 @@ class asset:
 
     def isContractChange(self):
         if self.lastSymbol != self.symbol:
-            lg.info(f'{self.sym} ContractChange Flagged')
             self.lastSymbol = self.symbol
             return True
         return False
@@ -74,7 +74,7 @@ class asset:
             self.timeDelta = 0
             return
 
-        self.timeDelta = (self.timestamp - self.lastTS).seconds / aggFreq
+        self.timeDelta = (self.timestamp - self.lastTS).seconds / self.aggFreq
         self.lastTS = self.timestamp
         return
 
@@ -103,7 +103,7 @@ class asset:
 
 class traded(asset):
     def __init__(self, sym, tickSize, spreadCutoff, cfg, seeds):
-        super(traded, self).__init__(sym, tickSize, spreadCutoff)
+        super(traded, self).__init__(sym, tickSize, spreadCutoff, cfg['inputParams']['aggFreq'])
         self.midPrice = seeds[f'{sym}_midPrice']
         self.vol = seeds[f'Volatility_{sym}_timeDR']
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
