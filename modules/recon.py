@@ -10,9 +10,10 @@ def processLogs(fitModels):
                                                    f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
                                                    f'Volatility_{sym}_timeDR', 'annPctChange', f'{sym}_CumAlpha',
                                                    'hOpt', f'{sym}_BasketHoldings']).set_index('lastTS')
-        for alph in fitModels[sym].alphaList:
-            logs[sym][alph.name] = pd.DataFrame(alph.log, columns=['lastTS', 'rawVal', 'smoothVal', 'zVal', 'vol',
-                                                                   f'feat_{alph.name}']).set_index('lastTS')
+        for name in fitModels[sym].alphaDict:
+            logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
+                                           columns=[name, 'lastTS', 'rawVal', 'smoothVal', 'zVal', 'vol',
+                                                    f'feat_{name}']).set_index('lastTS')
     lg.info("Processed Logs.")
     return logs
 
@@ -27,6 +28,7 @@ def checkTolerance(research, prod, cols, ts, tol=0.02):
             lg.info(f'Recon Failed at {ts} for {col}. Research: {research[col]}. Prod: {prod[col]}')
     return
 
+
 def constructTimeDeltas(fitModels, researchFeeds):
     """
     Reconcile the timeDeltas rather than the total decay to account for different seeding periods
@@ -36,13 +38,14 @@ def constructTimeDeltas(fitModels, researchFeeds):
         researchFeeds['recon'][f'{sym}_timeDR_Delta'] = researchFeeds['recon'][f'{sym}_timeDR'].diff().fillna(0)
     return researchFeeds
 
+
 def reconcile(prodLogs, researchFeeds, fitModels):
     for ts in researchFeeds['recon'].index:
         for sym in fitModels:
             if ts not in prodLogs[sym]['model'].index:
                 continue
-            modelCols = [f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR']
-            # laterCols = [f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
+            modelCols = [f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR',
+                         f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
             checkTolerance(researchFeeds['recon'].loc[ts], prodLogs[sym]['model'].loc[ts], modelCols, ts)
 
             for alph in fitModels[sym].alphaList:
@@ -56,7 +59,8 @@ def reconcile(prodLogs, researchFeeds, fitModels):
 def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
     for sym in fitModels:
         fts = cfg['fitParams'][sym]['feats']
-        modelCols = [f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR']
+        modelCols = [f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR', f'{sym}_CumAlpha',
+                     f'{sym}_BasketHoldings']
         prod = prodLogs[sym]['model']
 
         fig, axs = plt.subplots(len(modelCols) + len(fts), sharex='all')
@@ -70,6 +74,7 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
             name = ft.replace('feat_', '')
             axs[i + j + 1].step(researchFeeds[sym].index, researchFeeds[sym][ft], label=f'Research: {ft}', where='post')
             axs[i + j + 1].step(prodLogs[sym][name].index, prodLogs[sym][name][ft], label=f'Prod: {ft}', where='post')
+            axs[i+j+1].axhline(y=0, color='black', linestyle='--')
             axs[i + j + 1].legend(loc='upper left')
         fig.show()
     return

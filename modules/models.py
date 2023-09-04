@@ -4,7 +4,7 @@ from modules import utility, alphas, assets
 
 class assetModel():
     def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0):
-        self.target = assets.traded(targetSym, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym], cfg,
+        self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds)
         self.seeding = True
         self.log = []
@@ -42,8 +42,8 @@ class assetModel():
         self.seeding = False
         lg.info(f'{self.target.sym} Model Successfully Seeded')
 
-        for alph in self.alphaList:
-            alph.firstSaneUpdate()
+        for name in self.alphaDict:
+            self.alphaDict[name].firstSaneUpdate()
         return
 
     def mdUpdate(self, md):
@@ -63,9 +63,9 @@ class assetModel():
 
     def updateAlphas(self):
         self.cumAlpha = 0
-        for alph in self.alphaList:
-            alph.onMdhUpdate()
-            self.cumAlpha += self.alphaWeights[alph.name] * alph.alphaVal
+        for name in self.alphaDict:
+            self.alphaDict[name].onMdhUpdate()
+            self.cumAlpha += self.alphaWeights[name] * self.alphaDict[name].alphaVal
         return
 
     def calcBuySellCosts(self):
@@ -123,12 +123,12 @@ class assetModel():
         predsNeeded = self.findPredsNeeded(self.target.sym, params['feats'])
 
         for pred in list(set(predsNeeded)):
-            self.predictors[pred] = assets.asset(pred, params['tickSizes'][pred], params['spreadCutoff'][pred],
-                                                 cfg['inputParams']['aggFreq'])
+            self.predictors[pred] = assets.asset(pred, cfg['inputParams']['aggFreq'], params['tickSizes'][pred],
+                                                 params['spreadCutoff'][pred])
         return
 
     def initialiseAlphas(self, cfg, params, seeds):
-        self.alphaList = []
+        self.alphaDict = {}
         for ft in params['feats']:
             name = ft.replace('feat_', '')
             ftType = ft.split('_')[3]
@@ -142,32 +142,26 @@ class assetModel():
             ncc = params['NCCs'][ft]
 
             if ftType == 'Move':
-                self.alphaList.append(
-                    alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL,
-                                volSeed, ncc, False))
+                self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
+                                                smoothSeed, volHL, volSeed, ncc, False)
             elif ftType == 'Acc':
-                self.alphaList.append(
-                    alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL,
-                                volSeed, ncc, True))
+                self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
+                                                smoothSeed, volHL, volSeed, ncc, True)
             elif ftType == 'RV':
-                self.alphaList.append(
-                    alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL,
-                              volSeed, ncc, False))
+                self.alphaDict[name] = alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
+                                              smoothSeed, volHL, volSeed, ncc, False)
             elif ftType == 'AccRV':
-                self.alphaList.append(
-                    alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed, volHL,
-                              volSeed, ncc, True))
+                self.alphaDict[name] = alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
+                                              smoothSeed, volHL, volSeed, ncc, True)
             elif "Basis" in ftType:
                 frontSym = utility.findBasisFrontSym(pred)
                 if ftType == 'Basis':
-                    self.alphaList.append(
-                        alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed,
-                                     volHL, volSeed, ncc, False, self.predictors[frontSym]))
+                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
+                                                     smoothSeed, volHL, volSeed, ncc, False, self.predictors[frontSym])
 
                 elif ftType == 'AccBasis':
-                    self.alphaList.append(
-                        alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor, smoothSeed,
-                                     volHL, volSeed, ncc, True, self.predictors[frontSym]))
+                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
+                                                     smoothSeed, volHL, volSeed, ncc, True, self.predictors[frontSym])
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 

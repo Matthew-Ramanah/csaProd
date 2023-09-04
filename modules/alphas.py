@@ -3,8 +3,6 @@ from modules import utility
 
 
 class alpha:
-    log = []
-
     def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
         self.target = target
         self.predictor = predictor
@@ -45,10 +43,9 @@ class alpha:
 
     def calcRawVal(self):
         """
-        Should always get overriden
+        Should always get overloaded
         """
-        lg.info(f"{self.name} Has No RawVal Calc , setting to 0...")
-        self.rawVal = 0
+        lg.info(f"{self.name} Has No RawVal Calc")
         return
 
     def updateSmoothVal(self):
@@ -77,12 +74,16 @@ class alpha:
         return
 
     def updateLog(self):
-        thisLog = [self.target.timestamp, self.rawVal, self.smoothVal, self.zVal, self.vol, self.featVal]
+        thisLog = [self.name, self.target.timestamp, self.rawVal, self.smoothVal, self.zVal, self.vol, self.featVal]
         self.log.append(thisLog)
         return
 
 
 class move(alpha):
+    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
+        super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
+        self.log = []
+
     def calcRawVal(self):
         self.rawVal = self.target.annPctChange
         return
@@ -94,6 +95,7 @@ class basis(alpha):
         super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
         self.front = front
         self.back = predictor
+        self.log = []
 
     def firstSaneUpdate(self):
         self.lastFrontMid = self.front.midPrice
@@ -119,6 +121,7 @@ class basis(alpha):
 class rv(alpha):
     def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
         super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
+        self.log = []
 
     def firstSaneUpdate(self):
         self.lastRatio = self.target.midPrice / self.predictor.midPrice

@@ -3,10 +3,7 @@ from modules import utility
 
 
 class asset:
-    symbol = str()
-    contractChange = bool()
-
-    def __init__(self, sym, tickSize, aggFreq, spreadCutoff):
+    def __init__(self, sym, aggFreq, tickSize,  spreadCutoff):
         self.sym = sym
         self.tickSize = float(tickSize)
         self.spreadCutoff = spreadCutoff
@@ -72,9 +69,8 @@ class asset:
     def decayCalc(self):
         if self.contractChange:
             self.timeDelta = 0
-            return
-
-        self.timeDelta = (self.timestamp - self.lastTS).seconds / self.aggFreq
+        else:
+            self.timeDelta = (self.timestamp - self.lastTS).seconds / self.aggFreq
         self.lastTS = self.timestamp
         return
 
@@ -83,7 +79,7 @@ class asset:
             self.annPctChange = 0
         else:
             pctChange = (self.midPrice - self.lastMid) / self.lastMid
-            self.annPctChange = pctChange * np.sqrt(1 / self.timeDelta)
+            self.annPctChange = pctChange * np.sqrt(minsPerYear / self.timeDelta)
         self.lastMid = self.midPrice
         return
 
@@ -102,8 +98,8 @@ class asset:
 
 
 class traded(asset):
-    def __init__(self, sym, tickSize, spreadCutoff, cfg, seeds):
-        super(traded, self).__init__(sym, tickSize, spreadCutoff, cfg['inputParams']['aggFreq'])
+    def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds):
+        super(traded, self).__init__(sym, cfg['inputParams']['aggFreq'], tickSize, spreadCutoff)
         self.midPrice = seeds[f'{sym}_midPrice']
         self.vol = seeds[f'Volatility_{sym}_timeDR']
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
