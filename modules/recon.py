@@ -7,10 +7,9 @@ def processLogs(fitModels):
         logs[sym] = {}
         logs[sym]['model'] = pd.DataFrame(fitModels[sym].log,
                                           columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_bidPrice',
-                                                   f'{sym}_askPrice',
-                                                   f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR',
-                                                   'annPctChange', f'{sym}_CumAlpha', 'hOpt',
-                                                   f'{sym}_BasketHoldings']).set_index('lastTS')
+                                                   f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
+                                                   f'Volatility_{sym}_timeDR', 'annPctChange', f'{sym}_CumAlpha',
+                                                   'hOpt', f'{sym}_BasketHoldings']).set_index('lastTS')
         for alph in fitModels[sym].alphaList:
             logs[sym][alph.name] = pd.DataFrame(alph.log, columns=['lastTS', 'rawVal', 'smoothVal', 'zVal', 'vol',
                                                                    f'feat_{alph.name}']).set_index('lastTS')
@@ -28,20 +27,23 @@ def checkTolerance(research, prod, cols, ts, tol=0.02):
             lg.info(f'Recon Failed at {ts} for {col}. Research: {research[col]}. Prod: {prod[col]}')
     return
 
-
-def reconcile(cfg, prodLogs, researchFeeds, fitModels):
-    modelFeed = researchFeeds['recon']
+def constructTimeDeltas(fitModels, researchFeeds):
+    """
+    Reconcile the timeDeltas rather than the total decay to account for different seeding periods
+    """
     # Reconcile the timeDeltas rather than the total decay to account for different seeding periods
     for sym in fitModels:
-        modelFeed[f'{sym}_timeDR_Delta'] = modelFeed[f'{sym}_timeDR'].diff().fillna(0)
+        researchFeeds['recon'][f'{sym}_timeDR_Delta'] = researchFeeds['recon'][f'{sym}_timeDR'].diff().fillna(0)
+    return researchFeeds
 
-    for ts in modelFeed.index:
+def reconcile(prodLogs, researchFeeds, fitModels):
+    for ts in researchFeeds['recon'].index:
         for sym in fitModels:
             if ts not in prodLogs[sym]['model'].index:
                 continue
             modelCols = [f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR']
             # laterCols = [f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
-            checkTolerance(modelFeed.loc[ts], prodLogs[sym]['model'].loc[ts], modelCols, ts)
+            checkTolerance(researchFeeds['recon'].loc[ts], prodLogs[sym]['model'].loc[ts], modelCols, ts)
 
             for alph in fitModels[sym].alphaList:
                 ftCols = [f'feat_{alph.name}']

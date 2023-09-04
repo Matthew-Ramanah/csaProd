@@ -5,7 +5,7 @@ with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 researchFeeds = utility.loadResearchFeeds(cfg)
-seeds = utility.constructSeeds(researchFeeds['recon'], cfg)
+seeds = utility.constructSeeds(researchFeeds, cfg)
 fitModels = utility.initialiseModels(cfg, seeds=seeds)
 
 # Replace this with the live feed in production
@@ -22,5 +22,6 @@ for i, md in prodFeed.iterrows():
         # Log
 
 prodLogs = recon.processLogs(fitModels)
+researchFeeds = recon.constructTimeDeltas(fitModels, researchFeeds)
 recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
-# recon.reconcile(cfg, prodLogs, researchFeeds, fitModels)
+# recon.reconcile(prodLogs, researchFeeds, fitModels)

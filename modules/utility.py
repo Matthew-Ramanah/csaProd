@@ -1,5 +1,5 @@
 from pyConfig import *
-from modules import assets, models
+from modules import models
 
 
 @functools.cache
@@ -21,7 +21,8 @@ def loadResearchFeeds(cfg):
     researchFeeds = {}
     researchFeeds['recon'] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/recon.h5", key='recon', mode='r')
     for sym in cfg['targets']:
-        researchFeeds[sym] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/{sym}/featsSelected.h5", key='featsSelected', mode='r')
+        researchFeeds[sym] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/{sym}/featsSelected.h5", key='featsSelected',
+                                         mode='r')
     return researchFeeds
 
 
@@ -35,17 +36,16 @@ def initialiseModels(cfg, seeds):
     return fitModels
 
 
-def constructSeeds(reconFeed, cfg):
-    seeds = dict(reconFeed.iloc[0])
-    seeds['lastTS'] = reconFeed.iloc[0].name
+def constructSeeds(researchFeeds, cfg):
+    seeds = dict(researchFeeds['recon'].iloc[0])
+    seeds['lastTS'] = researchFeeds['recon'].iloc[0].name
 
-    lg.info("Setting zSeed, smoothSeed for all feats to 0 for now. VolSeeds set to 100")
     for target in cfg['targets']:
         for ft in cfg['fitParams'][target]['feats']:
             name = ft.replace('feat_', '')
-            seeds[f'{name}_zSeed'] = 0
-            seeds[f'{name}_smoothSeed'] = 0
-            seeds[f'{name}_volSeed'] = 100
+            seeds[f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[0]
+            seeds[f'{name}_zSeed'] = researchFeeds[target][f'{name}_Z'].iloc[0]
+            seeds[f'{name}_volSeed'] = researchFeeds[target][f'{name}_Std'].iloc[0]
     return seeds
 
 
