@@ -17,10 +17,13 @@ class assetModel():
         self.kappa = params['alphaWeights']['kappa']
         self.hScaler = cfg['fitParams']['hScalers'][targetSym]
         self.alphaWeights = params['alphaWeights']
+        self.tradeSizeCap = cfg['fitParams']['tradeSizeCaps'][targetSym]
+        self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
+        self.pRate = cfg['inputParams']['basket']['execution']['pRate']
 
         # Seeds
         self.holdings = initHoldings
-        self.hOpt = self.convertHoldingsToHOpt(self.holdings, self.maxLots, self.hScaler)
+        self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, params)
@@ -44,6 +47,7 @@ class assetModel():
 
         for name in self.alphaDict:
             self.alphaDict[name].firstSaneUpdate()
+        self.liquidity = self.calcInstLiquidity()
         return
 
     def mdUpdate(self, md):
@@ -88,7 +92,20 @@ class assetModel():
         elif self.hOpt > sellBound:
             self.hOpt = sellBound
 
-        return self.hOpt
+        return
+
+    def calcInstLiquidity(self):
+        return 0.5 * (self.target.bidSize + self.target.askSize)
+
+    def calcMaxTradeSize(self):
+        instLiquidity = self.calcInstLiquidity()
+        if self.target.isSessionChange():
+            self.liquidity = instLiquidity
+        else:
+            self.liquidity = utility.emaUpdate(self.liquidity, instLiquidity, self.target.timeDelta,
+                                               self.liquidityInvTau)
+        self.maxTradeSize = np.clip(self.pRate * self.liquidity, 0, self.tradeSizeCap)
+        return
 
     @staticmethod
     def convertHoldingsToHOpt(holdings, maxLots, hScaler):
@@ -99,8 +116,11 @@ class assetModel():
         return int(maxLots * np.clip(hOpt / hScaler, -1, 1))
 
     def calcHoldings(self):
-        hOpt = self.calcHOpt()
-        self.holdings = self.convertHOptToHoldings(self.maxLots, hOpt, self.hScaler)
+        self.calcHOpt()
+        self.calcMaxTradeSize()
+        sizedHoldings = self.convertHOptToHoldings(self.maxLots, self.hOpt, self.hScaler)
+        self.tradeVolume = np.clip(sizedHoldings - self.holdings, -self.maxTradeSize, self.maxTradeSize).astype(int)
+        self.holdings += self.tradeVolume
         return
 
     @staticmethod
@@ -143,25 +163,29 @@ class assetModel():
 
             if ftType == 'Move':
                 self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                smoothSeed, volHL, volSeed, ncc, False)
+                                                   smoothSeed, volHL, volSeed, ncc, False)
             elif ftType == 'Acc':
                 self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                smoothSeed, volHL, volSeed, ncc, True)
+                                                   smoothSeed, volHL, volSeed, ncc, True)
             elif ftType == 'RV':
                 self.alphaDict[name] = alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                              smoothSeed, volHL, volSeed, ncc, False)
+                                                 smoothSeed, volHL, volSeed, ncc, False)
             elif ftType == 'AccRV':
                 self.alphaDict[name] = alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                              smoothSeed, volHL, volSeed, ncc, True)
+                                                 smoothSeed, volHL, volSeed, ncc, True)
             elif "Basis" in ftType:
                 frontSym = utility.findBasisFrontSym(pred)
                 if ftType == 'Basis':
-                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                     smoothSeed, volHL, volSeed, ncc, False, self.predictors[frontSym])
+                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed,
+                                                        smoothFactor,
+                                                        smoothSeed, volHL, volSeed, ncc, False,
+                                                        self.predictors[frontSym])
 
                 elif ftType == 'AccBasis':
-                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                     smoothSeed, volHL, volSeed, ncc, True, self.predictors[frontSym])
+                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed,
+                                                        smoothFactor,
+                                                        smoothSeed, volHL, volSeed, ncc, True,
+                                                        self.predictors[frontSym])
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 
@@ -170,6 +194,6 @@ class assetModel():
     def updateLog(self):
         thisLog = [self.target.timestamp, self.target.contractChange, self.target.bidPrice, self.target.askPrice,
                    self.target.midPrice, self.target.timeDelta, self.target.vol, self.target.annPctChange,
-                   self.cumAlpha, self.hOpt, self.holdings]
+                   self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume]
         self.log.append(thisLog)
         return

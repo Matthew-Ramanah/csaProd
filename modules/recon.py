@@ -9,7 +9,8 @@ def processLogs(fitModels):
                                           columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_bidPrice',
                                                    f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
                                                    f'Volatility_{sym}_timeDR', f'annPctChange_{sym}_timeDR',
-                                                   f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings']).set_index(
+                                                   f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings',
+                                                   f'{sym}_Trades']).set_index(
             'lastTS')
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
