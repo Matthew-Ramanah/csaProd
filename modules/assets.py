@@ -3,12 +3,13 @@ from modules import utility
 
 
 class asset:
-    def __init__(self, sym, aggFreq, tickSize,  spreadCutoff):
+    def __init__(self, sym, aggFreq, tickSize, spreadCutoff):
         self.sym = sym
         self.tickSize = float(tickSize)
         self.spreadCutoff = spreadCutoff
         self.aggFreq = aggFreq
         self.initialised = False
+        self.log = []
 
     @staticmethod
     def mdhSane(md, sym, spreadCutoff):
@@ -94,6 +95,13 @@ class asset:
             self.contractChange = self.isContractChange()
             self.decayCalc()
             self.annualPctChangeCalc()
+        self.updateLog()
+        return
+
+    def updateLog(self):
+        thisLog = [self.sym, self.timestamp, self.contractChange, self.bidPrice, self.askPrice, self.midPrice,
+                   self.timeDelta, self.annPctChange]
+        self.log.append(thisLog)
         return
 
 
