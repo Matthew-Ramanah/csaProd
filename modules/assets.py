@@ -100,7 +100,7 @@ class asset:
         return
 
     def updateLog(self):
-        thisLog = [self.sym, self.timestamp, self.contractChange, self.bidPrice, self.askPrice, self.midPrice,
+        thisLog = [self.symbol, self.timestamp, self.contractChange, self.bidPrice, self.askPrice, self.midPrice,
                    self.timeDelta, self.annPctChange]
         self.log.append(thisLog)
         return

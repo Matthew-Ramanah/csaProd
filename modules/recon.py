@@ -21,7 +21,7 @@ def processLogs(fitModels):
                                                     f'feat_{name}']).set_index('lastTS')
         for pred in fitModels[sym].predictors:
             logs[sym][pred] = pd.DataFrame(fitModels[sym].predictors[pred].log,
-                                           columns=[pred, f'{pred}_lastTS', f'{pred}_contractChange',
+                                           columns=[f'{pred}_symbol', f'{pred}_lastTS', f'{pred}_contractChange',
                                                     f'{pred}_bidPrice', f'{pred}_askPrice', f'{pred}_midPrice',
                                                     f'{pred}_timeDR_Delta',
                                                     f'annualPctChange_{pred}_timeDR']).set_index(f'{pred}_lastTS')
@@ -146,41 +146,42 @@ def plotPnLs(prodLogs, researchFeeds, cfg):
 
 
 def reconRVAlpha(researchFeeds, prodLogs):
-    name = 'ZL0_IND0_RV_timeDR_146'
+    name = 'ZL0_CL0_RV_timeDR_146'
     ft = f'feat_{name}'
     sym = 'ZL0'
+    pred = 'CL0'
     res = researchFeeds[sym]
     df = prodLogs[sym][name]
 
     fig, axs = plt.subplots(8, sharex='all')
     fig.suptitle(f"{ft} Reconciliation")
-    axs[0].step(prodLogs[sym]['model'].index, prodLogs[sym]['model']['ZL0_midPrice'], label='Prod ZL0_midPrice',
+    axs[0].step(res.index, res[f'{sym}_midPrice'], label=f'Research {sym}_midPrice', where='post')
+    axs[0].step(prodLogs[sym]['model'].index, prodLogs[sym]['model'][f'{sym}_midPrice'], label=f'Prod {sym}_midPrice',
                 where='post')
-    axs[0].step(res.index, res[f'ZL0_midPrice'], label='Research ZL0_midPrice', where='post')
     axs[0].legend(loc='upper right')
-    axs[1].step(prodLogs[sym]['IND0'].index, prodLogs[sym]['IND0']['IND0_midPrice'], label='Prod IND0_midPrice',
+    axs[1].step(res.index, res[f'{pred}_midPrice'], label=f'Research {pred}_midPrice', where='post')
+    axs[1].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_midPrice'], label=f'Prod {pred}_midPrice',
                 where='post')
-    axs[1].step(res.index, res[f'IND0_midPrice'], label='Research IND0_midPrice', where='post')
     axs[1].legend(loc='upper right')
+    axs[2].step(res.index, res[f'{pred}_timeDR_Delta'], label='Research Decay', where='post')
     axs[2].step(df.index, df['decay'], label='Prod Decay', where='post')
-    axs[2].step(res.index, res[f'IND0_timeDR_Delta'], label='Research Decay', where='post')
     axs[2].legend(loc='upper right')
 
+    axs[3].step(res.index, res[f'{pred}_RVDelta'], label='Research rawVal', where='post')
     axs[3].step(df.index, df['rawVal'], label='Prod rawVal', where='post')
-    axs[3].step(res.index, res[f'IND0_RVDelta'], label='Research rawVal', where='post')
     axs[3].legend(loc='upper right')
 
-    axs[4].step(df.index, df['smoothVal'], label='Prod smoothVal', where='post')
     axs[4].step(res.index, res[f'{name}_Smooth'], label='Research smoothVal', where='post')
+    axs[4].step(df.index, df['smoothVal'], label='Prod smoothVal', where='post')
     axs[4].legend(loc='upper right')
-    axs[5].step(df.index, df['zVal'], label='Prod zVal', where='post')
     axs[5].step(res.index, res[f'{name}_Z'], label='Research zVal', where='post')
+    axs[5].step(df.index, df['zVal'], label='Prod zVal', where='post')
     axs[5].legend(loc='upper right')
-    axs[6].step(df.index, df['vol'], label='Prod vol', where='post')
     axs[6].step(res.index, res[f'{name}_Std'], label='Research vol', where='post')
+    axs[6].step(df.index, df['vol'], label='Prod vol', where='post')
     axs[6].legend(loc='upper right')
-    axs[7].step(df.index, df[ft], label='Prod Feat', where='post')
     axs[7].step(res.index, res[ft], label='Research Feat', where='post')
+    axs[7].step(df.index, df[ft], label='Prod Feat', where='post')
     axs[7].legend(loc='upper right')
     fig.show()
     return

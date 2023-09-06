@@ -26,6 +26,9 @@ print(
     f'Tick2Trade Mean: {round(statistics.mean(runTimes), 2)} ms. Max: {round(max(runTimes), 2)} ms. Min: {round(min(runTimes), 2)}')
 prodLogs = recon.processLogs(fitModels)
 
-recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
-recon.plotPnLs(prodLogs, researchFeeds, cfg)
+#recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
+#recon.plotPnLs(prodLogs, researchFeeds, cfg)
 #recon.reconcile(prodLogs, researchFeeds, fitModels)
+
+sym = 'ZL0'
+print(prodLogs[sym]['CL0'].iloc[np.where(prodLogs[sym]['CL0']['CL0_contractChange']==True)])
