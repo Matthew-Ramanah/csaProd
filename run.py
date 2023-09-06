@@ -13,17 +13,19 @@ researchFeeds = recon.constructTimeDeltas(fitModels, researchFeeds)
 prodFeed = md.loadSyntheticMD(cfg)
 prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=200000)
 lg.info("Feed Loaded.")
-t0 = time.time()
+runTimes = []
 for i, md in prodFeed.iterrows():
+    t0 = time.time()
     for sym in fitModels:
         fitModels[sym].mdUpdate(md)
 
-        # Generate trades -> Apply tradeSizeCap from cfg here
-
-t1 = time.time()
-lg.info(f"Processed {len(prodFeed):,} Updates with mean time: {round(1000 * (t1 - t0) / len(prodFeed), 2)} ms")
+    t1 = time.time()
+    runTimes.append(1000 * (t1 - t0))
+lg.info(f"Processed {len(prodFeed):,} Updates")
+print(
+    f'Tick2Trade Mean: {round(statistics.mean(runTimes), 2)} ms. Max: {round(max(runTimes), 2)} ms. Min: {round(min(runTimes), 2)}')
 prodLogs = recon.processLogs(fitModels)
-recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
-# recon.reconcile(prodLogs, researchFeeds, fitModels)
 
-# print(prodLogs['ZL0']['ZL0_IND0_RV_timeDR_146'].tail(20))
+recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
+recon.plotPnLs(prodLogs, researchFeeds, cfg)
+#recon.reconcile(prodLogs, researchFeeds, fitModels)

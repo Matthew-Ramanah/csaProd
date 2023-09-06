@@ -59,6 +59,9 @@ class assetModel():
             self.checkifSeeded()
 
         elif self.target.mdhSane(md, self.target.sym, self.target.spreadCutoff):
+            self.target.modelUpdate()
+            for pred in self.predictors:
+                self.predictors[pred].modelUpdate()
             self.target.updateVolatility()
             self.updateAlphas()
             self.calcHoldings()
@@ -177,14 +180,12 @@ class assetModel():
                 frontSym = utility.findBasisFrontSym(pred)
                 if ftType == 'Basis':
                     self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed,
-                                                        smoothFactor,
-                                                        smoothSeed, volHL, volSeed, ncc, False,
+                                                        smoothFactor, smoothSeed, volHL, volSeed, ncc, False,
                                                         self.predictors[frontSym])
 
                 elif ftType == 'AccBasis':
                     self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed,
-                                                        smoothFactor,
-                                                        smoothSeed, volHL, volSeed, ncc, True,
+                                                        smoothFactor, smoothSeed, volHL, volSeed, ncc, True,
                                                         self.predictors[frontSym])
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
@@ -194,6 +195,6 @@ class assetModel():
     def updateLog(self):
         thisLog = [self.target.timestamp, self.target.contractChange, self.target.bidPrice, self.target.askPrice,
                    self.target.midPrice, self.target.timeDelta, self.target.vol, self.target.annPctChange,
-                   self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume]
+                   self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume, self.buyCost, self.sellCost]
         self.log.append(thisLog)
         return

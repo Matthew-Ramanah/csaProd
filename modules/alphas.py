@@ -74,7 +74,7 @@ class alpha:
         return
 
     def updateLog(self):
-        thisLog = [self.name, self.target.timestamp, self.rawVal, self.smoothVal, self.zVal, self.vol, self.featVal]
+        thisLog = [self.target.timestamp, self.decay, self.rawVal, self.smoothVal, self.zVal, self.vol, self.featVal]
         self.log.append(thisLog)
         return
 
@@ -85,7 +85,14 @@ class move(alpha):
         self.log = []
 
     def calcRawVal(self):
-        self.rawVal = self.target.annPctChange
+        self.rawVal = self.predictor.annPctChange
+        return
+
+    def decayCalc(self):
+        """
+        May get overloaded
+        """
+        self.decay = self.predictor.timeDelta
         return
 
 
@@ -129,9 +136,16 @@ class rv(alpha):
 
     def calcRawVal(self):
         thisRatio = self.target.midPrice / self.predictor.midPrice
-        if (self.target.contractChange) | (self.predictor.contractChange) | (self.predictor.midPrice == 0):
+        if (self.target.contractChange) | (self.predictor.contractChange):
             self.rawVal = 0
         else:
             self.rawVal = thisRatio - self.lastRatio
         self.lastRatio = thisRatio
+        return
+
+    def decayCalc(self):
+        """
+        May get overloaded
+        """
+        self.decay = self.predictor.timeDelta
         return

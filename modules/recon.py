@@ -1,4 +1,7 @@
+import numpy as np
+
 from pyConfig import *
+from modules import utility
 
 
 def processLogs(fitModels):
@@ -10,11 +13,11 @@ def processLogs(fitModels):
                                                    f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
                                                    f'Volatility_{sym}_timeDR', f'annPctChange_{sym}_timeDR',
                                                    f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings',
-                                                   f'{sym}_Trades']).set_index(
+                                                   f'{sym}_Trades', f'{sym}_BuyCost', f'{sym}_SellCost']).set_index(
             'lastTS')
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
-                                           columns=[name, 'lastTS', 'rawVal', 'smoothVal', 'zVal', 'vol',
+                                           columns=['lastTS', 'decay', 'rawVal', 'smoothVal', 'zVal', 'vol',
                                                     f'feat_{name}']).set_index('lastTS')
         for pred in fitModels[sym].predictors:
             logs[sym][pred] = pd.DataFrame(fitModels[sym].predictors[pred].log,
@@ -68,7 +71,8 @@ def reconcile(prodLogs, researchFeeds, fitModels):
 def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
     for sym in fitModels:
         fts = cfg['fitParams'][sym]['feats']
-        reconCols = [f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR', f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
+        reconCols = [f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR', f'{sym}_CumAlpha', f'{sym}_BasketHoldings',
+                     f'{sym}_Trades']
         prod = prodLogs[sym]['model']
 
         fig, axs = plt.subplots(len(reconCols) + len(fitModels[sym].predictors) + len(fts), sharex='all')
@@ -99,4 +103,84 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
             axs[i + j + k + 2].axhline(y=0, color='black', linestyle='--')
             axs[i + j + k + 2].legend(loc='upper right')
         fig.show()
+    return
+
+
+def calcPnLs(prodLogs, researchFeeds, cfg):
+    pnls = pd.DataFrame(index=researchFeeds['recon'].index)
+    pnls['TradingProfit'] = np.zeros(len(pnls))
+    refData = utility.loadRefData()
+    for sym in prodLogs:
+        tickScaler = refData['tickValue'][sym] / float(cfg['fitParams'][sym]['tickSizes'][sym])
+        log = prodLogs[sym]['model']
+        trades = log[f'{sym}_Trades']
+        lastHoldings = log[f'{sym}_BasketHoldings'].shift(1).fillna(0)
+        mpDelta = log[f'{sym}_midPrice'].diff().fillna(0)
+        uncostedPnl = np.cumsum(lastHoldings * tickScaler * mpDelta)
+        tCosts = np.cumsum(tickScaler * np.abs(trades) * np.where(trades > 0, log[f'{sym}_BuyCost'],
+                                                                  np.where(trades < 0,
+                                                                           log[f'{sym}_SellCost'], 0)))
+        fees = np.cumsum(np.abs(trades) * refData['feesPerLot'][sym])
+        pnls[f'{sym}_TradingProfit'] = uncostedPnl - tCosts - fees
+        pnls['TradingProfit'] += pnls[f'{sym}_TradingProfit']
+    return pnls.ffill().fillna(0)
+
+
+def plotPnLs(prodLogs, researchFeeds, cfg):
+    pnls = calcPnLs(prodLogs, researchFeeds, cfg)
+    fig, axs = plt.subplots(len(prodLogs) + 1, sharex='all')
+    fig.suptitle(f"PnL Reconciliation")
+    axs[0].step(researchFeeds['recon'].index, researchFeeds['recon']['TradingProfit'], label=f'Research: TradingProfit',
+                where='post')
+    axs[0].step(pnls.index, pnls[f'TradingProfit'], label=f'Prod: TradingProfit', where='post')
+    axs[0].legend(loc='upper right')
+    axs[0].axhline(y=0, color='black', linestyle='--')
+    for i, sym in enumerate(prodLogs):
+        researchProfit = researchFeeds['recon'][f'{sym}_CostedPnl'] - researchFeeds['recon'][f'{sym}_Fees']
+        axs[i + 1].step(researchProfit.index, researchProfit, label=f'Research: {sym}_TradingProfit', where='post')
+        axs[i + 1].step(pnls.index, pnls[f'{sym}_TradingProfit'], label=f'Prod: {sym}_TradingProfit', where='post')
+        axs[i + 1].legend(loc='upper right')
+        axs[i + 1].axhline(y=0, color='black', linestyle='--')
+    fig.show()
+    return
+
+
+def reconRVAlpha(researchFeeds, prodLogs):
+    name = 'ZL0_IND0_RV_timeDR_146'
+    ft = f'feat_{name}'
+    sym = 'ZL0'
+    res = researchFeeds[sym]
+    df = prodLogs[sym][name]
+
+    fig, axs = plt.subplots(8, sharex='all')
+    fig.suptitle(f"{ft} Reconciliation")
+    axs[0].step(prodLogs[sym]['model'].index, prodLogs[sym]['model']['ZL0_midPrice'], label='Prod ZL0_midPrice',
+                where='post')
+    axs[0].step(res.index, res[f'ZL0_midPrice'], label='Research ZL0_midPrice', where='post')
+    axs[0].legend(loc='upper right')
+    axs[1].step(prodLogs[sym]['IND0'].index, prodLogs[sym]['IND0']['IND0_midPrice'], label='Prod IND0_midPrice',
+                where='post')
+    axs[1].step(res.index, res[f'IND0_midPrice'], label='Research IND0_midPrice', where='post')
+    axs[1].legend(loc='upper right')
+    axs[2].step(df.index, df['decay'], label='Prod Decay', where='post')
+    axs[2].step(res.index, res[f'IND0_timeDR_Delta'], label='Research Decay', where='post')
+    axs[2].legend(loc='upper right')
+
+    axs[3].step(df.index, df['rawVal'], label='Prod rawVal', where='post')
+    axs[3].step(res.index, res[f'IND0_RVDelta'], label='Research rawVal', where='post')
+    axs[3].legend(loc='upper right')
+
+    axs[4].step(df.index, df['smoothVal'], label='Prod smoothVal', where='post')
+    axs[4].step(res.index, res[f'{name}_Smooth'], label='Research smoothVal', where='post')
+    axs[4].legend(loc='upper right')
+    axs[5].step(df.index, df['zVal'], label='Prod zVal', where='post')
+    axs[5].step(res.index, res[f'{name}_Z'], label='Research zVal', where='post')
+    axs[5].legend(loc='upper right')
+    axs[6].step(df.index, df['vol'], label='Prod vol', where='post')
+    axs[6].step(res.index, res[f'{name}_Std'], label='Research vol', where='post')
+    axs[6].legend(loc='upper right')
+    axs[7].step(df.index, df[ft], label='Prod Feat', where='post')
+    axs[7].step(res.index, res[ft], label='Research Feat', where='post')
+    axs[7].legend(loc='upper right')
+    fig.show()
     return

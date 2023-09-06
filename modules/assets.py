@@ -87,14 +87,15 @@ class asset:
     def mdUpdate(self, md):
         if not self.mdhSane(md, self.sym, self.spreadCutoff):
             return
-        self.updateContractState(md)
-
         if not self.initialised:
             self.firstSaneUpdate(md)
-        else:
-            self.contractChange = self.isContractChange()
-            self.decayCalc()
-            self.annualPctChangeCalc()
+        self.updateContractState(md)
+        return
+
+    def modelUpdate(self):
+        self.contractChange = self.isContractChange()
+        self.decayCalc()
+        self.annualPctChangeCalc()
         self.updateLog()
         return
 

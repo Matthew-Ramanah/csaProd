@@ -51,3 +51,9 @@ def constructSeeds(researchFeeds, cfg):
 
 def findBasisFrontSym(backSym):
     return backSym.replace('1', '0')
+
+
+def loadRefData():
+    refData = pd.read_csv(f'{root}asaRefData.csv')
+    return refData.set_index('symbol')
+
