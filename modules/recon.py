@@ -13,7 +13,8 @@ def processLogs(fitModels):
                                                    f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
                                                    f'Volatility_{sym}_timeDR', f'annPctChange_{sym}_timeDR',
                                                    f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings',
-                                                   f'{sym}_Trades', f'{sym}_BuyCost', f'{sym}_SellCost']).set_index(
+                                                   f'{sym}_Trades', f'{sym}_BuyCost', f'{sym}_SellCost',
+                                                   f'{sym}_maxTradeSize']).set_index(
             'lastTS')
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
@@ -72,7 +73,7 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
     for sym in fitModels:
         fts = cfg['fitParams'][sym]['feats']
         reconCols = [f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR', f'{sym}_CumAlpha', f'{sym}_BasketHoldings',
-                     f'{sym}_Trades']
+                     f'{sym}_maxTradeSize']
         prod = prodLogs[sym]['model']
 
         fig, axs = plt.subplots(len(reconCols) + len(fitModels[sym].predictors) + len(fts), sharex='all')

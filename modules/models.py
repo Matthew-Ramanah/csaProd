@@ -195,6 +195,7 @@ class assetModel():
     def updateLog(self):
         thisLog = [self.target.timestamp, self.target.contractChange, self.target.bidPrice, self.target.askPrice,
                    self.target.midPrice, self.target.timeDelta, self.target.vol, self.target.annPctChange,
-                   self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume, self.buyCost, self.sellCost]
+                   self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume, self.buyCost, self.sellCost,
+                   self.maxTradeSize]
         self.log.append(thisLog)
         return
