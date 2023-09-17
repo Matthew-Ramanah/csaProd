@@ -3,6 +3,9 @@ root = "C:/Users/matth/PycharmProjects/asaProd/"
 rawDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/raw/minutely/quotes/"
 proDataRoot = "C:/Users/matth/OneDrive/Documents/AlphaGrep/data/processed/"
 
+liveRoot = "/home/mramanah/asaProd/"
+barPath = '/data/misc/include/pybarsubscriber'
+
 # Constants
 signalCap = 3
 tradingDays = 252
@@ -11,7 +14,7 @@ minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
 
 # Run-time options
-cfg_file = root + "config/recon.json"
+cfg_file = liveRoot + "config/recon.json"
 
 # Global Packages
 import pandas as pd
