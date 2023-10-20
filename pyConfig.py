@@ -14,7 +14,7 @@ minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
 
 # Run-time options
-cfg_file = liveRoot + "config/recon.json"
+cfg_file = root + "config/recon.json"
 
 # Global Packages
 import pandas as pd
