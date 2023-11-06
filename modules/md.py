@@ -25,7 +25,6 @@ def loadRawData(sym):
 
 
 def loadSyntheticMD(cfg):
-    ts = pd.Timestamp('2023-01-27 09:50:00+1100', tz='Australia/Sydney')
     md = pd.DataFrame()
     for sym in cfg['predictors']:
         raw = loadRawData(sym)
