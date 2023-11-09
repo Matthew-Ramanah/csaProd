@@ -71,7 +71,7 @@ class asset:
         if self.contractChange:
             self.timeDelta = 0
         else:
-            self.timeDelta = (self.timestamp - self.lastTS).seconds / self.aggFreq
+            self.timeDelta = 1  # (self.timestamp - self.lastTS).seconds / self.aggFreq
         self.lastTS = self.timestamp
         return
 
