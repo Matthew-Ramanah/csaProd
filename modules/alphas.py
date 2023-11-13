@@ -3,13 +3,13 @@ from modules import utility
 
 
 class alpha:
-    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel):
         self.target = target
         self.predictor = predictor
         self.name = name
-        self.zInvTau = np.float64(1 / (zHL * logTwo))
+        self.zInvTau = np.float64(1 / (scoreFactor * hl * logTwo))
         self.zVal = zSeed
-        self.smoothInvTau = np.float64(1 / (smoothFactor * zHL * logTwo))
+        self.smoothInvTau = np.float64(1 / (hl * logTwo))
         self.smoothVal = smoothSeed
         self.lastSmoothVal = smoothSeed
         self.volInvTau = np.float64(1 / (volHL * logTwo))
@@ -45,7 +45,8 @@ class alpha:
         """
         Should always get overloaded
         """
-        lg.info(f"{self.name} Has No RawVal Calc")
+        lg.info(f"{self.name} Has No RawVal Calc, Keeping it at 0")
+        self.rawVal = 0
         return
 
     def updateSmoothVal(self):
@@ -80,12 +81,12 @@ class alpha:
 
 
 class move(alpha):
-    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
-        super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel):
+        super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
         self.log = []
 
     def calcRawVal(self):
-        self.rawVal = self.predictor.annPctChange
+        self.rawVal = self.predictor.midDelta
         return
 
     def decayCalc(self):
@@ -97,9 +98,9 @@ class move(alpha):
 
 
 class basis(alpha):
-    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel,
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel,
                  front):
-        super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
+        super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
         self.front = front
         self.back = predictor
         self.log = []
@@ -125,22 +126,17 @@ class basis(alpha):
         return
 
 
-class rv(alpha):
-    def __init__(self, target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel):
-        super().__init__(target, predictor, name, zHL, zSeed, smoothFactor, smoothSeed, volHL, volSeed, ncc, accel)
+class vsr(alpha):
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel):
+        super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
         self.log = []
 
     def firstSaneUpdate(self):
-        self.lastRatio = self.target.midPrice / self.predictor.midPrice
+        self.rawVal = 0
         return
 
     def calcRawVal(self):
-        thisRatio = self.target.midPrice / self.predictor.midPrice
-        if (self.target.contractChange) | (self.predictor.contractChange):
-            self.rawVal = 0
-        else:
-            self.rawVal = thisRatio - self.lastRatio
-        self.lastRatio = thisRatio
+        self.rawVal = self.predictor.midDelta / self.predictor.vol - self.target.midDelta / self.target.vol
         return
 
     def decayCalc(self):

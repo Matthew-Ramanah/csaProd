@@ -55,7 +55,7 @@ class asset:
         self.initialised = True
         self.contractChange = True
         self.timeDelta = 0
-        self.annPctChange = 0
+        self.midDelta = 0
         self.lastMid = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
         self.lastTS = md[f'{self.sym}_end_ts']
         self.lastSymbol = md[f'{self.sym}_symbol']
@@ -75,7 +75,18 @@ class asset:
         self.lastTS = self.timestamp
         return
 
-    def annualPctChangeCalc(self):
+    def midDeltaCalc(self):
+        if self.contractChange:
+            self.midDelta = 0
+        else:
+            self.midDelta = self.midPrice - self.lastMid
+        self.lastMid = self.midPrice
+        return
+
+    def _annualPctChangeCalc(self):
+        """
+        Deprecated for now
+        """
         if (self.timeDelta == 0) | (self.contractChange):
             self.annPctChange = 0
         else:
@@ -95,13 +106,13 @@ class asset:
     def modelUpdate(self):
         self.contractChange = self.isContractChange()
         self.decayCalc()
-        self.annualPctChangeCalc()
+        self.midDeltaCalc()
         self.updateLog()
         return
 
     def updateLog(self):
         thisLog = [self.symbol, self.timestamp, self.contractChange, self.bidPrice, self.askPrice, self.midPrice,
-                   self.timeDelta, self.annPctChange]
+                   self.timeDelta, self.midDelta]
         self.log.append(thisLog)
         return
 
@@ -110,12 +121,12 @@ class traded(asset):
     def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds):
         super(traded, self).__init__(sym, cfg['inputParams']['aggFreq'], tickSize, spreadCutoff)
         self.midPrice = seeds[f'{sym}_midPrice']
-        self.vol = seeds[f'Volatility_{sym}_timeDR']
+        self.vol = seeds[f'Volatility_{sym}']
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
 
     def updateVolatility(self):
         self.vol = np.sqrt(
-            utility.emaUpdate(self.vol ** 2, (self.annPctChange) ** 2, self.timeDelta, self.volInvTau))
+            utility.emaUpdate(self.vol ** 2, (self.midDelta) ** 2, self.timeDelta, self.volInvTau))
         return
 
     def updateContractState(self, md):

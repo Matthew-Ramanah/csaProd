@@ -9,9 +9,10 @@ tradingDays = 252
 daysPerYear = 365
 minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
+scoreFactor = 10
 
 # Run-time options
-cfg_file = root + "config/allHourly.json"
+cfg_file = root + "config/afbiRecon.json"
 
 # Global Packages
 import pandas as pd

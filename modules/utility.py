@@ -36,6 +36,14 @@ def initialiseModels(cfg, seeds):
     return fitModels
 
 
+def findFeatPred(ft, target):
+    partitions = ft.replace(f'feat_{target}_', '').split('_')
+    if len(partitions) == 4:
+        return partitions[0]
+    else:
+        return f'{partitions[0]}_{partitions[1]}'
+
+
 def constructSeeds(researchFeeds, cfg):
     seeds = dict(researchFeeds['recon'].iloc[0])
     seeds['lastTS'] = researchFeeds['recon'].iloc[0].name
@@ -56,4 +64,3 @@ def findBasisFrontSym(backSym):
 def loadRefData():
     refData = pd.read_csv(f'{root}asaRefData.csv')
     return refData.set_index('symbol')
-

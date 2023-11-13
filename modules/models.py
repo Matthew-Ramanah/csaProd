@@ -12,17 +12,18 @@ class assetModel():
         # Params
         totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
         notionalPerLot = self.calcNotionalPerLot(refData, targetSym, seeds[f'{targetSym}_midPrice'])
-        self.maxLots = self.calcMaxLots(totalCapital, cfg['fitParams']['basket'][f'{targetSym}_notionalAlloc'],
+        self.maxLots = self.calcMaxLots(totalCapital, cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}'],
                                         notionalPerLot)
         self.kappa = params['alphaWeights']['kappa']
-        self.hScaler = cfg['fitParams']['hScalers'][targetSym]
+        self.hScaler = cfg['fitParams'][targetSym]['hScaler']
         self.alphaWeights = params['alphaWeights']
-        self.tradeSizeCap = cfg['fitParams']['tradeSizeCaps'][targetSym]
+        self.tradeSizeCap = cfg['fitParams']['basket']['tradeSizeCaps'][targetSym]
         self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
         self.pRate = cfg['inputParams']['basket']['execution']['pRate']
 
         # Seeds
         self.holdings = initHoldings
+        lg.info(f'{targetSym} {self.maxLots} {self.hScaler} {initHoldings}')
         self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
 
         # Construct Predictors & Alpha Objects
@@ -34,8 +35,8 @@ class assetModel():
         return int(totalCapital * notionalAlloc / notionalPerLot)
 
     @staticmethod
-    def calcNotionalPerLot(refData, target, midPrice):
-        return refData['notionalMultiplier'][target] * midPrice
+    def calcNotionalPerLot(refData, target, midPrice, fxRate):
+        return refData['notionalMultiplier'][target] * midPrice / fxRate
 
     def checkifSeeded(self):
         for pred in self.predictors:
@@ -130,14 +131,14 @@ class assetModel():
     def findPredsNeeded(targetSym, feats):
         predsNeeded = [targetSym]
         for ft in feats:
-            type = ft.split('_')[3]
-            if type in ['Move', 'Acc', 'RV', 'AccRV']:
-                predsNeeded.append(ft.split('_')[2])
+            ftType = ft.split('_')[-3]
+            pred = utility.findFeatPred(ft, targetSym)
+            if ftType in ['Move', 'VSR']:
+                predsNeeded.append(pred)
 
-            elif type in ['Basis', 'AccBasis']:
-                backSym = ft.split('_')[2]
-                predsNeeded.append(backSym)
-                predsNeeded.append(utility.findBasisFrontSym(backSym))
+            elif ftType == 'Basis':
+                predsNeeded.append(pred)
+                predsNeeded.append(utility.findBasisFrontSym(pred))
 
         return predsNeeded
 
@@ -154,10 +155,9 @@ class assetModel():
         self.alphaDict = {}
         for ft in params['feats']:
             name = ft.replace('feat_', '')
-            ftType = ft.split('_')[3]
-            pred = ft.split('_')[2]
-            zHL = int(ft.split('_')[-1])
-            smoothFactor = cfg['inputParams']['feats']['smoothFactor']
+            ftType = ft.split('_')[-3]
+            pred = utility.findFeatPred(ft, self.target.sym)
+            hl = int(ft.split('_')[-1])
             volHL = cfg['inputParams']['volHL']
             zSeed = seeds[f'{name}_zSeed']
             smoothSeed = seeds[f'{name}_smoothSeed']
@@ -165,28 +165,16 @@ class assetModel():
             ncc = params['NCCs'][ft]
 
             if ftType == 'Move':
-                self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                   smoothSeed, volHL, volSeed, ncc, False)
-            elif ftType == 'Acc':
-                self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                   smoothSeed, volHL, volSeed, ncc, True)
-            elif ftType == 'RV':
-                self.alphaDict[name] = alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                 smoothSeed, volHL, volSeed, ncc, False)
-            elif ftType == 'AccRV':
-                self.alphaDict[name] = alphas.rv(self.target, self.predictors[pred], name, zHL, zSeed, smoothFactor,
-                                                 smoothSeed, volHL, volSeed, ncc, True)
-            elif "Basis" in ftType:
+                self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
+                                                   volHL, volSeed, ncc, False)
+            elif ftType == 'VSR':
+                self.alphaDict[name] = alphas.vsr(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
+                                                  volHL, volSeed, ncc, False)
+            elif ftType == "Basis":
                 frontSym = utility.findBasisFrontSym(pred)
-                if ftType == 'Basis':
-                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed,
-                                                        smoothFactor, smoothSeed, volHL, volSeed, ncc, False,
-                                                        self.predictors[frontSym])
-
-                elif ftType == 'AccBasis':
-                    self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, zHL, zSeed,
-                                                        smoothFactor, smoothSeed, volHL, volSeed, ncc, True,
-                                                        self.predictors[frontSym])
+                self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, hl, zSeed,
+                                                    smoothSeed, volHL, volSeed, ncc, False,
+                                                    self.predictors[frontSym])
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 
