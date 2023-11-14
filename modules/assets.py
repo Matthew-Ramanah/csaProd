@@ -3,13 +3,16 @@ from modules import utility
 
 
 class asset:
-    def __init__(self, sym, aggFreq, tickSize, spreadCutoff):
+    def __init__(self, sym, aggFreq, tickSize, spreadCutoff, volHL, seeds):
         self.sym = sym
         self.tickSize = float(tickSize)
         self.spreadCutoff = spreadCutoff
         self.aggFreq = aggFreq
         self.initialised = False
         self.log = []
+        self.midPrice = seeds[f'{sym}_midPrice']
+        self.vol = seeds[f'Volatility_{sym}']
+        self.volInvTau = np.float64(1 / (volHL * logTwo))
 
     @staticmethod
     def mdhSane(md, sym, spreadCutoff):
@@ -116,18 +119,16 @@ class asset:
         self.log.append(thisLog)
         return
 
-
-class traded(asset):
-    def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds):
-        super(traded, self).__init__(sym, cfg['inputParams']['aggFreq'], tickSize, spreadCutoff)
-        self.midPrice = seeds[f'{sym}_midPrice']
-        self.vol = seeds[f'Volatility_{sym}']
-        self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
-
     def updateVolatility(self):
         self.vol = np.sqrt(
             utility.emaUpdate(self.vol ** 2, (self.midDelta) ** 2, self.timeDelta, self.volInvTau))
         return
+
+
+class traded(asset):
+    def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds):
+        super(traded, self).__init__(sym, cfg['inputParams']['aggFreq'], tickSize, spreadCutoff,
+                                     cfg['inputParams']['volHL'], seeds)
 
     def updateContractState(self, md):
         super().updateContractState(md)

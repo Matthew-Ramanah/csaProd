@@ -45,15 +45,29 @@ def findFeatPred(ft, target):
 
 
 def constructSeeds(researchFeeds, cfg):
-    seeds = dict(researchFeeds['recon'].iloc[0])
-    seeds['lastTS'] = researchFeeds['recon'].iloc[0].name
-
+    # seeds = dict(researchFeeds['recon'].iloc[0])
+    # seeds['lastTS'] = researchFeeds['recon'].iloc[0].name
+    seeds = {}
     for target in cfg['targets']:
+        seeds[target] = {}
+        seeds[target] = {f'{target}_midPrice': researchFeeds[target][f'{target}_midPrice'].iloc[0],
+                         f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[0]}
+
         for ft in cfg['fitParams'][target]['feats']:
+            pred = findFeatPred(ft, target)
+            seeds[target][f'{pred}_midPrice'] = researchFeeds[target][f'{pred}_midPrice'].iloc[0]
+            seeds[target][f'Volatility_{pred}'] = researchFeeds[target][f'Volatility_{pred}'].iloc[0]
+
+            ftType = ft.split('_')[-3]
+            if ftType == "Basis":
+                frontSym = findBasisFrontSym(pred)
+                seeds[target][f'{frontSym}_midPrice'] = researchFeeds[target][f'{frontSym}_midPrice'].iloc[0]
+                seeds[target][f'Volatility_{frontSym}'] = researchFeeds[target][f'Volatility_{frontSym}'].iloc[0]
+
             name = ft.replace('feat_', '')
-            seeds[f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[0]
-            seeds[f'{name}_zSeed'] = researchFeeds[target][f'{name}_Z'].iloc[0]
-            seeds[f'{name}_volSeed'] = researchFeeds[target][f'{name}_Std'].iloc[0]
+            seeds[target][f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[0]
+            seeds[target][f'{name}_zSeed'] = researchFeeds[target][f'{name}_Z'].iloc[0]
+            seeds[target][f'{name}_volSeed'] = researchFeeds[target][f'{name}_Std'].iloc[0]
     return seeds
 
 

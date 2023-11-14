@@ -11,7 +11,7 @@ researchFeeds = recon.constructTimeDeltas(fitModels, researchFeeds)
 
 # Replace this with the live feed in production
 prodFeed = md.loadSyntheticMD(cfg)
-prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=5000)
+prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=100)
 lg.info("Feed Loaded.")
 runTimes = []
 for i, md in prodFeed.iterrows():
@@ -30,5 +30,3 @@ recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
 recon.plotPnLs(prodLogs, researchFeeds, cfg)
 #recon.reconcile(prodLogs, researchFeeds, fitModels)
 
-sym = 'ZL0'
-print(prodLogs[sym]['CL0'].iloc[np.where(prodLogs[sym]['CL0']['CL0_contractChange']==True)])

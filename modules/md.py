@@ -21,6 +21,7 @@ def loadRawData(sym):
     exch = findExch(sym)
     raw = pd.read_hdf(f"{rawDataRoot}{exch}/{sym}.h5", key=sym)
     raw = raw.set_index('end_ts', drop=False)
+    raw = raw[~raw.index.duplicated(keep='first')]
     return addPrefix(raw, sym)
 
 

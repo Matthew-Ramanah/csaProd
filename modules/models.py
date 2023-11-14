@@ -5,13 +5,14 @@ from modules import utility, alphas, assets
 class assetModel():
     def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
-                                    seeds)
+                                    seeds[targetSym])
         self.seeding = True
         self.log = []
 
         # Params
         totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
-        notionalPerLot = self.calcNotionalPerLot(refData, targetSym, seeds[f'{targetSym}_midPrice'])
+        notionalPerLot = self.calcNotionalPerLot(refData, targetSym, seeds[targetSym][f'{targetSym}_midPrice'],
+                                                 fxRate=1)
         self.maxLots = self.calcMaxLots(totalCapital, cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}'],
                                         notionalPerLot)
         self.kappa = params['alphaWeights']['kappa']
@@ -23,11 +24,11 @@ class assetModel():
 
         # Seeds
         self.holdings = initHoldings
-        lg.info(f'{targetSym} {self.maxLots} {self.hScaler} {initHoldings}')
+        lg.info(f'{targetSym} maxLots: {self.maxLots}')
         self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
 
         # Construct Predictors & Alpha Objects
-        self.initialisePreds(cfg, params)
+        self.initialisePreds(cfg, params, seeds)
         self.initialiseAlphas(cfg, params, seeds)
 
     @staticmethod
@@ -113,6 +114,8 @@ class assetModel():
 
     @staticmethod
     def convertHoldingsToHOpt(holdings, maxLots, hScaler):
+        if maxLots == 0:
+            return 0
         return np.clip(holdings / maxLots, -1, 1) * hScaler
 
     @staticmethod
@@ -142,13 +145,14 @@ class assetModel():
 
         return predsNeeded
 
-    def initialisePreds(self, cfg, params):
+    def initialisePreds(self, cfg, params, seeds):
         self.predictors = {}
         predsNeeded = self.findPredsNeeded(self.target.sym, params['feats'])
 
         for pred in list(set(predsNeeded)):
             self.predictors[pred] = assets.asset(pred, cfg['inputParams']['aggFreq'], params['tickSizes'][pred],
-                                                 params['spreadCutoff'][pred])
+                                                 params['spreadCutoff'][pred], cfg['inputParams']['volHL'],
+                                                 seeds[self.target.sym])
         return
 
     def initialiseAlphas(self, cfg, params, seeds):
@@ -159,9 +163,9 @@ class assetModel():
             pred = utility.findFeatPred(ft, self.target.sym)
             hl = int(ft.split('_')[-1])
             volHL = cfg['inputParams']['volHL']
-            zSeed = seeds[f'{name}_zSeed']
-            smoothSeed = seeds[f'{name}_smoothSeed']
-            volSeed = seeds[f'{name}_volSeed']
+            zSeed = seeds[self.target.sym][f'{name}_zSeed']
+            smoothSeed = seeds[self.target.sym][f'{name}_smoothSeed']
+            volSeed = seeds[self.target.sym][f'{name}_volSeed']
             ncc = params['NCCs'][ft]
 
             if ftType == 'Move':
@@ -182,7 +186,7 @@ class assetModel():
 
     def updateLog(self):
         thisLog = [self.target.timestamp, self.target.contractChange, self.target.bidPrice, self.target.askPrice,
-                   self.target.midPrice, self.target.timeDelta, self.target.vol, self.target.annPctChange,
+                   self.target.midPrice, self.target.timeDelta, self.target.vol, self.target.midDelta,
                    self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume, self.buyCost, self.sellCost,
                    self.maxTradeSize]
         self.log.append(thisLog)

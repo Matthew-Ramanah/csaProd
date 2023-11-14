@@ -11,10 +11,9 @@ def processLogs(fitModels):
         logs[sym]['model'] = pd.DataFrame(fitModels[sym].log,
                                           columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_bidPrice',
                                                    f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
-                                                   f'Volatility_{sym}_timeDR', f'annPctChange_{sym}_timeDR',
-                                                   f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings',
-                                                   f'{sym}_Trades', f'{sym}_BuyCost', f'{sym}_SellCost',
-                                                   f'{sym}_maxTradeSize']).set_index(
+                                                   f'Volatility_{sym}', f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt',
+                                                   f'{sym}_BasketHoldings', f'{sym}_Trades', f'{sym}_BuyCost',
+                                                   f'{sym}_SellCost', f'{sym}_maxTradeSize']).set_index(
             'lastTS')
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
@@ -72,37 +71,30 @@ def reconcile(prodLogs, researchFeeds, fitModels):
 def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
     for sym in fitModels:
         fts = cfg['fitParams'][sym]['feats']
-        reconCols = [f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR', f'{sym}_CumAlpha', f'{sym}_BasketHoldings',
-                     f'{sym}_maxTradeSize']
+        reconCols = [f'{sym}_BasketHoldings', f'Volatility_{sym}']
         prod = prodLogs[sym]['model']
 
-        fig, axs = plt.subplots(len(reconCols) + len(fitModels[sym].predictors) + len(fts), sharex='all')
+        fig, axs = plt.subplots(len(reconCols) + len(fts) + 1, sharex='all')
         fig.suptitle(f"{sym} Reconciliation")
-        # Plot predictors
-        for i, pred in enumerate(fitModels[sym].predictors):
-            axs[i].step(researchFeeds[sym].index, researchFeeds[sym][f'{pred}_midPrice'],
-                        label=f'Research: {pred}_midPrice', where='post')
-            axs[i].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_midPrice'],
-                        label=f'Prod: {pred}_midPrice', where='post')
-            axs[i].legend(loc='upper right')
-        fig.show()
+        axs[0].step(researchFeeds[sym].index, researchFeeds[sym][f'{sym}_midPrice'],
+                    label=f'Research: {sym}_midPrice', where='post')
 
         # Plot Model
-        for j, col in enumerate(reconCols):
-            axs[i + j + 1].step(researchFeeds['recon'].index, researchFeeds['recon'][col], label=f'Research: {col}',
-                                where='post')
-            axs[i + j + 1].step(prod.index, prod[col], label=f'Prod: {col}', where='post')
-            axs[i + j + 1].legend(loc='upper right')
+        for i, col in enumerate(reconCols):
+            axs[i + 1].step(researchFeeds['recon'].index, researchFeeds['recon'][col], label=f'Research: {col}',
+                            where='post')
+            axs[i + 1].step(prod.index, prod[col], label=f'Prod: {col}', where='post')
+            axs[i + 1].legend(loc='upper right')
 
         # Plot Alphas
-        for k, ft in enumerate(fts):
+        for j, ft in enumerate(fts):
             name = ft.replace('feat_', '')
-            axs[i + j + k + 2].step(researchFeeds[sym].index, researchFeeds[sym][ft], label=f'Research: {ft}',
-                                    where='post')
-            axs[i + j + k + 2].step(prodLogs[sym][name].index, prodLogs[sym][name][ft], label=f'Prod: {ft}',
-                                    where='post')
-            axs[i + j + k + 2].axhline(y=0, color='black', linestyle='--')
-            axs[i + j + k + 2].legend(loc='upper right')
+            axs[i + j + 2].step(researchFeeds[sym].index, researchFeeds[sym][ft], label=f'Research: {ft}',
+                                where='post')
+            axs[i + j + 2].step(prodLogs[sym][name].index, prodLogs[sym][name][ft], label=f'Prod: {ft}',
+                                where='post')
+            axs[i + j + 2].axhline(y=0, color='black', linestyle='--')
+            axs[i + j + 2].legend(loc='upper right')
         fig.show()
     return
 
@@ -112,7 +104,7 @@ def calcPnLs(prodLogs, researchFeeds, cfg):
     pnls['TradingProfit'] = np.zeros(len(pnls))
     refData = utility.loadRefData()
     for sym in prodLogs:
-        tickScaler = refData['tickValue'][sym] / float(cfg['fitParams'][sym]['tickSizes'][sym])
+        tickScaler = float(refData['tickValue'][sym]) / float(cfg['fitParams'][sym]['tickSizes'][sym])
         log = prodLogs[sym]['model']
         trades = log[f'{sym}_Trades']
         lastHoldings = log[f'{sym}_BasketHoldings'].shift(1).fillna(0)
