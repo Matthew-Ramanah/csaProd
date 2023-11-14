@@ -125,8 +125,7 @@ class vsr(alpha):
 
 
 class basis(alpha):
-    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel,
-                 front):
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel, front):
         super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
         self.front = front
         self.back = predictor

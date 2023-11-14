@@ -215,9 +215,8 @@ class assetModel():
                                                   volHL, volSeed, ncc, False)
             elif ftType == "Basis":
                 frontSym = utility.findBasisFrontSym(pred)
-                self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, hl, zSeed,
-                                                    smoothSeed, volHL, volSeed, ncc, False,
-                                                    self.predictors[frontSym])
+                self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
+                                                    volHL, volSeed, ncc, False, self.predictors[frontSym])
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 
