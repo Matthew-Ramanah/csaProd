@@ -110,6 +110,7 @@ class asset:
         self.contractChange = self.isContractChange()
         self.decayCalc()
         self.midDeltaCalc()
+        self.updateVolatility()
         self.updateLog()
         return
 

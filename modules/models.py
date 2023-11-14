@@ -1,8 +1,12 @@
+import pandas as pd
+
 from pyConfig import *
 from modules import utility, alphas, assets
 
 
 class assetModel():
+    tradingDate = pd.Timestamp
+
     def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds[targetSym])
@@ -10,34 +14,43 @@ class assetModel():
         self.log = []
 
         # Params
-        totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
-        notionalPerLot = self.calcNotionalPerLot(refData, targetSym, seeds[targetSym][f'{targetSym}_midPrice'],
-                                                 fxRate=1)
-        self.maxLots = self.calcMaxLots(totalCapital, cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}'],
-                                        notionalPerLot)
         self.kappa = params['alphaWeights']['kappa']
         self.hScaler = cfg['fitParams'][targetSym]['hScaler']
         self.alphaWeights = params['alphaWeights']
         self.tradeSizeCap = cfg['fitParams']['basket']['tradeSizeCaps'][targetSym]
         self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
         self.pRate = cfg['inputParams']['basket']['execution']['pRate']
-
-        # Seeds
-        self.holdings = initHoldings
-        lg.info(f'{targetSym} maxLots: {self.maxLots}')
-        self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
+        self.notionalAlloc = cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}']
+        self.notionalMultiplier = refData['notionalMultiplier'][self.target.sym]
+        self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, params, seeds)
         self.initialiseAlphas(cfg, params, seeds)
 
-    @staticmethod
-    def calcMaxLots(totalCapital, notionalAlloc, notionalPerLot):
-        return int(totalCapital * notionalAlloc / notionalPerLot)
+        # Initialisations
+        self.updateNotionals()
+        self.holdings = initHoldings
+        self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
 
-    @staticmethod
-    def calcNotionalPerLot(refData, target, midPrice, fxRate):
-        return refData['notionalMultiplier'][target] * midPrice / fxRate
+    def updateNotionals(self):
+        self.fxRate = self.calcFxRate()
+        self.notionalPerLot = self.calcNotionalPerLot()
+        self.maxLots = self.calcMaxLots()
+        return
+
+    def calcFxRate(self):
+        fx = utility.findNotionalFx(self.target.sym)
+        if fx == 'USD':
+            return 1
+        else:
+            return self.predictors[f'{fx}='].midPrice
+
+    def calcNotionalPerLot(self):
+        return round(self.notionalMultiplier * self.target.midPrice / self.fxRate, 2)
+
+    def calcMaxLots(self):
+        return int(self.totalCapital * self.notionalAlloc / self.notionalPerLot)
 
     def checkifSeeded(self):
         for pred in self.predictors:
@@ -45,12 +58,18 @@ class assetModel():
                 return
 
         self.seeding = False
-        lg.info(f'{self.target.sym} Model Successfully Seeded')
+        lg.info(f'{self.target.sym} Model Seeded')
 
         for name in self.alphaDict:
             self.alphaDict[name].firstSaneUpdate()
         self.liquidity = self.calcInstLiquidity()
         return
+
+    def checkDateChange(self, md):
+        if md[f'{self.target.sym}_date'] != self.tradingDate:
+            self.tradingDate = md[f'{self.target.sym}_date']
+            return True
+        return False
 
     def mdUpdate(self, md):
         self.target.mdUpdate(md)
@@ -62,12 +81,19 @@ class assetModel():
 
         elif self.target.mdhSane(md, self.target.sym, self.target.spreadCutoff):
             self.target.modelUpdate()
+
             for pred in self.predictors:
                 self.predictors[pred].modelUpdate()
-            self.target.updateVolatility()
+
             self.updateAlphas()
+
+            if self.checkDateChange(md):
+                self.updateNotionals()
+
             self.calcHoldings()
+
             self.updateLog()
+
         return
 
     def updateAlphas(self):
@@ -109,7 +135,7 @@ class assetModel():
         else:
             self.liquidity = utility.emaUpdate(self.liquidity, instLiquidity, self.target.timeDelta,
                                                self.liquidityInvTau)
-        self.maxTradeSize = np.clip(self.pRate * self.liquidity, 0, self.tradeSizeCap)
+        self.maxTradeSize = int(np.clip(self.pRate * self.liquidity, 0, self.tradeSizeCap))
         return
 
     @staticmethod
@@ -119,20 +145,33 @@ class assetModel():
         return np.clip(holdings / maxLots, -1, 1) * hScaler
 
     @staticmethod
-    def convertHOptToHoldings(maxLots, hOpt, hScaler):
-        return int(maxLots * np.clip(hOpt / hScaler, -1, 1))
+    def convertHOptToNormedHoldings(hOpt, hScaler):
+        return np.clip(hOpt / hScaler, -1, 1)
+
+    @staticmethod
+    def convertNormedToSizedHoldings(maxLots, normedHoldings):
+        return int(maxLots * normedHoldings)
 
     def calcHoldings(self):
         self.calcHOpt()
         self.calcMaxTradeSize()
-        sizedHoldings = self.convertHOptToHoldings(self.maxLots, self.hOpt, self.hScaler)
+        self.normedHoldings = self.convertHOptToNormedHoldings(self.hOpt, self.hScaler)
+        sizedHoldings = self.convertNormedToSizedHoldings(self.maxLots, self.normedHoldings)
         self.tradeVolume = np.clip(sizedHoldings - self.holdings, -self.maxTradeSize, self.maxTradeSize).astype(int)
         self.holdings += self.tradeVolume
         return
 
     @staticmethod
     def findPredsNeeded(targetSym, feats):
+        # Target
         predsNeeded = [targetSym]
+
+        # Fx needed for notionals calc
+        fx = utility.findNotionalFx(targetSym)
+        if fx != 'USD':
+            predsNeeded.append(f'{fx}=')
+
+        # Any symbols used in features
         for ft in feats:
             ftType = ft.split('_')[-3]
             pred = utility.findFeatPred(ft, targetSym)
@@ -188,6 +227,6 @@ class assetModel():
         thisLog = [self.target.timestamp, self.target.contractChange, self.target.bidPrice, self.target.askPrice,
                    self.target.midPrice, self.target.timeDelta, self.target.vol, self.target.midDelta,
                    self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume, self.buyCost, self.sellCost,
-                   self.maxTradeSize]
+                   self.maxTradeSize, self.normedHoldings, self.maxLots, self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
         return

@@ -97,6 +97,33 @@ class move(alpha):
         return
 
 
+class vsr(alpha):
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel):
+        super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
+        self.log = []
+
+    def firstSaneUpdate(self):
+        self.lastPredMid = self.predictor.midPrice
+        return
+
+    def calcRawVal(self):
+        if self.predictor.contractChange:
+            predDelta = 0
+        else:
+            predDelta = self.predictor.midPrice - self.lastPredMid
+
+        self.rawVal = predDelta / self.predictor.vol - self.target.midDelta / self.target.vol
+        self.lastPredMid = self.predictor.midPrice
+        return
+
+    def decayCalc(self):
+        """
+        May get overloaded
+        """
+        self.decay = self.predictor.timeDelta
+        return
+
+
 class basis(alpha):
     def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel,
                  front):
@@ -106,42 +133,15 @@ class basis(alpha):
         self.log = []
 
     def firstSaneUpdate(self):
-        self.lastFrontMid = self.front.midPrice
-        self.lastBackMid = self.back.midPrice
+        self.lastBasis = self.front.midPrice - self.back.midPrice
         return
 
     def calcRawVal(self):
-        if (self.front.contractChange) | (self.front.midPrice == 0):
-            frontDelta = 0
+        thisBasis = self.front.midPrice - self.back.midPrice
+        if (self.front.contractChange) | (self.back.contractChange):
+            self.rawVal = 0
         else:
-            frontDelta = (self.front.midPrice - self.lastFrontMid) / self.front.midPrice
-        if (self.back.contractChange) | (self.back.midPrice == 0):
-            backDelta = 0
-        else:
-            backDelta = (self.back.midPrice - self.lastBackMid) / self.back.midPrice
+            self.rawVal = thisBasis - self.lastBasis
 
-        self.rawVal = frontDelta - backDelta
-        self.lastFrontMid = self.front.midPrice
-        self.lastBackMid = self.back.midPrice
-        return
-
-
-class vsr(alpha):
-    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel):
-        super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
-        self.log = []
-
-    def firstSaneUpdate(self):
-        self.rawVal = 0
-        return
-
-    def calcRawVal(self):
-        self.rawVal = self.predictor.midDelta / self.predictor.vol - self.target.midDelta / self.target.vol
-        return
-
-    def decayCalc(self):
-        """
-        May get overloaded
-        """
-        self.decay = self.predictor.timeDelta
+        self.lastBasis = self.front.midPrice - self.back.midPrice
         return

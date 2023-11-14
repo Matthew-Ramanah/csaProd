@@ -36,6 +36,11 @@ def initialiseModels(cfg, seeds):
     return fitModels
 
 
+def findNotionalFx(target):
+    refData = loadRefData()
+    return refData.loc[target]['notionalCurrency']
+
+
 def findFeatPred(ft, target):
     partitions = ft.replace(f'feat_{target}_', '').split('_')
     if len(partitions) == 4:
@@ -45,8 +50,6 @@ def findFeatPred(ft, target):
 
 
 def constructSeeds(researchFeeds, cfg):
-    # seeds = dict(researchFeeds['recon'].iloc[0])
-    # seeds['lastTS'] = researchFeeds['recon'].iloc[0].name
     seeds = {}
     for target in cfg['targets']:
         seeds[target] = {}
@@ -68,6 +71,13 @@ def constructSeeds(researchFeeds, cfg):
             seeds[target][f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[0]
             seeds[target][f'{name}_zSeed'] = researchFeeds[target][f'{name}_Z'].iloc[0]
             seeds[target][f'{name}_volSeed'] = researchFeeds[target][f'{name}_Std'].iloc[0]
+
+        # Seed fxRates with most recent midPrice for recon purposes as research uses the latest daily fx
+        fx = findNotionalFx(target)
+        if fx != 'USD':
+            seeds[target][f'{fx}=_midPrice'] = researchFeeds[target][f'{fx}=_midPrice'].iloc[-1]
+            seeds[target][f'Volatility_{fx}='] = researchFeeds[target][f'Volatility_{fx}='].iloc[-1]
+
     return seeds
 
 

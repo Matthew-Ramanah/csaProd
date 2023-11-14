@@ -11,7 +11,7 @@ researchFeeds = recon.constructTimeDeltas(fitModels, researchFeeds)
 
 # Replace this with the live feed in production
 prodFeed = md.loadSyntheticMD(cfg)
-prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=100)
+prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=250000)
 lg.info("Feed Loaded.")
 runTimes = []
 for i, md in prodFeed.iterrows():

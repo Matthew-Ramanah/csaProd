@@ -8,13 +8,15 @@ def processLogs(fitModels):
     logs = {}
     for sym in fitModels:
         logs[sym] = {}
+        fx = utility.findNotionalFx(sym)
         logs[sym]['model'] = pd.DataFrame(fitModels[sym].log,
                                           columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_bidPrice',
                                                    f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
                                                    f'Volatility_{sym}', f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt',
                                                    f'{sym}_BasketHoldings', f'{sym}_Trades', f'{sym}_BuyCost',
-                                                   f'{sym}_SellCost', f'{sym}_maxTradeSize']).set_index(
-            'lastTS')
+                                                   f'{sym}_SellCost', f'{sym}_maxTradeSize', f'{sym}_Holdings',
+                                                   f'{sym}_maxLots', f'{sym}_notionalPerLot',
+                                                   f'{sym}_{fx}_DailyRate']).set_index('lastTS')
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
                                            columns=['lastTS', 'decay', 'rawVal', 'smoothVal', 'zVal', 'vol',
@@ -56,8 +58,8 @@ def reconcile(prodLogs, researchFeeds, fitModels):
         for sym in fitModels:
             if ts not in prodLogs[sym]['model'].index:
                 continue
-            modelCols = [f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}_timeDR',
-                         f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
+            modelCols = [f'{sym}_contractChange', f'{sym}_midPrice', f'Volatility_{sym}', f'{sym}_CumAlpha',
+                         f'{sym}_BasketHoldings']
             checkTolerance(researchFeeds['recon'].loc[ts], prodLogs[sym]['model'].loc[ts], modelCols, ts)
 
             for alph in fitModels[sym].alphaList:
@@ -74,10 +76,12 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
         reconCols = [f'{sym}_BasketHoldings', f'Volatility_{sym}']
         prod = prodLogs[sym]['model']
 
-        fig, axs = plt.subplots(len(reconCols) + len(fts) + 1, sharex='all')
+        fig, axs = plt.subplots(len(reconCols) + len(fts) + 1, sharex='all')  # len(fitModels[sym].predictors)
         fig.suptitle(f"{sym} Reconciliation")
         axs[0].step(researchFeeds[sym].index, researchFeeds[sym][f'{sym}_midPrice'],
                     label=f'Research: {sym}_midPrice', where='post')
+        axs[0].step(prod.index, prod[f'{sym}_midPrice'], label=f'Prod: {sym}_midPrice', where='post')
+        axs[0].legend(loc='upper right')
 
         # Plot Model
         for i, col in enumerate(reconCols):
@@ -95,6 +99,15 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
                                 where='post')
             axs[i + j + 2].axhline(y=0, color='black', linestyle='--')
             axs[i + j + 2].legend(loc='upper right')
+
+        """
+        for k, pred in enumerate(fitModels[sym].predictors):
+            axs[i + j + k + 3].step(researchFeeds[sym].index, researchFeeds[sym][f'{pred}_midPrice'],
+                                    label=f'Research: {pred}_midPrice', where='post')
+            axs[i + j + k + 3].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_midPrice'],
+                                    label=f'Prod: {pred}_midPrice', where='post')
+            axs[i + j + k + 3].legend(loc='upper right')
+        """
         fig.show()
     return
 
@@ -104,17 +117,18 @@ def calcPnLs(prodLogs, researchFeeds, cfg):
     pnls['TradingProfit'] = np.zeros(len(pnls))
     refData = utility.loadRefData()
     for sym in prodLogs:
-        tickScaler = float(refData['tickValue'][sym]) / float(cfg['fitParams'][sym]['tickSizes'][sym])
         log = prodLogs[sym]['model']
         trades = log[f'{sym}_Trades']
         lastHoldings = log[f'{sym}_BasketHoldings'].shift(1).fillna(0)
         mpDelta = log[f'{sym}_midPrice'].diff().fillna(0)
+        fx = utility.findNotionalFx(sym)
+        fxRate = log[f'{sym}_{fx}_DailyRate']
+        tickScaler = float(refData['tickValue'][sym]) / float(cfg['fitParams'][sym]['tickSizes'][sym]) / fxRate
+
         uncostedPnl = np.cumsum(lastHoldings * tickScaler * mpDelta)
         tCosts = np.cumsum(tickScaler * np.abs(trades) * np.where(trades > 0, log[f'{sym}_BuyCost'],
-                                                                  np.where(trades < 0,
-                                                                           log[f'{sym}_SellCost'], 0)))
-        fees = np.cumsum(np.abs(trades) * refData['feesPerLot'][sym])
-        pnls[f'{sym}_TradingProfit'] = uncostedPnl - tCosts - fees
+                                                                  np.where(trades < 0, log[f'{sym}_SellCost'], 0)))
+        pnls[f'{sym}_TradingProfit'] = uncostedPnl - tCosts
         pnls['TradingProfit'] += pnls[f'{sym}_TradingProfit']
     return pnls.ffill().fillna(0)
 
