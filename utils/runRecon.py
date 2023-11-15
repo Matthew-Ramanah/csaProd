@@ -7,11 +7,10 @@ with open(cfg_file, 'r') as f:
 researchFeeds = utility.loadResearchFeeds(cfg)
 seeds = utility.constructSeeds(researchFeeds, cfg)
 fitModels = utility.initialiseModels(cfg, seeds=seeds)
-researchFeeds = recon.constructTimeDeltas(fitModels, researchFeeds)
 
 # Replace this with the live feed in production
 prodFeed = md.loadSyntheticMD(cfg)
-prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=250000)
+prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=5)
 lg.info("Feed Loaded.")
 runTimes = []
 for i, md in prodFeed.iterrows():
@@ -26,8 +25,9 @@ print(
     f'Tick2Trade Mean: {round(statistics.mean(runTimes), 2)} ms. Max: {round(max(runTimes), 2)} ms. Min: {round(min(runTimes), 2)}')
 prodLogs = recon.processLogs(fitModels)
 
-recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
-recon.plotPnLDeltas(prodLogs, researchFeeds, cfg)
-#recon.plotPnLs(prodLogs, researchFeeds, cfg)
-#recon.reconcile(prodLogs, researchFeeds, fitModels)
+if False:
+    recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
+    recon.plotPnLDeltas(prodLogs, researchFeeds, cfg)
+    #recon.plotPnLs(prodLogs, researchFeeds, cfg)
+    #recon.reconcile(prodLogs, researchFeeds, fitModels)
 
