@@ -27,6 +27,7 @@ print(
 prodLogs = recon.processLogs(fitModels)
 
 recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
-recon.plotPnLs(prodLogs, researchFeeds, cfg)
+recon.plotPnLDeltas(prodLogs, researchFeeds, cfg)
+#recon.plotPnLs(prodLogs, researchFeeds, cfg)
 #recon.reconcile(prodLogs, researchFeeds, fitModels)
 

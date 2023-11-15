@@ -1,5 +1,3 @@
-import numpy as np
-
 from pyConfig import *
 from modules import utility
 
@@ -133,21 +131,82 @@ def calcPnLs(prodLogs, researchFeeds, cfg):
     return pnls.ffill().fillna(0)
 
 
+def findAssClasses(cfg):
+    refData = utility.loadRefData()
+    assClasses = {}
+    for target in cfg['targets']:
+        assClass = refData.loc[target]['assetClass']
+        if assClass not in assClasses:
+            assClasses[assClass] = [target]
+        else:
+            assClasses[assClass].append(target)
+
+    return assClasses
+
+
+
+def plotPnLDeltas(prodLogs, researchFeeds, cfg):
+    pnls = calcPnLs(prodLogs, researchFeeds, cfg)
+    assClasses = findAssClasses(cfg)
+    tick = mtick.StrMethodFormatter(dollarFmt)
+
+    fig, axs = plt.subplots(len(assClasses) + 1, sharex='all')
+    fig.suptitle(f"PnL Deltas")
+    delta = researchFeeds['recon']['TradingProfit'] - pnls[f'TradingProfit']
+    axs[0].step(delta.index, delta, label=f'Cumulative', where='post')
+
+    for i, assClass in enumerate(assClasses):
+        assetDelta = np.zeros(len(researchFeeds['recon']))
+        for sym in assClasses[assClass]:
+            delta = researchFeeds['recon'][f'{sym}_CostedPnl'] - pnls[f'{sym}_TradingProfit']
+            axs[i + 1].step(delta.index, delta, label=f'{sym}', where='post')
+            assetDelta += delta
+        axs[i + 1].set_title(f'{assClass}')
+        axs[i + 1].legend(loc='upper right')
+        axs[i + 1].axhline(y=0, color='black', linestyle='--')
+        axs[i + 1].yaxis.set_major_formatter(tick)
+
+        axs[0].step(delta.index, assetDelta, label=f'{assClass}')
+
+    axs[0].legend(loc='upper right')
+    axs[0].axhline(y=0, color='black', linestyle='--')
+    axs[0].yaxis.set_major_formatter(tick)
+    fig.show()
+    return
+
+
 def plotPnLs(prodLogs, researchFeeds, cfg):
     pnls = calcPnLs(prodLogs, researchFeeds, cfg)
-    fig, axs = plt.subplots(len(prodLogs) + 1, sharex='all')
+    assClasses = findAssClasses(cfg)
+    tick = mtick.StrMethodFormatter(dollarFmt)
+
+    fig, axs = plt.subplots(len(assClasses) + 1, sharex='all')
     fig.suptitle(f"PnL Reconciliation")
     axs[0].step(researchFeeds['recon'].index, researchFeeds['recon']['TradingProfit'], label=f'Research: TradingProfit',
                 where='post')
     axs[0].step(pnls.index, pnls[f'TradingProfit'], label=f'Prod: TradingProfit', where='post')
     axs[0].legend(loc='upper right')
     axs[0].axhline(y=0, color='black', linestyle='--')
-    for i, sym in enumerate(prodLogs):
-        researchProfit = researchFeeds['recon'][f'{sym}_CostedPnl'] - researchFeeds['recon'][f'{sym}_Fees']
-        axs[i + 1].step(researchProfit.index, researchProfit, label=f'Research: {sym}_TradingProfit', where='post')
-        axs[i + 1].step(pnls.index, pnls[f'{sym}_TradingProfit'], label=f'Prod: {sym}_TradingProfit', where='post')
+    axs[0].yaxis.set_major_formatter(tick)
+
+    for i, assClass in enumerate(assClasses):
+        researchPnl = np.zeros(len(researchFeeds['recon']))
+        prodPnl = np.zeros(len(pnls))
+        for sym in assClasses[assClass]:
+            symResPnl = researchFeeds['recon'][f'{sym}_CostedPnl']
+            symProdPnl = pnls[f'{sym}_TradingProfit']
+            axs[i + 1].step(symResPnl.index, symResPnl, label=f'Research: {sym}_TradingProfit', where='post')
+            axs[i + 1].step(pnls.index, symProdPnl, label=f'Prod: {sym}_TradingProfit', where='post')
+            researchPnl += symResPnl
+            prodPnl += symProdPnl
+        axs[i + 1].set_title(f'{assClass}')
         axs[i + 1].legend(loc='upper right')
         axs[i + 1].axhline(y=0, color='black', linestyle='--')
+        axs[i + 1].yaxis.set_major_formatter(tick)
+
+        axs[0].step(researchFeeds['recon'].index, researchPnl, label=f'Research: {assClass}')
+        axs[0].step(pnls.index, prodPnl, label=f'Prod: {assClass}')
+
     fig.show()
     return
 

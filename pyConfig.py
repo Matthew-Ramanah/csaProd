@@ -10,6 +10,7 @@ daysPerYear = 365
 minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
 scoreFactor = 10
+dollarFmt = '${x:,.0f}'
 
 # Run-time options
 cfg_file = root + "config/afbiRecon.json"
@@ -18,6 +19,7 @@ cfg_file = root + "config/afbiRecon.json"
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 import logging as lg
 import scipy
 import math
