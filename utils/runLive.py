@@ -1,34 +1,82 @@
-import subprocess
-import socket
-import time
+from pyConfig import *
+from modules import utility
 
 host = "127.0.0.1"
 livePort = 5009
 historicalPort = 9100
 
-symbols = ['@TY#C']
-# Open Connection
-subprocess.Popen(["IQConnect.exe",
-                  "‑product SYDNEY_QUANTITATIVE_50907 ‑version 6.2.0.25 ‑login 514851 ‑password yevv3cmf ‑autoconnect"])
-time.sleep(10)
+backMonth = 'H24'
 
-# Connect To Socket
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((host, livePort))
+with open(cfg_file, 'r') as f:
+    cfg = json.load(f)
 
-# Format
-s.sendall(b'S,SELECT UPDATE FIELDS,Symbol,Market Open,Settlement Date,Bid,Bid Size,Ask,Ask Size\r\n')
-s.sendall(b'S,TIMESTAMPSOFF\r\n')
 
-# Start watching all symbols needed
-s.sendall(b'w@TYZ23\r\n')
-print(s.recv(1024))
-print(s.recv(1024))
+def findIQFSymbols(cfg):
+    refData = utility.loadRefData()
+    symbols = []
+    for i in cfg['fitParams']['basket']['symbolsNeeded']:
+        if i[-1] in ['0', '=']:
+            iqfSym = refData.loc[i]['iqfSym']
+        else:
+            frontSym = refData.loc[i[:-1] + '0']['iqfSym']
+            iqfSym = frontSym[:-2] + backMonth
+        symbols.append(iqfSym)
+    return symbols
 
-# Refresh each symbol in case it hasn't ticked
-print('refreshing')
-s.sendall(b'f@TYZ23\r\n')
-print(s.recv(1024))
-print(s.recv(1024))
-print('done')
+
+def openConnection():
+    productID = 'SYDNEY_QUANTITATIVE_50907'
+    version = "6.2.0.25"
+    login = "514851"
+    password = "yevv3cmf"
+    subprocess.Popen(
+        ["IQConnect.exe", f"‑product {productID} ‑version {version} ‑login {login} ‑password {password} ‑autoconnect"])
+    time.sleep(10)
+    return
+
+
+def connectToSocket():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, livePort))
+    s.sendall(b'S,SELECT UPDATE FIELDS,Symbol,Market Open,Settlement Date,Bid,Bid Size,Ask,Ask Size\r\n')
+    s.sendall(b'S,TIMESTAMPSOFF\r\n')
+    return s
+
+
+def watchSymbols(s, iqfSymbols):
+    for sym in iqfSymbols:
+        message = f'w{sym}'
+        s.sendall(bytes(message + "\r\n", "utf-8"))
+    return
+
+
+def refreshSymbols(s, iqfSymbols):
+    # Refresh each symbol in case it hasn't ticked
+    for sym in iqfSymbols:
+        print(sym)
+        message = f'b{sym}'
+        s.sendall(bytes(message + "\r\n", "utf-8"))
+        print(s.recv(2048))
+        print("")
+    return
+
+
+def pullHistorical(s, iqfSymbols):
+    for sym in iqfSymbols:
+        print(sym)
+        message = f'5MS,{sym},3600,1'
+        print(message)
+        s.sendall(bytes(message + "\r\n", "utf-8"))
+        print(s.recv(2048))
+        print("")
+
+    return
+
+
+iqfSymbols = findIQFSymbols(cfg)
+print(iqfSymbols)
+openConnection()
+s = connectToSocket()
+watchSymbols(s, iqfSymbols)
+refreshSymbols(s, iqfSymbols)
 s.close()
