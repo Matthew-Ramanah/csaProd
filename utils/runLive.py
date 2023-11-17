@@ -6,7 +6,7 @@ host = "127.0.0.1"
 livePort = 5009
 historicalPort = 9100
 
-symbols = ['@TYZ23']
+symbols = ['@TY#C']
 # Open Connection
 subprocess.Popen(["IQConnect.exe",
                   "‑product SYDNEY_QUANTITATIVE_50907 ‑version 6.2.0.25 ‑login 514851 ‑password yevv3cmf ‑autoconnect"])
