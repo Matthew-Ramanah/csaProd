@@ -58,7 +58,8 @@ def constructSeeds(researchFeeds, cfg, prod=False):
     for target in cfg['targets']:
         seeds[target] = {}
         seeds[target] = {f'{target}_midPrice': researchFeeds[target][f'{target}_midPrice'].iloc[location],
-                         f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[location]}
+                         f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[location],
+                         f'{target}_lastTS': researchFeeds[target][f'{target}_lastTS'].iloc[location].date()}
 
         for ft in cfg['fitParams'][target]['feats']:
             pred = findFeatPred(ft, target)

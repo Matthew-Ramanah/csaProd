@@ -137,16 +137,8 @@ class traded(asset):
 
     def updateContractState(self, md):
         super().updateContractState(md)
-        self.tradingDate = md[f'{self.sym}_date']
         return
 
     def firstSaneUpdate(self, md):
         super().firstSaneUpdate(md)
-        self.lastTradingDate = md[f'{self.sym}_date']
         return
-
-    def isSessionChange(self):
-        if self.lastTradingDate != self.tradingDate:
-            self.lastTradingDate = self.tradingDate
-            return True
-        return False

@@ -14,6 +14,7 @@ class feed():
 
     def __init__(self, cfg, backMonths):
         self.constructSymbolMap(cfg, backMonths)
+        self.aggregation = str(cfg['inputParams']['aggFreq'])
 
         return
 
@@ -50,10 +51,10 @@ class feed():
         lg.info("Pulling Latest Prices...")
         self.dataMap = {}
         for sym in self.symbolMap:
-            message = f'HIX,{self.symbolMap[sym]},3600,1'
+            message = f'HIX,{self.symbolMap[sym]},{self.aggregation},1'
             self.sendSocketMessage(message)
             self.dataMap[sym] = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
-            print(sym, self.symbolMap[sym], self.dataMap[sym])
+            lg.info(f'{sym} {self.symbolMap[sym]} {self.dataMap[sym]}')
 
             # Flush the socket of the !ENDMSG! before requesting next symbol
             self.clientSocket.recv(self.receiveSize)

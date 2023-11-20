@@ -14,7 +14,7 @@ dollarFmt = '${x:,.0f}'
 
 backMonths = {"HE": 'G24',
               "RS": "F24",
-              "GC": "Z23",
+              "GC": "F24",
               "ZS": "F24",
               "ZC": "H24"}
 

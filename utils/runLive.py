@@ -27,11 +27,19 @@ fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=positions, prod
 # Get latest md object
 md = dataFeed.feed(cfg, backMonths).pullLatestMD()
 
+# Parse the same md through several times for now
+for i in range(3):
+    for sym in fitModels:
+        # Update models
+        fitModels[sym].mdUpdate(md)
+
+        # Generate tradeFile
+
+        # Dump new seeds & logs
+
+lg.info("Completed.")
 for sym in fitModels:
-    # Update models
-    fitModels[sym].mdUpdate(md)
-
-    # Generate tradeFile
-    print(fitModels[sym].log)
-
-    # Dump new seeds & logs
+    print(sym)
+    for j in fitModels[sym].log:
+        print(j)
+    print("")

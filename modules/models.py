@@ -5,8 +5,6 @@ from modules import utility, alphas, assets
 
 
 class assetModel():
-    tradingDate = pd.Timestamp
-
     def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0, prod=False):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds[targetSym], prod)
@@ -30,6 +28,7 @@ class assetModel():
         self.initialiseAlphas(cfg, params, seeds)
 
         # Initialisations
+        self.tradingDate = seeds[targetSym][f'{targetSym}_lastTS']
         self.updateNotionals()
         self.holdings = initHoldings
         self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
@@ -67,8 +66,8 @@ class assetModel():
         return
 
     def checkDateChange(self, md):
-        if md[f'{self.target.sym}_date'] != self.tradingDate:
-            self.tradingDate = md[f'{self.target.sym}_date']
+        if md[f'{self.target.sym}_lastTS'] != self.tradingDate:
+            self.tradingDate = md[f'{self.target.sym}_lastTS'].date()
             return True
         return False
 
