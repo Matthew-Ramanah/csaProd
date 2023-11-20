@@ -12,6 +12,12 @@ logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
 
+backMonths = {"HE": 'G24',
+              "RS": "F24",
+              "GC": "Z23",
+              "ZS": "F24",
+              "ZC": "H24"}
+
 # Run-time options
 cfg_file = root + "config/afbiRecon.json"
 

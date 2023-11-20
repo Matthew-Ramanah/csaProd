@@ -26,12 +26,12 @@ def loadResearchFeeds(cfg):
     return researchFeeds
 
 
-def initialiseModels(cfg, seeds):
+def initialiseModels(cfg, seeds, positions):
     refData = loadRefData()
     fitModels = {}
     for sym in cfg['targets']:
         fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData,
-                                           seeds=seeds)
+                                           seeds=seeds, initHoldings=positions[sym])
     lg.info("Models Initialised.")
     return fitModels
 
@@ -49,34 +49,37 @@ def findFeatPred(ft, target):
         return f'{partitions[0]}_{partitions[1]}'
 
 
-def constructSeeds(researchFeeds, cfg):
+def constructSeeds(researchFeeds, cfg, prod=False):
+    if prod:
+        location = -1
+    else:
+        location = 0
     seeds = {}
     for target in cfg['targets']:
         seeds[target] = {}
-        seeds[target] = {f'{target}_midPrice': researchFeeds[target][f'{target}_midPrice'].iloc[0],
-                         f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[0]}
+        seeds[target] = {f'{target}_midPrice': researchFeeds[target][f'{target}_midPrice'].iloc[location],
+                         f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[location]}
 
         for ft in cfg['fitParams'][target]['feats']:
             pred = findFeatPred(ft, target)
-            seeds[target][f'{pred}_midPrice'] = researchFeeds[target][f'{pred}_midPrice'].iloc[0]
-            seeds[target][f'Volatility_{pred}'] = researchFeeds[target][f'Volatility_{pred}'].iloc[0]
+            seeds[target][f'{pred}_midPrice'] = researchFeeds[target][f'{pred}_midPrice'].iloc[location]
+            seeds[target][f'Volatility_{pred}'] = researchFeeds[target][f'Volatility_{pred}'].iloc[location]
 
             ftType = ft.split('_')[-3]
             if ftType == "Basis":
                 frontSym = findBasisFrontSym(pred)
-                seeds[target][f'{frontSym}_midPrice'] = researchFeeds[target][f'{frontSym}_midPrice'].iloc[0]
-                seeds[target][f'Volatility_{frontSym}'] = researchFeeds[target][f'Volatility_{frontSym}'].iloc[0]
+                seeds[target][f'{frontSym}_midPrice'] = researchFeeds[target][f'{frontSym}_midPrice'].iloc[location]
+                seeds[target][f'Volatility_{frontSym}'] = researchFeeds[target][f'Volatility_{frontSym}'].iloc[location]
 
             name = ft.replace('feat_', '')
-            seeds[target][f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[0]
-            seeds[target][f'{name}_zSeed'] = researchFeeds[target][f'{name}_Z'].iloc[0]
-            seeds[target][f'{name}_volSeed'] = researchFeeds[target][f'{name}_Std'].iloc[0]
+            seeds[target][f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[location]
+            seeds[target][f'{name}_zSeed'] = researchFeeds[target][f'{name}_Z'].iloc[location]
+            seeds[target][f'{name}_volSeed'] = researchFeeds[target][f'{name}_Std'].iloc[location]
 
-        # Seed fxRates with most recent midPrice for recon purposes as research uses the latest daily fx
         fx = findNotionalFx(target)
         if fx != 'USD':
-            seeds[target][f'{fx}=_midPrice'] = researchFeeds[target][f'{fx}=_midPrice'].iloc[-1]
-            seeds[target][f'Volatility_{fx}='] = researchFeeds[target][f'Volatility_{fx}='].iloc[-1]
+            seeds[target][f'{fx}=_midPrice'] = researchFeeds[target][f'{fx}=_midPrice'].iloc[location]
+            seeds[target][f'Volatility_{fx}='] = researchFeeds[target][f'Volatility_{fx}='].iloc[location]
 
     return seeds
 

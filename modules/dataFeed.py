@@ -1,16 +1,6 @@
 from pyConfig import *
 from modules import utility
 
-backMonths = {"HE": 'G24',
-              "RS": "F24",
-              "GC": "Z23",
-              "ZS": "F24",
-              "ZC": "H24"}
-
-with open(cfg_file, 'r') as f:
-    cfg = json.load(f)
-
-
 class feed():
     host = "127.0.0.1"
     port = 9100
@@ -38,8 +28,12 @@ class feed():
             self.symbolMap[i] = iqfSym
         return self.symbolMap
 
+    def sendSocketMessage(self, message):
+        self.clientSocket.sendall(bytes(message + "\r\n", "utf-8"))
+        return
+
     def openConnection(self):
-        lg.info("Opening Connection...")
+        lg.info("Opening IQF Connection...")
         subprocess.Popen(
             ["IQConnect.exe",
              f"‑product {self.productID} ‑version {self.version} ‑login {self.login} ‑password {self.password} ‑autoconnect"])
@@ -47,7 +41,6 @@ class feed():
         return
 
     def createClientSocket(self):
-        lg.info("Creating Socket...")
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.clientSocket.connect((self.host, self.port))
         return
@@ -65,26 +58,15 @@ class feed():
             self.clientSocket.recv(self.receiveSize)
         return
 
-    def sendSocketMessage(self, message):
-        self.clientSocket.sendall(bytes(message + "\r\n", "utf-8"))
-        return
-
     def closeSocket(self):
         self.clientSocket.close()
         lg.info("Socket Closed.")
         return
 
-    def pullLatestMD(self):
-        self.openConnection()
-        self.createClientSocket()
-        self.updateDataMap()
-        self.closeSocket()
-        return self.constructMD()
-
     def constructMD(self):
         md = {}
         for sym in self.dataMap:
-            if len(iqfFeed.dataMap[sym]) == 8:
+            if len(self.dataMap[sym]) == 8:
                 md[f'{sym}_lastTS'] = self.dataMap[sym][0]
                 md[f'{sym}_midPrice'] = self.dataMap[sym][4]
             else:
@@ -93,7 +75,9 @@ class feed():
 
         return pd.Series(md)
 
-
-iqfFeed = feed(cfg, backMonths)
-md = iqfFeed.pullLatestMD()
-print(md)
+    def pullLatestMD(self):
+        self.openConnection()
+        self.createClientSocket()
+        self.updateDataMap()
+        self.closeSocket()
+        return self.constructMD()
