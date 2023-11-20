@@ -26,12 +26,12 @@ def loadResearchFeeds(cfg):
     return researchFeeds
 
 
-def initialiseModels(cfg, seeds, positions):
+def initialiseModels(cfg, seeds, positions, prod=False):
     refData = loadRefData()
     fitModels = {}
     for sym in cfg['targets']:
         fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData,
-                                           seeds=seeds, initHoldings=positions[sym])
+                                           seeds=seeds, initHoldings=positions[sym], prod=prod)
     lg.info("Models Initialised.")
     return fitModels
 

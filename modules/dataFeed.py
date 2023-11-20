@@ -1,6 +1,7 @@
 from pyConfig import *
 from modules import utility
 
+
 class feed():
     host = "127.0.0.1"
     port = 9100
@@ -67,12 +68,13 @@ class feed():
         md = {}
         for sym in self.dataMap:
             if len(self.dataMap[sym]) == 8:
-                md[f'{sym}_lastTS'] = self.dataMap[sym][0]
-                md[f'{sym}_midPrice'] = self.dataMap[sym][4]
+                md[f'{sym}_lastTS'] = pd.Timestamp(self.dataMap[sym][0])
+                md[f'{sym}_midPrice'] = float(self.dataMap[sym][4])
+                md[f'{sym}_symbol'] = self.dataMap[sym]
             else:
                 md[f'{sym}_lastTS'] = np.nan
                 md[f'{sym}_midPrice'] = np.nan
-
+                md[f'{sym}_symbol'] = np.nan
         return pd.Series(md)
 
     def pullLatestMD(self):

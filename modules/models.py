@@ -7,10 +7,11 @@ from modules import utility, alphas, assets
 class assetModel():
     tradingDate = pd.Timestamp
 
-    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0):
+    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0, prod=False):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
-                                    seeds[targetSym])
+                                    seeds[targetSym], prod)
         self.seeding = True
+        self.prod = prod
         self.log = []
 
         # Params
@@ -62,7 +63,7 @@ class assetModel():
 
         for name in self.alphaDict:
             self.alphaDict[name].firstSaneUpdate()
-        self.liquidity = self.calcInstLiquidity()
+        # self.liquidity = self.calcInstLiquidity()
         return
 
     def checkDateChange(self, md):
@@ -79,7 +80,7 @@ class assetModel():
         if self.seeding:
             self.checkifSeeded()
 
-        elif self.target.mdhSane(md, self.target.sym, self.target.spreadCutoff):
+        elif self.target.mdhSane(md, self.target.sym, self.target.spreadCutoff, self.prod):
             self.target.modelUpdate()
 
             for pred in self.predictors:
@@ -104,8 +105,8 @@ class assetModel():
         return
 
     def calcBuySellCosts(self):
-        self.buyCost = self.target.askPrice - self.target.midPrice
-        self.sellCost = self.target.midPrice - self.target.bidPrice
+        self.buyCost = self.target.tickSize  # self.target.askPrice - self.target.midPrice
+        self.sellCost = self.target.tickSize  # self.target.midPrice - self.target.bidPrice
         return
 
     def calcVar(self):
@@ -129,6 +130,9 @@ class assetModel():
         return 0.5 * (self.target.bidSize + self.target.askSize)
 
     def calcMaxTradeSize(self):
+        self.maxTradeSize = int(self.tradeSizeCap)
+        """
+        Deprecate liquidity filter until we have live bid/ask data
         instLiquidity = self.calcInstLiquidity()
         if self.target.isSessionChange():
             self.liquidity = instLiquidity
@@ -136,6 +140,7 @@ class assetModel():
             self.liquidity = utility.emaUpdate(self.liquidity, instLiquidity, self.target.timeDelta,
                                                self.liquidityInvTau)
         self.maxTradeSize = int(np.clip(self.pRate * self.liquidity, 0, self.tradeSizeCap))
+        """
         return
 
     @staticmethod
@@ -191,7 +196,7 @@ class assetModel():
         for pred in list(set(predsNeeded)):
             self.predictors[pred] = assets.asset(pred, cfg['inputParams']['aggFreq'], params['tickSizes'][pred],
                                                  params['spreadCutoff'][pred], cfg['inputParams']['volHL'],
-                                                 seeds[self.target.sym])
+                                                 seeds[self.target.sym], self.prod)
         return
 
     def initialiseAlphas(self, cfg, params, seeds):
@@ -223,9 +228,8 @@ class assetModel():
         return
 
     def updateLog(self):
-        thisLog = [self.target.timestamp, self.target.contractChange, self.target.bidPrice, self.target.askPrice,
-                   self.target.midPrice, self.target.timeDelta, self.target.vol, self.target.midDelta,
-                   self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume, self.buyCost, self.sellCost,
+        thisLog = [self.target.timestamp, self.target.contractChange, self.target.midPrice, self.target.timeDelta,
+                   self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume,
                    self.maxTradeSize, self.normedHoldings, self.maxLots, self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
         return

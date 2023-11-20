@@ -8,13 +8,12 @@ def processLogs(fitModels):
         logs[sym] = {}
         fx = utility.findNotionalFx(sym)
         logs[sym]['model'] = pd.DataFrame(fitModels[sym].log,
-                                          columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_bidPrice',
-                                                   f'{sym}_askPrice', f'{sym}_midPrice', f'{sym}_timeDR_Delta',
-                                                   f'Volatility_{sym}', f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt',
-                                                   f'{sym}_BasketHoldings', f'{sym}_Trades', f'{sym}_BuyCost',
-                                                   f'{sym}_SellCost', f'{sym}_maxTradeSize', f'{sym}_Holdings',
-                                                   f'{sym}_maxLots', f'{sym}_notionalPerLot',
-                                                   f'{sym}_{fx}_DailyRate']).set_index('lastTS')
+                                          columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_midPrice',
+                                                   f'{sym}_timeDR_Delta', f'Volatility_{sym}', f'midDelta_{sym}',
+                                                   f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings', f'{sym}_Trades',
+                                                   f'{sym}_maxTradeSize', f'{sym}_Holdings', f'{sym}_maxLots',
+                                                   f'{sym}_notionalPerLot', f'{sym}_{fx}_DailyRate']).set_index(
+            'lastTS')
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
                                            columns=['lastTS', 'decay', 'rawVal', 'smoothVal', 'zVal', 'vol',
@@ -22,9 +21,8 @@ def processLogs(fitModels):
         for pred in fitModels[sym].predictors:
             logs[sym][pred] = pd.DataFrame(fitModels[sym].predictors[pred].log,
                                            columns=[f'{pred}_symbol', f'{pred}_lastTS', f'{pred}_contractChange',
-                                                    f'{pred}_bidPrice', f'{pred}_askPrice', f'{pred}_midPrice',
-                                                    f'{pred}_timeDR_Delta',
-                                                    f'annualPctChange_{pred}_timeDR']).set_index(f'{pred}_lastTS')
+                                                    f'{pred}_midPrice', f'{pred}_timeDR_Delta']).set_index(
+                f'{pred}_lastTS')
 
     lg.info("Processed Logs.")
     return logs
@@ -142,7 +140,6 @@ def findAssClasses(cfg):
             assClasses[assClass].append(target)
 
     return assClasses
-
 
 
 def plotPnLDeltas(prodLogs, researchFeeds, cfg):

@@ -22,7 +22,7 @@ def loadPositions(cfg):
 positions = loadPositions(cfg)
 
 # Initialise models
-fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=positions)
+fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=positions, prod=True)
 
 # Get latest md object
 md = dataFeed.feed(cfg, backMonths).pullLatestMD()

@@ -3,7 +3,7 @@ from modules import utility
 
 
 class asset:
-    def __init__(self, sym, aggFreq, tickSize, spreadCutoff, volHL, seeds):
+    def __init__(self, sym, aggFreq, tickSize, spreadCutoff, volHL, seeds, prod):
         self.sym = sym
         self.tickSize = float(tickSize)
         self.spreadCutoff = spreadCutoff
@@ -13,23 +13,30 @@ class asset:
         self.midPrice = seeds[f'{sym}_midPrice']
         self.vol = seeds[f'Volatility_{sym}']
         self.volInvTau = np.float64(1 / (volHL * logTwo))
+        self.prod = prod
 
     @staticmethod
-    def mdhSane(md, sym, spreadCutoff):
+    def mdhSane(md, sym, spreadCutoff, prod):
         """
         DataFilters
         """
-        if md[f'{sym}_bid_price'] >= md[f'{sym}_ask_price']:
-            return False
-        if (md[f'{sym}_bid_size'] == 0) | (md[f'{sym}_ask_size'] == 0):
-            return False
-        if (md[f'{sym}_bid_price'] == 0) | (md[f'{sym}_ask_price'] == 0):
-            return False
-        if math.isnan(md[f'{sym}_bid_price']) | math.isnan(md[f'{sym}_ask_price']):
-            return False
-        if (md[f'{sym}_ask_price'] - md[f'{sym}_bid_price']) > spreadCutoff:
-            return False
-        return True
+        if not prod:
+            if md[f'{sym}_bid_price'] >= md[f'{sym}_ask_price']:
+                return False
+            if (md[f'{sym}_bid_size'] == 0) | (md[f'{sym}_ask_size'] == 0):
+                return False
+            if (md[f'{sym}_bid_price'] == 0) | (md[f'{sym}_ask_price'] == 0):
+                return False
+            if math.isnan(md[f'{sym}_bid_price']) | math.isnan(md[f'{sym}_ask_price']):
+                return False
+            if (md[f'{sym}_ask_price'] - md[f'{sym}_bid_price']) > spreadCutoff:
+                return False
+            return True
+        else:
+            # TODO - Check if timestamp matches most recent hour, throw out if not
+            if math.isnan(md[f'{sym}_midPrice']):
+                return False
+            return True
 
     @staticmethod
     def midPriceCalc(bidPrice, askPrice):
@@ -43,15 +50,13 @@ class asset:
         return 0
 
     def updateContractState(self, md):
-        self.bidPrice = md[f'{self.sym}_bid_price']
-        self.askPrice = md[f'{self.sym}_ask_price']
-        self.bidSize = md[f'{self.sym}_bid_size']
-        self.askSize = md[f'{self.sym}_ask_size']
-        self.midPrice = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
-        self.microPrice = self.microPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'],
-                                              md[f'{self.sym}_bid_size'], md[f'{self.sym}_ask_size'])
-        self.timestamp = md[f'{self.sym}_end_ts']
+        self.midPrice = md[f'{self.sym}_midPrice']
+        self.timestamp = md[f'{self.sym}_lastTS']
         self.symbol = md[f'{self.sym}_symbol']
+        # self.bidPrice = md[f'{self.sym}_bid_price']
+        # self.askPrice = md[f'{self.sym}_ask_price']
+        # self.bidSize = md[f'{self.sym}_bid_size']
+        # self.askSize = md[f'{self.sym}_ask_size']
         return
 
     def firstSaneUpdate(self, md):
@@ -59,8 +64,8 @@ class asset:
         self.contractChange = True
         self.timeDelta = 0
         self.midDelta = 0
-        self.lastMid = self.midPriceCalc(md[f'{self.sym}_bid_price'], md[f'{self.sym}_ask_price'])
-        self.lastTS = md[f'{self.sym}_end_ts']
+        self.lastMid = md[f'{self.sym}_midPrice']
+        self.lastTS = md[f'{self.sym}_lastTS']
         self.lastSymbol = md[f'{self.sym}_symbol']
         return
 
@@ -99,7 +104,7 @@ class asset:
         return
 
     def mdUpdate(self, md):
-        if not self.mdhSane(md, self.sym, self.spreadCutoff):
+        if not self.mdhSane(md, self.sym, self.spreadCutoff, self.prod):
             return
         if not self.initialised:
             self.firstSaneUpdate(md)
@@ -115,8 +120,7 @@ class asset:
         return
 
     def updateLog(self):
-        thisLog = [self.symbol, self.timestamp, self.contractChange, self.bidPrice, self.askPrice, self.midPrice,
-                   self.timeDelta, self.midDelta]
+        thisLog = [self.symbol, self.timestamp, self.contractChange, self.midPrice, self.timeDelta]
         self.log.append(thisLog)
         return
 
@@ -127,9 +131,9 @@ class asset:
 
 
 class traded(asset):
-    def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds):
+    def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds, prod):
         super(traded, self).__init__(sym, cfg['inputParams']['aggFreq'], tickSize, spreadCutoff,
-                                     cfg['inputParams']['volHL'], seeds)
+                                     cfg['inputParams']['volHL'], seeds, prod)
 
     def updateContractState(self, md):
         super().updateContractState(md)
