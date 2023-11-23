@@ -25,7 +25,7 @@ positions = loadPositions(cfg)
 fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=positions, prod=True)
 
 # Get latest md object
-md = dataFeed.feed(cfg, backMonths).pullLatestMD()
+md = dataFeed.feed(cfg).pullLatestMD()
 
 # Parse the same md through several times for now
 for i in range(3):

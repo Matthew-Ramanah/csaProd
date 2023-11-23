@@ -12,21 +12,30 @@ class feed():
     login = "514851"
     password = "yevv3cmf"
 
-    def __init__(self, cfg, backMonths):
-        self.constructSymbolMap(cfg, backMonths)
+    def __init__(self, cfg):
         self.aggregation = str(cfg['inputParams']['aggFreq'])
+        self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded']
 
         return
 
-    def constructSymbolMap(self, cfg, backMonths):
+    def findBackMonth(self, baseSym):
+        """
+        Request futures symbol chain from IQF and pick up the current back month symbol
+        """
+        message = f"CFU,{baseSym},,0123456789,2"
+        self.sendSocketMessage(message)
+        symList = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
+        return symList[1]
+
+    def constructSymbolMap(self):
         refData = utility.loadRefData()
         self.symbolMap = {}
-        for i in cfg['fitParams']['basket']['symbolsNeeded']:
+        for i in self.symbolsNeeded:
             if i[-1] in ['0', '=']:
                 iqfSym = refData.loc[i]['iqfSym']
             else:
-                frontSym = refData.loc[i[:-1] + '0']['iqfSym']
-                iqfSym = frontSym[:-2] + backMonths[i[:-1]]
+                baseSym = refData.loc[i[:-1] + '0']['iqfSym'][:-2]
+                iqfSym = self.findBackMonth(baseSym)
             self.symbolMap[i] = iqfSym
         return self.symbolMap
 
@@ -48,6 +57,8 @@ class feed():
         return
 
     def updateDataMap(self):
+        self.constructSymbolMap()
+
         lg.info("Pulling Latest Prices...")
         self.dataMap = {}
         for sym in self.symbolMap:
