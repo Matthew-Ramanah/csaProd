@@ -12,6 +12,9 @@ logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
 
+posUser = "positions.afbi.cbct@sydneyquantitative.com"
+posPass = "SydQuantPos23"
+
 # Run-time options
 cfg_file = root + "config/afbiRecon.json"
 
@@ -37,6 +40,11 @@ import statistics
 import subprocess
 import socket
 import time
+import base64
+from io import BytesIO
+from googleapiclient.discovery import build
+from httplib2 import Http
+from oauth2client import file, client, tools
 
 # Environment Variables
 lg.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=lg.INFO, datefmt='%H:%M:%S')
@@ -44,6 +52,7 @@ pd.options.display.float_format = '{:.2f}'.format
 pd.set_option('expand_frame_repr', False)
 pd.options.mode.chained_assignment = None
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 
 exchangeMap = {
     "asx_refinitiv_v4": [
