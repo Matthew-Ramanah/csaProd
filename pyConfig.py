@@ -12,11 +12,9 @@ logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
 
-posUser = "positions.afbi.cbct@sydneyquantitative.com"
-posPass = "SydQuantPos23"
-
 # Run-time options
-cfg_file = root + "config/afbiRecon.json"
+cfg_file = root + "models/AFBI/config/afbiRecon.json"
+interfaceRoot = root + "models/AFBI/interface/"
 
 # Global Packages
 import pandas as pd

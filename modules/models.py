@@ -8,9 +8,12 @@ class assetModel():
     def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0, prod=False):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds[targetSym], prod)
-        self.seeding = True
-        self.prod = prod
         self.log = []
+        self.prod = prod
+        if self.prod:
+            self.seeding = False
+        else:
+            self.seeding = True
 
         # Params
         self.kappa = params['alphaWeights']['kappa']
@@ -33,6 +36,8 @@ class assetModel():
         self.holdings = initHoldings
         self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
 
+        return
+
     def updateNotionals(self):
         self.fxRate = self.calcFxRate()
         self.notionalPerLot = self.calcNotionalPerLot()
@@ -44,10 +49,10 @@ class assetModel():
         if fx == 'USD':
             return 1
         else:
-            return self.predictors[f'{fx}='].midPrice
+            return self.predictors[f'{fx}='].lastMid
 
     def calcNotionalPerLot(self):
-        return round(self.notionalMultiplier * self.target.midPrice / self.fxRate, 2)
+        return round(self.notionalMultiplier * self.target.lastMid / self.fxRate, 2)
 
     def calcMaxLots(self):
         return int(self.totalCapital * self.notionalAlloc / self.notionalPerLot)
@@ -62,12 +67,12 @@ class assetModel():
 
         for name in self.alphaDict:
             self.alphaDict[name].firstSaneUpdate()
-        # self.liquidity = self.calcInstLiquidity()
         return
 
     def checkDateChange(self, md):
-        if md[f'{self.target.sym}_lastTS'] != self.tradingDate:
-            self.tradingDate = md[f'{self.target.sym}_lastTS'].date()
+        thisDate = pd.Timestamp(md[f'{self.target.sym}_lastTS']).date()
+        if thisDate != self.tradingDate:
+            self.tradingDate = thisDate
             return True
         return False
 
@@ -93,6 +98,7 @@ class assetModel():
             self.calcHoldings()
 
             self.updateLog()
+            self.updateSeeds()
 
         return
 
@@ -161,7 +167,7 @@ class assetModel():
         self.calcMaxTradeSize()
         self.normedHoldings = self.convertHOptToNormedHoldings(self.hOpt, self.hScaler)
         sizedHoldings = self.convertNormedToSizedHoldings(self.maxLots, self.normedHoldings)
-        self.tradeVolume = np.clip(sizedHoldings - self.holdings, -self.maxTradeSize, self.maxTradeSize).astype(int)
+        self.tradeVolume = int(np.clip(sizedHoldings - self.holdings, -self.maxTradeSize, self.maxTradeSize))
         self.holdings += self.tradeVolume
         return
 
@@ -209,6 +215,8 @@ class assetModel():
             zSeed = seeds[self.target.sym][f'{name}_zSeed']
             smoothSeed = seeds[self.target.sym][f'{name}_smoothSeed']
             volSeed = seeds[self.target.sym][f'{name}_volSeed']
+            predSeed = seeds[self.target.sym][f'{pred}_midPrice']
+            basisSeed = self.target.lastMid - predSeed
             ncc = params['NCCs'][ft]
 
             if ftType == 'Move':
@@ -216,11 +224,11 @@ class assetModel():
                                                    volHL, volSeed, ncc, False)
             elif ftType == 'VSR':
                 self.alphaDict[name] = alphas.vsr(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
-                                                  volHL, volSeed, ncc, False)
+                                                  volHL, volSeed, ncc, False, predSeed)
             elif ftType == "Basis":
                 frontSym = utility.findBasisFrontSym(pred)
                 self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
-                                                    volHL, volSeed, ncc, False, self.predictors[frontSym])
+                                                    volHL, volSeed, ncc, False, self.predictors[frontSym], basisSeed)
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 
@@ -231,4 +239,21 @@ class assetModel():
                    self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume,
                    self.maxTradeSize, self.normedHoldings, self.maxLots, self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
+        return
+
+    def updateSeeds(self):
+        self.seedDump = {f"{self.target.sym}_midPrice": self.target.midPrice,
+                         f"Volatility_{self.target.sym}": self.target.vol,
+                         f"{self.target.sym}_lastTS": self.target.timestamp,
+                         f"{self.target.sym}_symbol" : self.target.symbol}
+
+        for pred in self.predictors:
+            self.seedDump[f'{pred}_midPrice'] = self.predictors[pred].midPrice
+            self.seedDump[f'Volatility_{pred}'] = self.predictors[pred].vol
+            self.seedDump[f'{pred}_symbol'] = self.predictors[pred].symbol
+
+        for name in self.alphaDict:
+            self.seedDump[f'{name}_smoothSeed'] = self.alphaDict[name].smoothVal
+            self.seedDump[f'{name}_zSeed'] = self.alphaDict[name].zVal
+            self.seedDump[f'{name}_volSeed'] = self.alphaDict[name].vol
         return

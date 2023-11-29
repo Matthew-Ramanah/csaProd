@@ -18,24 +18,24 @@ class feed():
 
         return
 
-    def findBackMonth(self, baseSym):
+    def findNthSymbol(self, baseSym, n):
         """
         Request futures symbol chain from IQF and pick up the current back month symbol
         """
-        message = f"CFU,{baseSym},,0123456789,2"
+        message = f"CFU,{baseSym},FGHJKMNQUVZ,0123456789,2"
         self.sendSocketMessage(message)
         symList = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
-        return symList[1]
+        return symList[n]
 
     def constructSymbolMap(self):
         refData = utility.loadRefData()
         self.symbolMap = {}
         for i in self.symbolsNeeded:
-            if i[-1] in ['0', '=']:
+            if i[-1] == '=':
                 iqfSym = refData.loc[i]['iqfSym']
             else:
                 baseSym = refData.loc[i[:-1] + '0']['iqfSym'][:-2]
-                iqfSym = self.findBackMonth(baseSym)
+                iqfSym = self.findNthSymbol(baseSym, n=int(i[-1]))
             self.symbolMap[i] = iqfSym
         return self.symbolMap
 
@@ -80,9 +80,9 @@ class feed():
         md = {}
         for sym in self.dataMap:
             if len(self.dataMap[sym]) == 8:
-                md[f'{sym}_lastTS'] = pd.Timestamp(self.dataMap[sym][0])
+                md[f'{sym}_lastTS'] = self.dataMap[sym][0]
                 md[f'{sym}_midPrice'] = float(self.dataMap[sym][4])
-                md[f'{sym}_symbol'] = self.dataMap[sym]
+                md[f'{sym}_symbol'] = self.symbolMap[sym]
             else:
                 md[f'{sym}_lastTS'] = np.nan
                 md[f'{sym}_midPrice'] = np.nan

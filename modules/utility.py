@@ -49,28 +49,36 @@ def findFeatPred(ft, target):
         return f'{partitions[0]}_{partitions[1]}'
 
 
-def constructSeeds(researchFeeds, cfg, prod=False):
-    if prod:
-        location = -1
-    else:
-        location = 0
+def findBasisFrontSym(backSym):
+    return backSym.replace('1', '0')
+
+
+def constructResearchSeeds(researchFeeds, cfg, location=0):
+    """
+    Seed in models using researchFeeds
+    Location=0 is used for reconciling
+    Location=-1 is used to seed production models with latest research data
+    """
     seeds = {}
     for target in cfg['targets']:
         seeds[target] = {}
         seeds[target] = {f'{target}_midPrice': researchFeeds[target][f'{target}_midPrice'].iloc[location],
                          f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[location],
-                         f'{target}_lastTS': researchFeeds[target][f'{target}_lastTS'].iloc[location].date()}
+                         f'{target}_lastTS': str(researchFeeds[target][f'{target}_lastTS'].iloc[location].date()),
+                         f'{target}_symbol': researchFeeds[target][f'{target}_symbol'].iloc[location]}
 
         for ft in cfg['fitParams'][target]['feats']:
             pred = findFeatPred(ft, target)
             seeds[target][f'{pred}_midPrice'] = researchFeeds[target][f'{pred}_midPrice'].iloc[location]
             seeds[target][f'Volatility_{pred}'] = researchFeeds[target][f'Volatility_{pred}'].iloc[location]
+            seeds[target][f'{pred}_symbol'] = researchFeeds[target][f'{pred}_symbol'].iloc[location]
 
             ftType = ft.split('_')[-3]
             if ftType == "Basis":
                 frontSym = findBasisFrontSym(pred)
                 seeds[target][f'{frontSym}_midPrice'] = researchFeeds[target][f'{frontSym}_midPrice'].iloc[location]
                 seeds[target][f'Volatility_{frontSym}'] = researchFeeds[target][f'Volatility_{frontSym}'].iloc[location]
+                seeds[target][f'{frontSym}_symbol'] = researchFeeds[target][f'{frontSym}_symbol'].iloc[location]
 
             name = ft.replace('feat_', '')
             seeds[target][f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[location]
@@ -81,10 +89,36 @@ def constructSeeds(researchFeeds, cfg, prod=False):
         if fx != 'USD':
             seeds[target][f'{fx}=_midPrice'] = researchFeeds[target][f'{fx}=_midPrice'].iloc[location]
             seeds[target][f'Volatility_{fx}='] = researchFeeds[target][f'Volatility_{fx}='].iloc[location]
+            seeds[target][f'{fx}=_symbol'] = researchFeeds[target][f'{fx}=_symbol'].iloc[location]
 
     return seeds
 
 
-def findBasisFrontSym(backSym):
-    return backSym.replace('1', '0')
+def saveModelState(initSeeds, initPositions, md, trades, fitModels):
+    modelState = {
+        "initSeeds": initSeeds,
+        "initPositions": initPositions,
+        "md": dict(md),
+        "trades": trades,
+        "seedDump": {},
+        "logs": {}
+    }
 
+    for sym in fitModels:
+        modelState['seedDump'][sym] = fitModels[sym].seedDump
+        modelState['logs'][sym] = fitModels[sym].log
+
+    with open(f'{interfaceRoot}modelState.json', 'w') as f:
+        json.dump(modelState, f)
+
+    lg.info("Saved Model State.")
+    return modelState
+
+
+def generateTrades(fitModels):
+    trades = {}
+    for sym in fitModels:
+        trades[sym] = int(fitModels[sym].tradeVolume)
+
+    # Construct excel sheet
+    return trades

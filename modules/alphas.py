@@ -98,9 +98,10 @@ class move(alpha):
 
 
 class vsr(alpha):
-    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel):
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel, predSeed):
         super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
         self.log = []
+        self.lastPredMid = predSeed
 
     def firstSaneUpdate(self):
         self.lastPredMid = self.predictor.midPrice
@@ -125,11 +126,12 @@ class vsr(alpha):
 
 
 class basis(alpha):
-    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel, front):
+    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel, front, basisSeed):
         super().__init__(target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc, accel)
         self.front = front
         self.back = predictor
         self.log = []
+        self.lastBasis = basisSeed
 
     def firstSaneUpdate(self):
         self.lastBasis = self.front.midPrice - self.back.midPrice

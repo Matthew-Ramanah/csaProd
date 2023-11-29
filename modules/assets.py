@@ -8,12 +8,16 @@ class asset:
         self.tickSize = float(tickSize)
         self.spreadCutoff = spreadCutoff
         self.aggFreq = aggFreq
-        self.initialised = False
         self.log = []
-        self.midPrice = seeds[f'{sym}_midPrice']
+        self.lastMid = seeds[f'{sym}_midPrice']
         self.vol = seeds[f'Volatility_{sym}']
+        self.lastSymbol = seeds[f'{self.sym}_symbol']
         self.volInvTau = np.float64(1 / (volHL * logTwo))
         self.prod = prod
+        if self.prod:
+            self.initialised = True
+        else:
+            self.initialised = False
 
     @staticmethod
     def mdhSane(md, sym, spreadCutoff, prod):
@@ -65,8 +69,8 @@ class asset:
         self.timeDelta = 0
         self.midDelta = 0
         self.lastMid = md[f'{self.sym}_midPrice']
-        self.lastTS = md[f'{self.sym}_lastTS']
         self.lastSymbol = md[f'{self.sym}_symbol']
+        #self.lastTS = md[f'{self.sym}_lastTS']
         return
 
     def isContractChange(self):
@@ -80,7 +84,7 @@ class asset:
             self.timeDelta = 0
         else:
             self.timeDelta = 1  # (self.timestamp - self.lastTS).seconds / self.aggFreq
-        self.lastTS = self.timestamp
+        #self.lastTS = self.timestamp
         return
 
     def midDeltaCalc(self):

@@ -1,51 +1,36 @@
 from pyConfig import *
-from modules import dataFeed, utility, AFBI
+from modules import dataFeed, utility
+from models.AFBI.interface import AFBI
 
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
+with open(f'{interfaceRoot}modelState.json', 'r') as f:
+    oldModelState = json.load(f)
+
 # Load Seed Dump
-researchFeeds = utility.loadResearchFeeds(cfg)
-seeds = utility.constructSeeds(researchFeeds, cfg, prod=True)
-
-
-def dumpSeeds(fitModels, md):
-    # Dump latest MD
-
-    # Dump midPrices & vols for all preds + target
-
-    # Dump lastTS date
-
-    # Dump last fxRate
-
-    # Dump smooth, Z & vol for all features
-
-    # Dump latest positions
-    return
-
+initSeeds = oldModelState['seedDump']
 
 # Load Positions
-positions = AFBI.detectAFBIPositions(cfg)
+initPositions = AFBI.detectAFBIPositions(cfg)
 
 # Initialise models
-fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=positions, prod=True)
+fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, prod=True)
 
-# Get latest md object
+# Pull Market Data
 md = dataFeed.feed(cfg).pullLatestMD()
 
-# Parse the same md through several times for now
-for i in range(3):
-    for sym in fitModels:
-        # Update models
-        fitModels[sym].mdUpdate(md)
+# Update Models
+for sym in fitModels:
+    fitModels[sym].mdUpdate(md)
 
-        # Generate tradeFile
+# Generate tradeFile
+trades = utility.generateTrades(fitModels)
 
-        # Dump new seeds & logs
+# Save
+modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels)
+
+for sym in fitModels:
+    print(f"{sym} Initial Position: {modelState['initPositions'][sym]} Traded: {modelState['trades'][sym]} Lots")
 
 lg.info("Completed.")
-for sym in fitModels:
-    print(sym)
-    for j in fitModels[sym].log:
-        print(j)
-    print("")

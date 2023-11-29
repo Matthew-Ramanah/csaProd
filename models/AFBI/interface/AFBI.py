@@ -19,8 +19,8 @@ def detectAFBIPositions(cfg):
 
 def pullAFBIPositions():
     lg.info("Pulling Latest AFBI Positions..")
-    afbiCredentials = root + "credentials.json"
-    afbiToken = root + "token.json"
+    afbiCredentials = interfaceRoot + "credentials.json"
+    afbiToken = interfaceRoot + "token.json"
     afbiEmailRegex = "CBCT EOD POSITIONS"
 
     service = gmail.get_gmail_service(afbiCredentials, afbiToken)
