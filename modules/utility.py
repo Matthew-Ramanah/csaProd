@@ -120,5 +120,4 @@ def generateTrades(fitModels):
     for sym in fitModels:
         trades[sym] = int(fitModels[sym].tradeVolume)
 
-    # Construct excel sheet
     return trades

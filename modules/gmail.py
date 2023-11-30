@@ -87,3 +87,44 @@ def pullLatestPosFile(service, searchQuery):
         data = _get_attachment_from_part(service, messageId, attPart)
         df = _convert_attachment_data_to_dataframe(data, attType)
         return {'emailsubject': subject, 'filename': attPart['filename'], 'data': df}
+
+
+def sendTradeFile(path, sendFrom, sendTo, username, password, subject, message, filename):
+    lg.info("Sending tradeFile...")
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.base import MIMEBase
+    from email.mime.text import MIMEText
+    from email.utils import formatdate
+    from email import encoders
+
+    msg = MIMEMultipart()
+    msg['From'] = sendFrom
+    msg['To'] = sendTo
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(message))
+
+    part = MIMEBase('application', "octet-stream")
+    with open(path, 'rb') as file:
+        part.set_payload(file.read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', f'attachment; filename={filename}')
+        msg.attach(part)
+
+    lg.info("Connecting to host/port")
+    smtp = smtplib.SMTP("smtp.gmail.com", 587)
+    lg.info('0')
+    smtp.ehlo()
+    lg.info("1")
+    smtp.starttls()
+    lg.info("2")
+    smtp.login(username, password)
+    lg.info("3")
+    smtp.sendmail(sendFrom, sendTo, msg.as_string())
+    lg.info("4")
+    smtp.quit()
+    lg.info("5")
+
+    return

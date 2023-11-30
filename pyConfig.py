@@ -15,6 +15,7 @@ dollarFmt = '${x:,.0f}'
 # Run-time options
 cfg_file = root + "models/AFBI/config/afbiRecon.json"
 interfaceRoot = root + "models/AFBI/interface/"
+logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
 
 # Global Packages
 import pandas as pd
@@ -43,6 +44,7 @@ from io import BytesIO
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
+import datetime
 
 # Environment Variables
 lg.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=lg.INFO, datefmt='%H:%M:%S')

@@ -3,14 +3,13 @@ from modules import utility
 
 
 class feed():
-    host = "127.0.0.1"
-    port = 9100
-    receiveSize = 1024
-
     productID = 'SYDNEY_QUANTITATIVE_50907'
     version = "6.2.0.25"
     login = "514851"
     password = "yevv3cmf"
+    host = "127.0.0.1"
+    port = 9100
+    receiveSize = 1024
 
     def __init__(self, cfg):
         self.aggregation = str(cfg['inputParams']['aggFreq'])
