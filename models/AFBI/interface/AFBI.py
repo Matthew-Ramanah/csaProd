@@ -38,7 +38,7 @@ def findSide(qty):
         return ""
 
 
-def createTradeCSV(trades, md, initPositions, timeSig):
+def createTradeCSV(trades, md, initPositions):
     refData = utility.loadRefData()
     afbiAccount = "CBCT"
     orderType = "MKT"
@@ -54,10 +54,11 @@ def createTradeCSV(trades, md, initPositions, timeSig):
         qty = trades[sym]
         side = findSide(qty)
         lastPrice = md[f'{sym}_midPrice']
+        lastTime = md[f'{sym}_lastTS']
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
         desc = refData.loc[sym]['description']
-        symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, timeSig,
+        symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, lastTime,
                     initPos, targetPos, desc]
         out.append(symTrade)
 
@@ -70,7 +71,7 @@ def generateAFBITradeFile(fitModels, md, initPositions):
 
     # Generate CSV & dict
     trades = utility.generateTrades(fitModels)
-    tradeCSV = createTradeCSV(trades, md, initPositions, timeSig)
+    tradeCSV = createTradeCSV(trades, md, initPositions)
     print(tradeCSV)
 
     # Save to Log & Email
@@ -81,12 +82,12 @@ def generateAFBITradeFile(fitModels, md, initPositions):
 
 def sendAFBITradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = "matthew.ramanah@sydneyquantitative.com"
+    sendTo = sendFrom
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"
     message = f"CBCT_{timeSig}"
-    filename = f"CBCT_{timeSig}"
+    filename = f"CBCT_{timeSig}.csv"
     gmail.sendTradeFile(tradesPath, sendFrom, sendTo, username, password, subject, message, filename)
 
     return
