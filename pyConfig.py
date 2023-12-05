@@ -45,6 +45,7 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 import datetime
+import pytz
 
 # Environment Variables
 lg.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=lg.INFO, datefmt='%H:%M:%S')
@@ -53,6 +54,9 @@ pd.set_option('expand_frame_repr', False)
 pd.options.mode.chained_assignment = None
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
+
+# Deal with terribly designed data source
+fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
 
 exchangeMap = {
     "asx_refinitiv_v4": [

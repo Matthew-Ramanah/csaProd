@@ -121,3 +121,9 @@ def generateTrades(fitModels):
         trades[sym] = int(fitModels[sym].tradeVolume)
 
     return trades
+
+
+def createTimeSig(timezone='UTC'):
+    timeSig = datetime.datetime.now(pytz.timezone(timezone)).strftime('%Y_%m_%d_%H')
+    lg.info(f'TimeSig: {timeSig}')
+    return timeSig

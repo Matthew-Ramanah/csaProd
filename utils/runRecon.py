@@ -5,6 +5,7 @@ with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 researchFeeds = utility.loadResearchFeeds(cfg)
+
 seeds = utility.constructResearchSeeds(researchFeeds, cfg)
 fitModels = utility.initialiseModels(cfg, seeds=seeds)
 
