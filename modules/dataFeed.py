@@ -11,9 +11,10 @@ class feed():
     port = 9100
     receiveSize = 1024
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, timezone):
         self.aggregation = str(cfg['inputParams']['aggFreq'])
         self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded']
+        self.timezone = timezone
 
         return
 
@@ -75,11 +76,12 @@ class feed():
         lg.info("Socket Closed.")
         return
 
-    def constructMD(self):
+    def constructMD(self, syntheticIncrement):
         md = {}
         for sym in self.dataMap:
             if len(self.dataMap[sym]) == 8:
-                md[f'{sym}_lastTS'] = self.dataMap[sym][0]
+                md[f'{sym}_lastTS'] = utility.localizeTS(self.dataMap[sym][0], self.timezone) + datetime.timedelta(
+                    hours=syntheticIncrement)
                 md[f'{sym}_symbol'] = self.symbolMap[sym]
                 if sym in fxToInvert:
                     md[f'{sym}_midPrice'] = 1 / float(self.dataMap[sym][4])
@@ -90,11 +92,14 @@ class feed():
                 md[f'{sym}_lastTS'] = np.nan
                 md[f'{sym}_midPrice'] = np.nan
                 md[f'{sym}_symbol'] = np.nan
+        md['timeSig'] = utility.createTimeSig(self.timezone)
+        lg.info(f"MD Constructed for timeSig: {md['timeSig']}")
+
         return pd.Series(md)
 
-    def pullLatestMD(self):
+    def pullLatestMD(self, syntheticIncrement=0):
         self.openConnection()
         self.createClientSocket()
         self.updateDataMap()
         self.closeSocket()
-        return self.constructMD()
+        return self.constructMD(syntheticIncrement)

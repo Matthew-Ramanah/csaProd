@@ -37,7 +37,7 @@ def findSide(qty):
         return ""
 
 
-def createTradeCSV(trades, md, initPositions, timezone):
+def createTradeCSV(fitModels, trades, md, initPositions, timezone):
     refData = utility.loadRefData()
     afbiAccount = "CBCT"
     orderType = "MKT"
@@ -46,7 +46,8 @@ def createTradeCSV(trades, md, initPositions, timezone):
     tif = "DAY"
     broker = "MSET"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
-            "refPrice", f'refTime: {timezone}', 'Current Position', 'Target Position', 'Description', 'Exchange']
+            "refPrice", f'refTime: {timezone}', 'Current Position', 'Target Position', 'Description', 'Exchange',
+            'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
         bbSym = refData.loc[sym]['tradedSym']
@@ -58,24 +59,26 @@ def createTradeCSV(trades, md, initPositions, timezone):
         targetPos = initPositions[sym] + trades[sym]
         desc = refData.loc[sym]['description']
         exchange = refData.loc[sym]['exchange']
+        maxPos = fitModels[sym].maxPosition
+        maxTradeSize = fitModels[sym].maxTradeSize
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, lastTime,
-                    initPos, targetPos, desc, exchange]
+                    initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
-def generateAFBITradeFile(fitModels, md, initPositions, timeSig, timezone):
-    tradesPath = f"{logRoot}CBCT_{timeSig}.csv"
+def generateAFBITradeFile(fitModels, md, initPositions, timezone):
+    tradesPath = f"{logRoot}CBCT_{md['timeSig']}.csv"
 
     # Generate CSV & dict
     trades = utility.generateTrades(fitModels)
-    tradeCSV = createTradeCSV(trades, md, initPositions, timezone)
+    tradeCSV = createTradeCSV(fitModels, trades, md, initPositions, timezone)
     print(tradeCSV)
 
     # Save to Log & Email
     tradeCSV.to_csv(tradesPath)
-    sendAFBITradeEmail(tradesPath, timeSig)
+    sendAFBITradeEmail(tradesPath, md['timeSig'])
     return trades
 
 

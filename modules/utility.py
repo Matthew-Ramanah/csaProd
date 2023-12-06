@@ -26,12 +26,12 @@ def loadResearchFeeds(cfg):
     return researchFeeds
 
 
-def initialiseModels(cfg, seeds, positions, prod=False):
+def initialiseModels(cfg, seeds, positions, timezone, prod=False):
     refData = loadRefData()
     fitModels = {}
     for sym in cfg['targets']:
         fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData,
-                                           seeds=seeds, initHoldings=positions[sym], prod=prod)
+                                           seeds=seeds, initHoldings=positions[sym], timezone=timezone, prod=prod)
     lg.info("Models Initialised.")
     return fitModels
 
@@ -64,7 +64,8 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
         seeds[target] = {}
         seeds[target] = {f'{target}_midPrice': researchFeeds[target][f'{target}_midPrice'].iloc[location],
                          f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[location],
-                         f'{target}_lastTS': str(researchFeeds[target][f'{target}_lastTS'].iloc[location].date()),
+                         f'{target}_lastTS': researchFeeds[target][f'{target}_lastTS'].iloc[location].strftime(
+                             '%Y_%m_%d_%H'),
                          f'{target}_symbol': researchFeeds[target][f'{target}_symbol'].iloc[location]}
 
         for ft in cfg['fitParams'][target]['feats']:
@@ -72,6 +73,8 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
             seeds[target][f'{pred}_midPrice'] = researchFeeds[target][f'{pred}_midPrice'].iloc[location]
             seeds[target][f'Volatility_{pred}'] = researchFeeds[target][f'Volatility_{pred}'].iloc[location]
             seeds[target][f'{pred}_symbol'] = researchFeeds[target][f'{pred}_symbol'].iloc[location]
+            seeds[target][f'{pred}_lastTS'] = researchFeeds[target][f'{pred}_lastTS'].iloc[location].strftime(
+                '%Y_%m_%d_%H')
 
             ftType = ft.split('_')[-3]
             if ftType == "Basis":
@@ -79,6 +82,8 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
                 seeds[target][f'{frontSym}_midPrice'] = researchFeeds[target][f'{frontSym}_midPrice'].iloc[location]
                 seeds[target][f'Volatility_{frontSym}'] = researchFeeds[target][f'Volatility_{frontSym}'].iloc[location]
                 seeds[target][f'{frontSym}_symbol'] = researchFeeds[target][f'{frontSym}_symbol'].iloc[location]
+                seeds[target][f'{frontSym}_lastTS'] = researchFeeds[target][f'{frontSym}_lastTS'].iloc[
+                    location].strftime('%Y_%m_%d_%H')
 
             name = ft.replace('feat_', '')
             seeds[target][f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[location]
@@ -90,6 +95,8 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
             seeds[target][f'{fx}=_midPrice'] = researchFeeds[target][f'{fx}=_midPrice'].iloc[location]
             seeds[target][f'Volatility_{fx}='] = researchFeeds[target][f'Volatility_{fx}='].iloc[location]
             seeds[target][f'{fx}=_symbol'] = researchFeeds[target][f'{fx}=_symbol'].iloc[location]
+            seeds[target][f'{fx}=_lastTS'] = researchFeeds[target][f'{fx}=_lastTS'].iloc[location].strftime(
+                '%Y_%m_%d_%H')
 
     return seeds
 
@@ -98,7 +105,6 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels):
     modelState = {
         "initSeeds": initSeeds,
         "initPositions": initPositions,
-        "md": dict(md),
         "trades": trades,
         "seedDump": {},
         "logs": {}
@@ -125,5 +131,30 @@ def generateTrades(fitModels):
 
 def createTimeSig(timezone='UTC'):
     timeSig = datetime.datetime.now(pytz.timezone(timezone)).strftime('%Y_%m_%d_%H')
-    lg.info(f'TimeSig: {timeSig}')
     return timeSig
+
+
+def localizeTS(stringTS, timezone):
+    return pytz.timezone(timezone).localize(pd.Timestamp(stringTS))
+
+
+def formatTsSeed(tsSeed, timezone):
+    tsNaive = pd.Timestamp(datetime.datetime.strptime(tsSeed, '%Y_%m_%d_%H'))
+    return localizeTS(tsNaive, timezone)
+
+
+def formatTsToStrig(ts):
+    return ts.strftime('%Y_%m_%d_%H')
+
+
+def loadInitSeeds(cfg):
+    """
+    Load Seed Dump if it exists, else seed with research seeds
+    """
+    try:
+        with open(f'{interfaceRoot}modelState.json', 'r') as f:
+            oldModelState = json.load(f)
+        return oldModelState['seedDump']
+    except:
+        researchFeeds = loadResearchFeeds(cfg)
+        return constructResearchSeeds(researchFeeds, cfg)

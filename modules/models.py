@@ -1,13 +1,11 @@
-import pandas as pd
-
 from pyConfig import *
 from modules import utility, alphas, assets
 
 
 class assetModel():
-    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings=0, prod=False):
+    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, timezone, prod=False):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
-                                    seeds[targetSym], prod)
+                                    seeds[targetSym], timezone, prod)
         self.log = []
         self.prod = prod
         if self.prod:
@@ -19,7 +17,6 @@ class assetModel():
         self.kappa = params['alphaWeights']['kappa']
         self.hScaler = cfg['fitParams'][targetSym]['hScaler']
         self.alphaWeights = params['alphaWeights']
-        self.tradeSizeCap = cfg['fitParams']['basket']['tradeSizeCaps'][targetSym]
         self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
         self.pRate = cfg['inputParams']['basket']['execution']['pRate']
         self.notionalAlloc = cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}']
@@ -27,21 +24,21 @@ class assetModel():
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
 
         # Construct Predictors & Alpha Objects
-        self.initialisePreds(cfg, params, seeds)
+        self.initialisePreds(cfg, params, seeds, timezone)
         self.initialiseAlphas(cfg, params, seeds)
 
         # Initialisations
-        self.tradingDate = seeds[targetSym][f'{targetSym}_lastTS']
+        self.tradingDate = utility.formatTsSeed(seeds[targetSym][f'{targetSym}_lastTS'], timezone).date()
         self.updateNotionals()
-        self.holdings = initHoldings
-        self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxLots, self.hScaler)
+        self.initHoldings = initHoldings
+        self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxPosition, self.hScaler)
 
         return
 
     def updateNotionals(self):
         self.fxRate = self.calcFxRate()
         self.notionalPerLot = self.calcNotionalPerLot()
-        self.maxLots = self.calcMaxLots()
+        self.maxPosition = self.calcMaxPosition()
         return
 
     def calcFxRate(self):
@@ -54,7 +51,7 @@ class assetModel():
     def calcNotionalPerLot(self):
         return round(self.notionalMultiplier * self.target.lastMid / self.fxRate, 2)
 
-    def calcMaxLots(self):
+    def calcMaxPosition(self):
         return int(self.totalCapital * self.notionalAlloc / self.notionalPerLot)
 
     def checkifSeeded(self):
@@ -96,10 +93,13 @@ class assetModel():
                 self.updateNotionals()
 
             self.calcHoldings()
-
             self.updateLog()
-            self.updateSeeds()
 
+        else:
+            self.tradeVolume = 0
+            self.log = []
+
+        self.updateSeeds()
         return
 
     def updateAlphas(self):
@@ -135,7 +135,8 @@ class assetModel():
         return 0.5 * (self.target.bidSize + self.target.askSize)
 
     def calcMaxTradeSize(self):
-        self.maxTradeSize = int(self.tradeSizeCap)
+        self.maxTradeSize = int(np.ceil(maxHDelta * self.maxPosition))
+
         """
         Deprecate liquidity filter until we have live bid/ask data
         instLiquidity = self.calcInstLiquidity()
@@ -149,26 +150,25 @@ class assetModel():
         return
 
     @staticmethod
-    def convertHoldingsToHOpt(holdings, maxLots, hScaler):
-        if maxLots == 0:
+    def convertHoldingsToHOpt(holdings, maxPosition, hScaler):
+        if maxPosition == 0:
             return 0
-        return np.clip(holdings / maxLots, -1, 1) * hScaler
+        return np.clip(holdings / maxPosition, -1, 1) * hScaler
 
     @staticmethod
     def convertHOptToNormedHoldings(hOpt, hScaler):
         return np.clip(hOpt / hScaler, -1, 1)
 
     @staticmethod
-    def convertNormedToSizedHoldings(maxLots, normedHoldings):
-        return int(maxLots * normedHoldings)
+    def convertNormedToSizedHoldings(maxPosition, normedHoldings):
+        return int(maxPosition * normedHoldings)
 
     def calcHoldings(self):
         self.calcHOpt()
         self.calcMaxTradeSize()
         self.normedHoldings = self.convertHOptToNormedHoldings(self.hOpt, self.hScaler)
-        sizedHoldings = self.convertNormedToSizedHoldings(self.maxLots, self.normedHoldings)
-        self.tradeVolume = int(np.clip(sizedHoldings - self.holdings, -self.maxTradeSize, self.maxTradeSize))
-        self.holdings += self.tradeVolume
+        sizedHoldings = self.convertNormedToSizedHoldings(self.maxPosition, self.normedHoldings)
+        self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))
         return
 
     @staticmethod
@@ -194,14 +194,14 @@ class assetModel():
 
         return predsNeeded
 
-    def initialisePreds(self, cfg, params, seeds):
+    def initialisePreds(self, cfg, params, seeds, timezone):
         self.predictors = {}
         predsNeeded = self.findPredsNeeded(self.target.sym, params['feats'])
 
         for pred in list(set(predsNeeded)):
             self.predictors[pred] = assets.asset(pred, cfg['inputParams']['aggFreq'], params['tickSizes'][pred],
                                                  params['spreadCutoff'][pred], cfg['inputParams']['volHL'],
-                                                 seeds[self.target.sym], self.prod)
+                                                 seeds[self.target.sym], timezone, self.prod)
         return
 
     def initialiseAlphas(self, cfg, params, seeds):
@@ -235,22 +235,23 @@ class assetModel():
         return
 
     def updateLog(self):
-        thisLog = [self.target.timestamp, self.target.contractChange, self.target.midPrice, self.target.timeDelta,
-                   self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt, self.holdings, self.tradeVolume,
-                   self.maxTradeSize, self.normedHoldings, self.maxLots, self.notionalPerLot, self.fxRate]
-        self.log.append(thisLog)
+        self.log = [utility.formatTsToStrig(self.target.timestamp), self.target.contractChange, self.target.midPrice,
+                    self.target.timeDelta, self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt,
+                    self.initHoldings, self.tradeVolume, self.maxTradeSize, self.normedHoldings, self.maxPosition,
+                    self.notionalPerLot, self.fxRate]
         return
 
     def updateSeeds(self):
         self.seedDump = {f"{self.target.sym}_midPrice": self.target.midPrice,
                          f"Volatility_{self.target.sym}": self.target.vol,
-                         f"{self.target.sym}_lastTS": self.target.timestamp,
-                         f"{self.target.sym}_symbol" : self.target.symbol}
+                         f"{self.target.sym}_lastTS": self.target.timestamp.strftime('%Y_%m_%d_%H'),
+                         f"{self.target.sym}_symbol": self.target.symbol}
 
         for pred in self.predictors:
             self.seedDump[f'{pred}_midPrice'] = self.predictors[pred].midPrice
             self.seedDump[f'Volatility_{pred}'] = self.predictors[pred].vol
             self.seedDump[f'{pred}_symbol'] = self.predictors[pred].symbol
+            self.seedDump[f'{pred}_lastTS'] = self.predictors[pred].timestamp.strftime('%Y_%m_%d_%H')
 
         for name in self.alphaDict:
             self.seedDump[f'{name}_smoothSeed'] = self.alphaDict[name].smoothVal

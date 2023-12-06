@@ -3,15 +3,16 @@ from modules import utility
 
 
 class asset:
-    def __init__(self, sym, aggFreq, tickSize, spreadCutoff, volHL, seeds, prod):
+    def __init__(self, sym, aggFreq, tickSize, spreadCutoff, volHL, seeds, timezone, prod):
         self.sym = sym
         self.tickSize = float(tickSize)
         self.spreadCutoff = spreadCutoff
         self.aggFreq = aggFreq
         self.log = []
-        self.lastMid = seeds[f'{sym}_midPrice']
         self.vol = seeds[f'Volatility_{sym}']
+        self.lastMid = seeds[f'{sym}_midPrice']
         self.lastSymbol = seeds[f'{self.sym}_symbol']
+        self.lastTS = utility.formatTsSeed(seeds[f'{self.sym}_lastTS'], timezone)
         self.volInvTau = np.float64(1 / (volHL * logTwo))
         self.prod = prod
         if self.prod:
@@ -19,8 +20,7 @@ class asset:
         else:
             self.initialised = False
 
-    @staticmethod
-    def mdhSane(md, sym, spreadCutoff, prod):
+    def mdhSane(self, md, sym, spreadCutoff, prod):
         """
         DataFilters
         """
@@ -37,8 +37,11 @@ class asset:
                 return False
             return True
         else:
-            # TODO - Check if timestamp matches most recent hour, throw out if not
+            if pd.Timestamp(md[f'{sym}_lastTS']) <= self.lastTS:
+                lg.info(f"No {sym} MD Update. Last Updated: {md[f'{sym}_lastTS']}")
+                return False
             if math.isnan(md[f'{sym}_midPrice']):
+                lg.info(f"NaN midPrice for: {sym}, ignoring this update...")
                 return False
             return True
 
@@ -63,6 +66,15 @@ class asset:
         # self.askSize = md[f'{self.sym}_ask_size']
         return
 
+    def maintainContractState(self):
+        self.midPrice = self.lastMid
+        self.symbol = self.lastSymbol
+        self.timestamp = self.lastTS
+        self.contractChange = False
+        self.timeDelta = 0
+        self.midDelta = 0
+        return
+
     def firstSaneUpdate(self, md):
         self.initialised = True
         self.contractChange = True
@@ -70,7 +82,7 @@ class asset:
         self.midDelta = 0
         self.lastMid = md[f'{self.sym}_midPrice']
         self.lastSymbol = md[f'{self.sym}_symbol']
-        #self.lastTS = md[f'{self.sym}_lastTS']
+        self.lastTS = md[f'{self.sym}_lastTS']
         return
 
     def isContractChange(self):
@@ -84,7 +96,7 @@ class asset:
             self.timeDelta = 0
         else:
             self.timeDelta = 1  # (self.timestamp - self.lastTS).seconds / self.aggFreq
-        #self.lastTS = self.timestamp
+        # self.lastTS = self.timestamp
         return
 
     def midDeltaCalc(self):
@@ -109,6 +121,7 @@ class asset:
 
     def mdUpdate(self, md):
         if not self.mdhSane(md, self.sym, self.spreadCutoff, self.prod):
+            self.maintainContractState()
             return
         if not self.initialised:
             self.firstSaneUpdate(md)
@@ -123,21 +136,21 @@ class asset:
         self.updateLog()
         return
 
-    def updateLog(self):
-        thisLog = [self.symbol, self.timestamp, self.contractChange, self.midPrice, self.timeDelta]
-        self.log.append(thisLog)
-        return
-
     def updateVolatility(self):
         self.vol = np.sqrt(
             utility.emaUpdate(self.vol ** 2, (self.midDelta) ** 2, self.timeDelta, self.volInvTau))
         return
 
+    def updateLog(self):
+        self.log = [self.symbol, utility.formatTsToStrig(self.timestamp), self.contractChange, self.midPrice,
+                   self.timeDelta]
+        return
+
 
 class traded(asset):
-    def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds, prod):
+    def __init__(self, sym, cfg, tickSize, spreadCutoff, seeds, timezone, prod):
         super(traded, self).__init__(sym, cfg['inputParams']['aggFreq'], tickSize, spreadCutoff,
-                                     cfg['inputParams']['volHL'], seeds, prod)
+                                     cfg['inputParams']['volHL'], seeds, timezone, prod)
 
     def updateContractState(self, md):
         super().updateContractState(md)
