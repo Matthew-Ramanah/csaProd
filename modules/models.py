@@ -39,6 +39,8 @@ class assetModel():
         self.fxRate = self.calcFxRate()
         self.notionalPerLot = self.calcNotionalPerLot()
         self.maxPosition = self.calcMaxPosition()
+        self.calcMaxTradeSize()
+
         return
 
     def calcFxRate(self):
@@ -165,7 +167,6 @@ class assetModel():
 
     def calcHoldings(self):
         self.calcHOpt()
-        self.calcMaxTradeSize()
         self.normedHoldings = self.convertHOptToNormedHoldings(self.hOpt, self.hScaler)
         sizedHoldings = self.convertNormedToSizedHoldings(self.maxPosition, self.normedHoldings)
         self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))

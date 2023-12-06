@@ -84,12 +84,14 @@ def generateAFBITradeFile(fitModels, md, initPositions, timezone):
 
 def sendAFBITradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = sendFrom
+    sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
+    sendCC = ["stephen.klein@afbillc.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com",
+              "matthew.ramanah@sydneyquantitative.com"]
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"
     message = f"CBCT_{timeSig}"
     filename = f"CBCT_{timeSig}.csv"
-    gmail.sendTradeFile(tradesPath, sendFrom, sendTo, username, password, subject, message, filename)
+    gmail.sendTradeFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
 
     return

@@ -89,7 +89,7 @@ def pullLatestPosFile(service, searchQuery):
         return {'emailsubject': subject, 'filename': attPart['filename'], 'data': df}
 
 
-def sendTradeFile(path, sendFrom, sendTo, username, password, subject, message, filename):
+def sendTradeFile(path, sendFrom, sendTo, sendCC, username, password, subject, message, filename):
     lg.info("Sending tradeFile...")
     import smtplib
     from email.mime.multipart import MIMEMultipart
@@ -100,7 +100,8 @@ def sendTradeFile(path, sendFrom, sendTo, username, password, subject, message, 
 
     msg = MIMEMultipart()
     msg['From'] = sendFrom
-    msg['To'] = sendTo
+    msg['To'] = ", ".join(sendTo)
+    msg['Cc'] = ", ".join(sendCC)
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject
 
@@ -117,7 +118,7 @@ def sendTradeFile(path, sendFrom, sendTo, username, password, subject, message, 
     smtp.ehlo()
     smtp.starttls()
     smtp.login(username, password)
-    smtp.sendmail(sendFrom, sendTo, msg.as_string())
+    smtp.sendmail(sendFrom, sendTo + sendCC, msg.as_string())
     smtp.quit()
 
     return
