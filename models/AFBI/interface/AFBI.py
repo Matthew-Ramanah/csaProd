@@ -39,7 +39,7 @@ def findSide(qty):
 
 def createTradeCSV(fitModels, trades, md, initPositions, timezone):
     refData = utility.loadRefData()
-    afbiAccount = "CBCT"
+    afbiAccount = "CBCTBULK"
     orderType = "MKT"
     limitPrice = ""
     stopPrice = ""
@@ -68,7 +68,7 @@ def createTradeCSV(fitModels, trades, md, initPositions, timezone):
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
-def generateAFBITradeFile(fitModels, md, initPositions, timezone):
+def generateAFBITradeFile(fitModels, md, initPositions, timezone, send=True):
     tradesPath = f"{logRoot}CBCT_{md['timeSig']}.csv"
 
     # Generate CSV & dict
@@ -78,7 +78,8 @@ def generateAFBITradeFile(fitModels, md, initPositions, timezone):
 
     # Save to Log & Email
     tradeCSV.to_csv(tradesPath)
-    sendAFBITradeEmail(tradesPath, md['timeSig'])
+    if send:
+        sendAFBITradeEmail(tradesPath, md['timeSig'])
     return trades
 
 
