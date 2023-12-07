@@ -29,7 +29,3 @@ trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, timezone, send
 modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels)
 
 lg.info("Completed.")
-
-print("")
-for sym in fitModels:
-    print(sym, fitModels[sym].normedHoldings)

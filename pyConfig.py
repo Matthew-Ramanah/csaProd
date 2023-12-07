@@ -26,7 +26,6 @@ import matplotlib.ticker as mtick
 import logging as lg
 import scipy
 import math
-import seaborn as sns
 import json
 import h5py
 import sys
