@@ -16,7 +16,7 @@ initPositions = AFBI.detectAFBIPositions(cfg)
 fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, timezone=timezone, prod=True)
 
 # Pull Market Data
-md = dataFeed.feed(cfg, timezone).pullLatestMD(syntheticIncrement=1)
+md = dataFeed.feed(cfg, timezone).pullLatestMD(syntheticIncrement=0)
 
 # Update Models
 for sym in fitModels:
@@ -29,3 +29,7 @@ trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, timezone, send
 modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels)
 
 lg.info("Completed.")
+
+print("")
+for sym in fitModels:
+    print(sym, fitModels[sym].normedHoldings)

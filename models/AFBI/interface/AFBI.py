@@ -5,15 +5,18 @@ from modules import utility, gmail
 def detectAFBIPositions(cfg):
     refData = utility.loadRefData()
     dfPositions = pullAFBIPositions()
+    notDetected = []
     positions = {}
     for sym in cfg['targets']:
         bbSym = refData.loc[sym]['iqfSym']
         if bbSym not in dfPositions['BB Yellow Key'].values:
+            notDetected.append(sym)
             positions[sym] = 0
-            lg.info(f"Can't find a {sym} position from AFBI, initialising at 0 for now...")
         else:
             positions[sym] = dfPositions.loc[dfPositions['BB Yellow Key'] == bbSym]['Active']
 
+    if len(notDetected)!=0:
+        lg.info(f"Can't find positions from AFBI for {notDetected}, initialising at 0 for now.")
     return positions
 
 

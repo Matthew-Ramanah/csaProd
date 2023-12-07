@@ -156,5 +156,6 @@ def loadInitSeeds(cfg):
             oldModelState = json.load(f)
         return oldModelState['seedDump']
     except:
+        lg.info("Can't find previous modelState, seeding with latest research data")
         researchFeeds = loadResearchFeeds(cfg)
         return constructResearchSeeds(researchFeeds, cfg)

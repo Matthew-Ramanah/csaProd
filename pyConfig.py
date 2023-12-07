@@ -59,6 +59,42 @@ lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 # Deal with terribly designed data source
 fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
 
+tradedSyms = {
+    "ZL0": "@BOF24",
+    "ZC0": "@CH24",
+    "ZS0": "@SF24",
+    "ZM0": "@SMF24",
+    "ZW0": "@WH24",
+    "KE0": "@KWH24",
+    "LE0": "@LEG24",
+    "GF0": "@GFF24",
+    "HG0": "QHGH24",
+    "GC0": "QGCG24",
+    "SI0": "QSIH24",
+    "PL0": "QPLF24",
+    "RB0": "QRBF24",
+    "CL0": "QCLF24",
+    "HO0": "QHOF24",
+    "RS0": "@RSH24",
+    "W0": "QWH24",
+    "ICE-US_CT0": "@CTH24",
+    "ICE-EU_G0": "GASF24",
+    "ICE-US_KC0": "@KCH24",
+    "ZB0": "@USH24",
+    "ZN0": "@TYH24",
+    "ZF0": "@FVH24",
+    "FBTP0": "BTPH24",
+    "FGBL0": "BDZ23",
+    "FGBM0": "BLZ23",
+    "AP0": "SPIZ23",
+    "ES0": "@ESZ23",
+    "NQ0": "@NQZ23",
+    "RTY0": "@RTYZ23",
+    "FSMI0": "SWZ23",
+    "FTI0": "AEXZ23",
+    "ALSI0": "ALJZ23",
+}
+
 exchangeMap = {
     "asx_refinitiv_v4": [
         "XT0",

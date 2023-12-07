@@ -30,13 +30,15 @@ class feed():
     def constructSymbolMap(self):
         refData = utility.loadRefData()
         self.symbolMap = {}
-        for i in self.symbolsNeeded:
-            if i[-1] == '=':
-                iqfSym = refData.loc[i]['iqfSym']
+        for sym in self.symbolsNeeded:
+            if sym in list(tradedSyms.keys()):
+                iqfSym = tradedSyms[sym]
+            elif sym[-1] == '=':
+                iqfSym = refData.loc[sym]['iqfSym']
             else:
-                baseSym = refData.loc[i[:-1] + '0']['iqfSym'][:-2]
-                iqfSym = self.findNthSymbol(baseSym, n=int(i[-1]))
-            self.symbolMap[i] = iqfSym
+                baseSym = refData.loc[sym[:-1] + '0']['iqfSym'][:-2]
+                iqfSym = self.findNthSymbol(baseSym, n=int(sym[-1]))
+            self.symbolMap[sym] = iqfSym
         return self.symbolMap
 
     def sendSocketMessage(self, message):
