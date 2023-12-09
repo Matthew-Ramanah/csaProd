@@ -1,6 +1,33 @@
 from pyConfig import *
 from modules import utility, gmail
 
+timezone = 'US/Eastern'
+
+unmannedHours = {
+    "Monday": ("00:00", "08:00"),
+    "Tuesday": ("04:00", "08:00"),
+    "Wednesday": ("04:00", "08:00"),
+    "Thursday": ("04:00", "08:00"),
+    "Friday": ("04:00", "08:00"),
+    "Saturday": ("04:00", "23:59"),
+    "Sunday": ("00:00", "23:59")
+}
+
+
+def isDeskManned():
+    """
+    Note the dictionary specifies the times the desk is UNMANNED
+    """
+    localDT = datetime.datetime.now(pytz.timezone(timezone))
+    localDay = dayOfWeekMap[localDT.weekday()]
+    localTime = localDT.time()
+    startTime = datetime.datetime.strptime(unmannedHours[localDay][0], '%H:%M').time()
+    endTime = datetime.datetime.strptime(unmannedHours[localDay][1], '%H:%M').time()
+    if localTime > startTime and localTime < endTime:
+        return False
+    else:
+        return True
+
 
 def detectAFBIPositions(cfg):
     refData = utility.loadRefData()
@@ -15,7 +42,7 @@ def detectAFBIPositions(cfg):
         else:
             positions[sym] = dfPositions.loc[dfPositions['BB Yellow Key'] == bbSym]['Active']
 
-    if len(notDetected)!=0:
+    if len(notDetected) != 0:
         lg.info(f"Can't find positions from AFBI for {notDetected}, initialising at 0 for now.")
     return positions
 
@@ -81,8 +108,12 @@ def generateAFBITradeFile(fitModels, md, initPositions, timezone, send=True):
 
     # Save to Log & Email
     tradeCSV.to_csv(tradesPath)
+
     if send:
-        sendAFBITradeEmail(tradesPath, md['timeSig'])
+        if isDeskManned():
+            sendAFBITradeEmail(tradesPath, md['timeSig'])
+        else:
+            lg.info("Not sending email as desk is unmanned.")
     return trades
 
 

@@ -58,6 +58,8 @@ lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 # Deal with terribly designed data source
 fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
 
+dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
+
 tradedSyms = {
     "ZL0": "@BOF24",
     "ZC0": "@CH24",
