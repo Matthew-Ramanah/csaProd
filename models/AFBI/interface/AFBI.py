@@ -35,12 +35,12 @@ def detectAFBIPositions(cfg):
     notDetected = []
     positions = {}
     for sym in cfg['targets']:
-        bbSym = refData.loc[sym]['iqfSym']
-        if bbSym not in dfPositions['BB Yellow Key'].values:
+        tradedSym = refData.loc[sym]['tradedSym']
+        if tradedSym not in dfPositions['BB Yellow Key'].values:
             notDetected.append(sym)
             positions[sym] = 0
         else:
-            positions[sym] = dfPositions.loc[dfPositions['BB Yellow Key'] == bbSym]['Active']
+            positions[sym] = dfPositions.loc[dfPositions['BB Yellow Key'] == tradedSym]['Active']
 
     if len(notDetected) != 0:
         lg.info(f"Can't find positions from AFBI for {notDetected}, initialising at 0 for now.")
