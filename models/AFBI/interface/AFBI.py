@@ -4,7 +4,7 @@ from modules import utility, gmail
 timezone = 'US/Eastern'
 
 unmannedHours = {
-    "Monday": ("00:00", "08:00"),
+    "Monday": ("04:00", "08:00"),
     "Tuesday": ("04:00", "08:00"),
     "Wednesday": ("04:00", "08:00"),
     "Thursday": ("04:00", "08:00"),
