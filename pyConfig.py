@@ -21,6 +21,8 @@ logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
 # Global Packages
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import logging as lg
