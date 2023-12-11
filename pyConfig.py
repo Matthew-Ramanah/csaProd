@@ -22,6 +22,7 @@ logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
 import pandas as pd
 import numpy as np
 import matplotlib
+
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -62,7 +63,7 @@ fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
 
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
 
-tradedSyms = {
+hardcodedContracts = {
     "ZL0": "@BOF24",
     "ZC0": "@CH24",
     "ZS0": "@SF24",
@@ -72,9 +73,12 @@ tradedSyms = {
     "LE0": "@LEG24",
     "GF0": "@GFF24",
     "HG0": "QHGH24",
+    "HE0": "@HEG24",
+    "HE1": "@HEJ24",
     "GC0": "QGCG24",
     "SI0": "QSIH24",
     "PL0": "QPLF24",
+    "PA0": "QPAH24",
     "RB0": "QRBF24",
     "CL0": "QCLF24",
     "HO0": "QHOF24",
@@ -83,9 +87,11 @@ tradedSyms = {
     "ICE-US_CT0": "@CTH24",
     "ICE-EU_G0": "GASF24",
     "ICE-US_KC0": "@KCH24",
+    "ICE-LL_R0": "LGH24",
     "ZB0": "@USH24",
     "ZN0": "@TYH24",
     "ZF0": "@FVH24",
+    "ZT0": "@TUH24",
     "FBTP0": "BTPH24",
     "FGBL0": "BDH24",
     "FGBM0": "BLH24",
@@ -95,7 +101,7 @@ tradedSyms = {
     "RTY0": "@RTYH24",
     "FSMI0": "SWZ23",
     "FTI0": "AEXZ23",
-    "ALSI0": "ALJZ23",
+    "ALSI0": "ALJZ23"
 }
 
 exchangeMap = {

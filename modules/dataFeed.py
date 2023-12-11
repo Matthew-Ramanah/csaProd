@@ -31,8 +31,8 @@ class feed():
         refData = utility.loadRefData()
         self.symbolMap = {}
         for sym in self.symbolsNeeded:
-            if sym in list(tradedSyms.keys()):
-                iqfSym = tradedSyms[sym]
+            if sym in list(hardcodedContracts.keys()):
+                iqfSym = hardcodedContracts[sym]
             elif sym[-1] == '=':
                 iqfSym = refData.loc[sym]['iqfSym']
             else:
