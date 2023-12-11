@@ -22,7 +22,7 @@ for sym in fitModels:
     fitModels[sym].mdUpdate(md)
 
 # Generate tradeFile
-trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=True)
+trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=False)
 
 # Save
 modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels)

@@ -1,3 +1,5 @@
+import pandas as pd
+
 from pyConfig import *
 from modules import utility
 
@@ -5,17 +7,19 @@ from modules import utility
 def initialiseLogDict(cfg):
     logs = {}
     for sym in cfg['targets']:
-        logs[sym] = pd.DataFrame()
+        logs[sym] = []
     return logs
 
 
-def formatRawLog(rawLog, sym):
-    fx = utility.findNotionalFx(sym)
-    names = [f'lastTS', f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}',
-             f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
-             f'{sym}_maxTradeSize', f'{sym}_NormTargetHoldings', f'{sym}_MaxPosition', f'{sym}_notionalPerLot',
-             f'{sym}_{fx}_DailyRate']
-    return pd.Series(rawLog, index=names)
+def formatRawLogs(rawLogs):
+    for sym in rawLogs:
+        fx = utility.findNotionalFx(sym)
+        names = [f'lastTS', f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}',
+                 f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
+                 f'{sym}_maxTradeSize', f'{sym}_NormTargetHoldings', f'{sym}_MaxPosition', f'{sym}_notionalPerLot',
+                 f'{sym}_{fx}_DailyRate']
+        rawLogs[sym] = pd.DataFrame(rawLogs[sym], columns=names)
+    return rawLogs
 
 
 with open(cfg_file, 'r') as f:
@@ -31,8 +35,7 @@ def loadLogs(cfg):
                 with open(f'{logRoot}models/{file}', 'r') as f:
                     rawLog = json.load(f)
                 for sym in rawLog:
-                    if len(rawLog[sym]) == 0:
-                        continue
-                    cleanLog = formatRawLog(rawLog[sym], sym)
-                    logs[sym] = pd.concat([logs[sym], cleanLog], axis=0)
+                    if len(rawLog[sym]) != 0:
+                        logs[sym].append(rawLog[sym])
+    logs = formatRawLogs(logs)
     return logs
