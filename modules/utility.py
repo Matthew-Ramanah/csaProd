@@ -117,6 +117,10 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels):
     with open(f'{interfaceRoot}modelState.json', 'w') as f:
         json.dump(modelState, f)
 
+    # Save log separately for processing
+    with open(f"{logRoot}models/CBCT_{md['timeSig']}.json", 'w') as f:
+        json.dump(modelState["logs"], f)
+
     lg.info("Saved Model State.")
     return modelState
 
@@ -141,7 +145,6 @@ def localizeTS(stringTS, timezone):
 def formatTsSeed(tsSeed, timezone):
     tsNaive = pd.Timestamp(datetime.datetime.strptime(tsSeed, '%Y_%m_%d_%H'))
     return localizeTS(tsNaive, timezone)
-
 
 
 def formatTsToStrig(ts):

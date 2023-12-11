@@ -99,7 +99,7 @@ def createTradeCSV(fitModels, trades, md, initPositions, timezone):
 
 
 def generateAFBITradeFile(fitModels, md, initPositions, timezone, send=True):
-    tradesPath = f"{logRoot}CBCT_{md['timeSig']}.csv"
+    tradesPath = f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
 
     # Generate CSV & dict
     trades = utility.generateTrades(fitModels)
