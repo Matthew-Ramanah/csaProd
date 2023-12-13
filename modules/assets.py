@@ -38,7 +38,6 @@ class asset:
             return True
         else:
             if pd.Timestamp(md[f'{sym}_lastTS']) <= self.lastTS:
-                lg.info(f"No {sym} MD Update. Last Updated: {md[f'{sym}_lastTS']}")
                 return False
             if math.isnan(md[f'{sym}_midPrice']):
                 lg.info(f"NaN midPrice for: {sym}, ignoring this update...")

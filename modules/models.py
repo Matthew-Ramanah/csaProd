@@ -7,6 +7,7 @@ class assetModel():
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds[targetSym], timezone, prod)
         self.log = []
+        self.staleAssets = []
         self.prod = prod
         if self.prod:
             self.seeding = False
@@ -76,6 +77,7 @@ class assetModel():
         return False
 
     def mdUpdate(self, md):
+        self.staleAssets = []
         self.target.mdUpdate(md)
         for pred in self.predictors:
             self.predictors[pred].mdUpdate(md)
@@ -100,6 +102,7 @@ class assetModel():
         else:
             self.tradeVolume = 0
             self.log = []
+            self.staleAssets.append(self.target.sym)
 
         self.updateSeeds()
         return

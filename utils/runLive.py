@@ -21,6 +21,11 @@ md = dataFeed.feed(cfg, AFBI.timezone).pullLatestMD(syntheticIncrement=0)
 for sym in fitModels:
     fitModels[sym].mdUpdate(md)
 
+# Check Bad Data
+for sym in fitModels:
+    for
+        lg.info(f"No {sym} MD Update. Last Updated: {md[f'{sym}_lastTS']}")
+
 # Generate tradeFile
 trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=False)
 
