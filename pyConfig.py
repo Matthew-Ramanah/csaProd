@@ -67,7 +67,7 @@ hardcodedContracts = {
     "ZL0": "@BOF24",
     "ZC0": "@CH24",
     "ZS0": "@SF24",
-    "ZM0": "@SMF24",
+    "ZM0": "@SMH24",
     "ZW0": "@WH24",
     "KE0": "@KWH24",
     "LE0": "@LEG24",
@@ -80,7 +80,7 @@ hardcodedContracts = {
     "PL0": "QPLF24",
     "PA0": "QPAH24",
     "RB0": "QRBF24",
-    "CL0": "QCLF24",
+    "CL0": "QCLG24",
     "HO0": "QHOF24",
     "RS0": "@RSH24",
     "W0": "QWH24",
@@ -99,8 +99,8 @@ hardcodedContracts = {
     "ES0": "@ESH24",
     "NQ0": "@NQH24",
     "RTY0": "@RTYH24",
-    "FSMI0": "SWZ23",
-    "FTI0": "AEXZ23",
+    "FSMI0": "SWH24",
+    "FTI0": "AEXF24",
     "ALSI0": "ALJZ23"
 }
 
