@@ -1,5 +1,5 @@
 from pyConfig import *
-from modules import models
+from modules import models, dataFeed
 
 
 @functools.cache
@@ -26,12 +26,13 @@ def loadResearchFeeds(cfg):
     return researchFeeds
 
 
-def initialiseModels(cfg, seeds, positions, timezone, prod=False):
+def initialiseModels(cfg, seeds, positions, timezone, riskLimits, prod=False):
     refData = loadRefData()
     fitModels = {}
     for sym in cfg['targets']:
         fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData,
-                                           seeds=seeds, initHoldings=positions[sym], timezone=timezone, prod=prod)
+                                           seeds=seeds, initHoldings=positions[sym], timezone=timezone,
+                                           riskLimits=riskLimits, prod=prod)
     lg.info("Models Initialised.")
     return fitModels
 
@@ -163,3 +164,29 @@ def loadInitSeeds(cfg):
         lg.info("Can't find previous modelState, seeding with latest research data")
         researchFeeds = loadResearchFeeds(cfg)
         return constructResearchSeeds(researchFeeds, cfg)
+
+
+def findPositionDelay(lastPosTime, timezone):
+    return pd.Timestamp(datetime.datetime.now(pytz.timezone(timezone))) - lastPosTime.tz_localize(timezone)
+
+
+def findDaysHoursMinutes(positionDelay):
+    days, r1 = divmod(positionDelay.total_seconds(), 86400)
+    hours, r2 = divmod(r1, 3600)
+    minutes, seconds = divmod(r2, 60)
+    return days, hours, minutes
+
+
+def logPositionDelay(lastPosTime, timezone):
+    positionDelay = findPositionDelay(lastPosTime, timezone)
+    days, hours, minutes = findDaysHoursMinutes(positionDelay)
+    lg.info(f"Position File Updated {int(days)} Days, {int(hours)} Hours, {int(minutes)} Minutes Ago.")
+    return
+
+
+def updateModels(fitModels, md):
+    for sym in fitModels:
+        fitModels[sym].mdUpdate(md)
+
+    dataFeed.monitorMdhSanity(fitModels, md)
+    return fitModels

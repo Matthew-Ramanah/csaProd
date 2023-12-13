@@ -8,28 +8,24 @@ with open(cfg_file, 'r') as f:
 # Load Seeds
 initSeeds = utility.loadInitSeeds(cfg)
 
-# Load Positions
+# Load Positions & Limits
 initPositions = AFBI.detectAFBIPositions(cfg)
+riskLimits = AFBI.detectRiskLimits()
 
 # Initialise models
-fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, timezone=AFBI.timezone, prod=True)
+fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, timezone=AFBI.timezone,
+                                     riskLimits=riskLimits, prod=True)
 
 # Pull Market Data
 md = dataFeed.feed(cfg, AFBI.timezone).pullLatestMD(syntheticIncrement=0)
 
 # Update Models
-for sym in fitModels:
-    fitModels[sym].mdUpdate(md)
-
-# Check Bad Data
-for sym in fitModels:
-    for
-        lg.info(f"No {sym} MD Update. Last Updated: {md[f'{sym}_lastTS']}")
+fitModels = utility.updateModels(fitModels, md)
 
 # Generate tradeFile
-trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=False)
+# trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=False)
 
 # Save
-modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels)
+# modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels)
 
 lg.info("Completed.")

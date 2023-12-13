@@ -19,6 +19,7 @@ class asset:
             self.initialised = True
         else:
             self.initialised = False
+        self.stale = False
 
     def mdhSane(self, md, sym, spreadCutoff, prod):
         """
@@ -37,11 +38,10 @@ class asset:
                 return False
             return True
         else:
-            if pd.Timestamp(md[f'{sym}_lastTS']) <= self.lastTS:
+            if (pd.Timestamp(md[f'{sym}_lastTS']) <= self.lastTS) or math.isnan(md[f'{sym}_midPrice']):
+                self.stale = True
                 return False
-            if math.isnan(md[f'{sym}_midPrice']):
-                lg.info(f"NaN midPrice for: {sym}, ignoring this update...")
-                return False
+            self.stale = False
             return True
 
     @staticmethod

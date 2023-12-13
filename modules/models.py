@@ -3,7 +3,7 @@ from modules import utility, alphas, assets
 
 
 class assetModel():
-    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, timezone, prod=False):
+    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, timezone, riskLimits, prod=False):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds[targetSym], timezone, prod)
         self.log = []
@@ -23,6 +23,7 @@ class assetModel():
         self.notionalAlloc = cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}']
         self.notionalMultiplier = refData['notionalMultiplier'][self.target.sym]
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
+        self.riskLimits = {}#riskLimits[targetSym]
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, params, seeds, timezone)
@@ -55,7 +56,7 @@ class assetModel():
         return round(self.notionalMultiplier * self.target.lastMid / self.fxRate, 2)
 
     def calcMaxPosition(self):
-        return int(self.totalCapital * self.notionalAlloc / self.notionalPerLot)
+        return min(int(self.totalCapital * self.notionalAlloc / self.notionalPerLot), self.riskLimit)
 
     def checkifSeeded(self):
         for pred in self.predictors:
@@ -76,8 +77,16 @@ class assetModel():
             return True
         return False
 
-    def mdUpdate(self, md):
+    def checkStaleAssets(self):
         self.staleAssets = []
+        if self.target.stale:
+            self.staleAssets.append(self.target.sym)
+        for pred in self.predictors:
+            if self.predictors[pred].stale:
+                self.staleAssets.append(self.predictors[pred].sym)
+        return
+
+    def mdUpdate(self, md):
         self.target.mdUpdate(md)
         for pred in self.predictors:
             self.predictors[pred].mdUpdate(md)
@@ -102,8 +111,8 @@ class assetModel():
         else:
             self.tradeVolume = 0
             self.log = []
-            self.staleAssets.append(self.target.sym)
 
+        self.checkStaleAssets()
         self.updateSeeds()
         return
 
@@ -140,7 +149,7 @@ class assetModel():
         return 0.5 * (self.target.bidSize + self.target.askSize)
 
     def calcMaxTradeSize(self):
-        self.maxTradeSize = int(np.ceil(maxHDelta * self.maxPosition))
+        self.maxTradeSize = int(np.ceil(maxAssetDelta * self.maxPosition))
 
         """
         Deprecate liquidity filter until we have live bid/ask data

@@ -52,6 +52,12 @@ def detectAFBIPositions(cfg):
     return positions
 
 
+def findEmailTime(filename):
+    for s in ['CBCT EOD POSITIONS_', '.xls']:
+        filename = filename.replace(s, '')
+    return pd.Timestamp(datetime.datetime.strptime(filename, '%m_%d_%Y_%H_%M_%S'))
+
+
 def pullAFBIPositions():
     afbiCredentials = interfaceRoot + "credentials.json"
     afbiToken = interfaceRoot + "token.json"
@@ -59,7 +65,8 @@ def pullAFBIPositions():
 
     service = gmail.get_gmail_service(afbiCredentials, afbiToken)
     latestEmail = gmail.pullLatestPosFile(service, afbiEmailRegex)
-    lg.info('Latest AFBI Position File: ' + latestEmail['filename'])
+    lastPosTime = findEmailTime(latestEmail['filename'])
+    utility.logPositionDelay(lastPosTime, timezone)
     return latestEmail['data']
 
 
@@ -135,3 +142,8 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     gmail.sendTradeFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
 
     return
+
+def detectRiskLimits():
+    riskPath =  f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
+    riskLimits = pd.read_csv()
+    return riskLimits

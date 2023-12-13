@@ -105,3 +105,13 @@ class feed():
         self.updateDataMap()
         self.closeSocket()
         return self.constructMD(syntheticIncrement)
+
+
+def monitorMdhSanity(fitModels, md):
+    staleAssets = []
+    for sym in fitModels:
+        staleAssets += fitModels[sym].staleAssets
+    staleAssets = list(set(staleAssets))
+    for i in staleAssets:
+        lg.info(f"{i} mdhUpdate not sane. Last Updated: {md[f'{i}_lastTS']}")
+    return

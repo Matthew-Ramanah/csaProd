@@ -11,7 +11,7 @@ minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
-maxHDelta = 0.2
+maxAssetDelta = 0.2
 
 # Run-time options
 cfg_file = root + "models/AFBI/config/afbiRecon.json"
