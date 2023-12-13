@@ -26,13 +26,13 @@ def loadResearchFeeds(cfg):
     return researchFeeds
 
 
-def initialiseModels(cfg, seeds, positions, timezone, riskLimits, prod=False):
+def initialiseModels(cfg, seeds, positions, riskLimits, timezone, prod=False):
     refData = loadRefData()
     fitModels = {}
     for sym in cfg['targets']:
         fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData,
-                                           seeds=seeds, initHoldings=positions[sym], timezone=timezone,
-                                           riskLimits=riskLimits, prod=prod)
+                                           seeds=seeds, initHoldings=positions[sym], riskLimits=riskLimits,
+                                           timezone=timezone, prod=prod)
     lg.info("Models Initialised.")
     return fitModels
 

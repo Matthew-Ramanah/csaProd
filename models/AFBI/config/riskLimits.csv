@@ -1,1 +1,22 @@
 ,Bloom Ticker,Exchange,Description,maxTradeSize,maxPosition
+0,TYH4 Comdty,CME,US 10 Yr Bond,1,2
+1,FVH4 Comdty,CME,US 5 Yr Bond,1,4
+2,IKH4 Comdty,EUREX,Italian Bond,2,6
+3,XPZ3 Index,SFE,Aus Index,1,2
+4,ESH4 Index,CME,E-Mini Index,1,3
+5,SMZ3 Index,EUREX,Swiss Blue Chip Index,1,2
+6,EOZ3 Index,EURONEXT,Amsterdam Index,1,3
+7,AIZ3 Index,JSE,Johannesburg Index,4,20
+8,C H4 Comdty,CME,Corn,3,12
+9,S F4 Comdty,CME,Soybeans,1,2
+10,SMF4 Comdty,CME,Soybean Meal,4,17
+11,W H4 Comdty,CME,Chicago Wheat,3,14
+12,KWH4 Comdty,CME,Kansas Wheat,2,8
+13,LCG4 Comdty,CME,Live Cattle,3,11
+14,CLF4 Comdty,CME,Crude Light,1,2
+15,HOF4 Comdty,CME,Heating Oil,1,2
+16,RSH4 Comdty,ICE,Canola,6,30
+17,QWH4 Comdty,ICE,White Sugar,3,15
+18,CTH4 Comdty,ICE,Cotton,4,16
+19,QSF4 Comdty,ICE,Low Sulphur Gasoil,1,2
+20,KCH4 Comdty,ICE,Arabica Coffee,2,6

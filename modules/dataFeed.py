@@ -61,7 +61,6 @@ class feed():
     def updateDataMap(self):
         self.constructSymbolMap()
 
-        lg.info("Pulling Latest Prices...")
         self.dataMap = {}
         for sym in self.symbolMap:
             message = f'HIX,{self.symbolMap[sym]},{self.aggregation},1'
@@ -113,5 +112,5 @@ def monitorMdhSanity(fitModels, md):
         staleAssets += fitModels[sym].staleAssets
     staleAssets = list(set(staleAssets))
     for i in staleAssets:
-        lg.info(f"{i} mdhUpdate not sane. Last Updated: {md[f'{i}_lastTS']}")
+        lg.info(f"{i} MD Update Not Sane. Last Updated: {md[f'{i}_lastTS']}")
     return

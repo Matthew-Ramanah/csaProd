@@ -143,7 +143,15 @@ def sendAFBITradeEmail(tradesPath, timeSig):
 
     return
 
-def detectRiskLimits():
-    riskPath =  f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
-    riskLimits = pd.read_csv()
+
+def detectRiskLimits(cfg):
+    riskPath = f"{root}models/AFBI/config/riskLimits.csv"
+    dfLimits = pd.read_csv(riskPath)
+    refData = utility.loadRefData()
+    riskLimits = {}
+    for sym in cfg['targets']:
+        tradedSym = refData.loc[sym]['tradedSym']
+        row = np.where(dfLimits['Bloom Ticker'] == tradedSym)[0][0]
+        riskLimits[sym] = {"maxPosition": int(dfLimits.iloc[row]['maxPosition']),
+                           "maxTradeSize": int(dfLimits.iloc[row]['maxTradeSize'])}
     return riskLimits

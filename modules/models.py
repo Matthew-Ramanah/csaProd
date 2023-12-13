@@ -3,7 +3,7 @@ from modules import utility, alphas, assets
 
 
 class assetModel():
-    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, timezone, riskLimits, prod=False):
+    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, riskLimits, timezone, prod=False):
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds[targetSym], timezone, prod)
         self.log = []
@@ -23,7 +23,7 @@ class assetModel():
         self.notionalAlloc = cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}']
         self.notionalMultiplier = refData['notionalMultiplier'][self.target.sym]
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
-        self.riskLimits = {}#riskLimits[targetSym]
+        self.riskLimits = riskLimits[targetSym]
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, params, seeds, timezone)
@@ -56,7 +56,7 @@ class assetModel():
         return round(self.notionalMultiplier * self.target.lastMid / self.fxRate, 2)
 
     def calcMaxPosition(self):
-        return min(int(self.totalCapital * self.notionalAlloc / self.notionalPerLot), self.riskLimit)
+        return min(int(self.totalCapital * self.notionalAlloc / self.notionalPerLot), self.riskLimits['maxPosition'])
 
     def checkifSeeded(self):
         for pred in self.predictors:
@@ -149,7 +149,7 @@ class assetModel():
         return 0.5 * (self.target.bidSize + self.target.askSize)
 
     def calcMaxTradeSize(self):
-        self.maxTradeSize = int(np.ceil(maxAssetDelta * self.maxPosition))
+        self.maxTradeSize = min(int(np.ceil(maxAssetDelta * self.maxPosition)), self.riskLimits['maxTradeSize'])
 
         """
         Deprecate liquidity filter until we have live bid/ask data
