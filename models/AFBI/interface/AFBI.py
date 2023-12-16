@@ -38,11 +38,7 @@ def detectAFBIPositions(cfg):
         tradedSym = refData.loc[sym]['tradedSym']
         if tradedSym in dfPositions['BB Yellow Key'].values:
             row = np.where(dfPositions['BB Yellow Key'] == tradedSym)[0][0]
-            if dfPositions.iloc[row]['Active']:
-                positions[sym] = int(dfPositions.iloc[row]['Notional Quantity'])
-            else:
-                # We really don't want this to happen, have the system exit if it detects a bad contract.
-                raise ValueError(f'{sym}: Trying to trade an inactive contract. Update refData.')
+            positions[sym] = int(dfPositions.iloc[row]['Notional Quantity'])
         else:
             notDetected.append(sym)
             positions[sym] = 0
