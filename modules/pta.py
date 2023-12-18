@@ -41,7 +41,7 @@ def loadLogs(cfg):
     return logs
 
 
-def formatAlphasLogs(rawAL):
+def formatAlphasLogs(rawAL, cfg):
     alphasLogs = {}
     for sym in rawAL:
         alphasLogs[sym] = {}
@@ -56,6 +56,8 @@ def formatAlphasLogs(rawAL):
     for sym in alphasLogs:
         for name in alphasLogs[sym]:
             alphasLogs[sym][name] = pd.DataFrame(alphasLogs[sym][name], columns=cols)
+            alphasLogs[sym][name]['weighted'] = alphasLogs[sym][name]['alphaVal'] * \
+                                                cfg['fitParams'][sym]['alphaWeights'][name]
             alphasLogs[sym][name].index = pd.to_datetime(alphasLogs[sym][name]['timestamp'], format='%Y_%m_%d_%H')
 
     return alphasLogs
@@ -72,7 +74,7 @@ def loadAlphasLogs(cfg):
                 for sym in rawLog:
                     if len(rawLog[sym]) != 0:
                         rawAL[sym].append(rawLog[sym])
-    alphasLogs = formatAlphasLogs(rawAL)
+    alphasLogs = formatAlphasLogs(rawAL, cfg)
     return alphasLogs
 
 
@@ -91,7 +93,7 @@ def plotLogs(logs, alphasLogs, symsToPlot):
         axs[2].axhline(y=1, color='black', linestyle='--')
         axs[2].legend(loc='upper left')
         for name in alphasLogs[sym]:
-            axs[3].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['alphaVal'], label=name, where='post')
+            axs[3].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['weighted'], label=name, where='post')
         axs[3].step(log.index, log[f'{sym}_CumAlpha'], label='CumAlpha', where='post', color='magenta')
         axs[3].axhline(y=0, color='black', linestyle='--')
         axs[3].legend(loc='upper left')
