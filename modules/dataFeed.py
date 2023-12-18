@@ -58,6 +58,12 @@ class feed():
         self.clientSocket.connect((self.host, self.port))
         return
 
+    @staticmethod
+    def recvDataIsSane(recvData):
+        if len(recvData) == 8:
+            return True
+        return False
+
     def updateDataMap(self):
         self.constructSymbolMap()
 
@@ -68,8 +74,11 @@ class feed():
             self.dataMap[sym] = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
             lg.info(f'{sym} {self.symbolMap[sym]} {self.dataMap[sym]}')
 
-            # Flush the socket of the !ENDMSG! before requesting next symbol
-            self.clientSocket.recv(self.receiveSize)
+            if self.recvDataIsSane(self.dataMap[sym]):
+                # Flush the socket of the !ENDMSG! before requesting next symbol
+                self.clientSocket.recv(self.receiveSize)
+            else:
+                lg.info(f"{sym} Received bad data. Check contract in config.")
         return
 
     def closeSocket(self):
@@ -80,7 +89,7 @@ class feed():
     def constructMD(self, syntheticIncrement):
         md = {}
         for sym in self.dataMap:
-            if len(self.dataMap[sym]) == 8:
+            if self.recvDataIsSane(self.dataMap[sym]):
                 md[f'{sym}_lastTS'] = utility.localizeTS(self.dataMap[sym][0], self.timezone) + datetime.timedelta(
                     hours=syntheticIncrement)
                 md[f'{sym}_symbol'] = self.symbolMap[sym]
