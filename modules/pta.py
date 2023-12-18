@@ -36,19 +36,29 @@ def loadLogs(cfg):
     return logs
 
 
-def formatAlphasLogs(alphasLogs):
-    for sym in alphasLogs:
+def formatAlphasLogs(rawAL):
+    alphasLogs = {}
+    for sym in rawAL:
         alphasLogs[sym] = {}
-        for alpha in alphasLogs[sym]:
-            names = ['name', 'rawVal', 'smoothVal', 'zVal', 'vol', 'alphaVal']
-            alphasLogs[sym][alpha[0]] = pd.DataFrame(alpha, columns=names)
+        for row in rawAL[sym]:
+            for alpha in row:
+                name = alpha[0]
+                if name not in list(alphasLogs[sym].keys()):
+                    alphasLogs[sym][name] = []
+                alphasLogs[sym][name].append(alpha[1:])
+
+    cols = ['timestamp', 'rawVal', 'smoothVal', 'zVal', 'vol', 'alphaVal']
+    for sym in alphasLogs:
+        for name in alphasLogs[sym]:
+            alphasLogs[sym][name] = pd.DataFrame(alphasLogs[sym][name], columns=cols)
+            alphasLogs[sym][name].index = pd.to_datetime(alphasLogs[sym][name]['timestamp'], format='%Y_%m_%d_%H')
 
     return alphasLogs
 
 
 def loadAlphasLogs(cfg):
     lg.info("Loading AlphasLogs...")
-    alphasLogs = initialiseLogDict(cfg)
+    rawAL = initialiseLogDict(cfg)
     for root, dirs, files in os.walk(f'{logRoot}alphas/'):
         for file in files:
             if file.endswith(".json"):
@@ -56,8 +66,8 @@ def loadAlphasLogs(cfg):
                     rawLog = json.load(f)
                 for sym in rawLog:
                     if len(rawLog[sym]) != 0:
-                        alphasLogs[sym].append(rawLog[sym])
-    alphasLogs = formatAlphasLogs(alphasLogs)
+                        rawAL[sym].append(rawLog[sym])
+    alphasLogs = formatAlphasLogs(rawAL)
     return alphasLogs
 
 

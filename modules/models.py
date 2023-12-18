@@ -252,7 +252,8 @@ class assetModel():
         self.alphasLog = []
         for name in self.alphaDict:
             thisAlpha = self.alphaDict[name]
-            thisLog = [name, thisAlpha.rawVal, thisAlpha.smoothVal, thisAlpha.zVal, thisAlpha.vol, thisAlpha.alphaVal]
+            thisLog = [name, utility.formatTsToStrig(self.target.timestamp), thisAlpha.rawVal, thisAlpha.smoothVal,
+                       thisAlpha.zVal, thisAlpha.vol, thisAlpha.alphaVal]
             self.alphasLog.append(thisLog)
         return
 
