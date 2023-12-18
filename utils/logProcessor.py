@@ -5,8 +5,9 @@ with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 logs = pta.loadLogs(cfg)
-logs = pta.formatLogs(logs)
 
-symsToPlot = ['RS0']#, 'ES0', 'ZW0', 'KE0', 'RS0']
+alphasLogs = pta.loadAlphasLogs(cfg)
+
+symsToPlot = ["ICE-US_KC0"]  # , 'ES0', 'ZW0', 'KE0', 'RS0']
 pta.plotLogs(logs, symsToPlot)
 lg.info("Completed.")

@@ -10,15 +10,20 @@ def initialiseLogDict(cfg):
 
 
 def formatRawLogs(rawLogs):
+    logs = {}
     for sym in rawLogs:
         fx = utility.findNotionalFx(sym)
         names = [f'lastTS', f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}',
                  f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
                  f'{sym}_maxTradeSize', f'{sym}_NormTargetHoldings', f'{sym}_MaxPosition', f'{sym}_notionalPerLot',
                  f'{sym}_{fx}_DailyRate']
-        rawLogs[sym] = pd.DataFrame(rawLogs[sym], columns=names)
+        logs[sym] = pd.DataFrame(rawLogs[sym], columns=names)
 
-    return rawLogs
+    for sym in logs:
+        logs[sym].index = pd.to_datetime(logs[sym]['lastTS'], format='%Y_%m_%d_%H')
+        logs[sym][f'{sym}_TargetPos'] = logs[sym][f'{sym}_InitHoldings'] + logs[sym][f'{sym}_Trades']
+
+    return logs
 
 
 def loadLogs(cfg):
@@ -69,13 +74,6 @@ def loadAlphasLogs(cfg):
                         rawAL[sym].append(rawLog[sym])
     alphasLogs = formatAlphasLogs(rawAL)
     return alphasLogs
-
-
-def formatLogs(logs):
-    for sym in logs:
-        logs[sym].index = pd.to_datetime(logs[sym]['lastTS'], format='%Y_%m_%d_%H')
-        logs[sym][f'{sym}_TargetPos'] = logs[sym][f'{sym}_InitHoldings'] + logs[sym][f'{sym}_Trades']
-    return logs
 
 
 def plotLogs(logs, symsToPlot):
