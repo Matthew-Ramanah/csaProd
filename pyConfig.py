@@ -66,7 +66,7 @@ dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Fr
 hardcodedContracts = {
     "ZL0": "@BOF24",
     "ZC0": "@CH24",
-    "ZS0": "@SF24",
+    "ZS0": "@SH24",
     "ZM0": "@SMH24",
     "ZW0": "@WH24",
     "KE0": "@KWH24",

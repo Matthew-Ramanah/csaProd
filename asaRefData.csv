@@ -1,21 +1,21 @@
 symbol,iqfSym,assetClass,exchange,description,tradedSym,notionalCurrency,notionalMultiplier,tickValueCurrency,tickValue,feesCurrency,feesPerLot
 ZL0,@BO#C,Commodity,CME,Soybean Oil,BOF4 Comdty,USD,600,USD,6,USD,0.33
 ZC0,@C#C,Commodity,CME,Corn,C H4 Comdty,USD,50,USD,12.5,USD,0.33
-ZS0,@S#C,Commodity,CME,Soybeans,S F4 Comdty,USD,50,USD,12.5,USD,0.33
-ZM0,@SM#C,Commodity,CME,Soybean Meal,SMF4 Comdty,USD,100,USD,10,USD,0.33
+ZS0,@S#C,Commodity,CME,Soybeans,S H4 Comdty,USD,50,USD,12.5,USD,0.33
+ZM0,@SM#C,Commodity,CME,Soybean Meal,SMH4 Comdty,USD,100,USD,10,USD,0.33
 ZW0,@W#C,Commodity,CME,Chicago Wheat,W H4 Comdty,USD,50,USD,12.5,USD,0.33
 KE0,@KW#C,Commodity,CME,Kansas Wheat,KWH4 Comdty,USD,50,USD,12.5,USD,0.33
 LE0,@LE#C,Commodity,CME,Live Cattle,LCG4 Comdty,USD,400,USD,10,USD,0.61
-GF0,@GF#C,Commodity,CME,Feeder Cattle,FCF4 Comdty,USD,500,USD,12.5,USD,0.61
+GF0,@GF#C,Commodity,CME,Feeder Cattle,,USD,500,USD,12.5,USD,0.61
 HE0,@HE#C,Commodity,CME,Lean Hog,,USD,400,USD,10,USD,0.61
 HG0,QHG#C,Commodity,CME,Copper,HGH4 Comdty,USD,2500,USD,12.5,USD,1.65
-GC0,QGC#C,Commodity,CME,Gold,GCG4 Comdty,USD,100,USD,10,USD,1.65
-SI0,QSI#C,Commodity,CME,Silver,SIH4 Comdty,USD,5000,USD,25,USD,1.65
+GC0,QGC#C,Commodity,CME,Gold,,USD,100,USD,10,USD,1.65
+SI0,QSI#C,Commodity,CME,Silver,,USD,5000,USD,25,USD,1.65
 PA0,QPA#C,Commodity,CME,Palladium,,USD,100,USD,50,USD,1.65
-PL0,QPL#C,Commodity,CME,Platinum,PLF4 Comdty,USD,50,USD,5,USD,1.65
-RB0,QRB#C,Commodity,CME,Gasoline,XBF4 Comdty,USD,42000,USD,4.2,USD,1.6
+PL0,QPL#C,Commodity,CME,Platinum,,USD,50,USD,5,USD,1.65
+RB0,QRB#C,Commodity,CME,Gasoline,,USD,42000,USD,4.2,USD,1.6
 CL0,QCL#C,Commodity,CME,Crude Light,CLG4 Comdty,USD,1000,USD,10,USD,1.65
-HO0,QHO#C,Commodity,CME,Heating Oil,HOF4 Comdty,USD,42000,USD,4.20,USD,1.6
+HO0,QHO#C,Commodity,CME,Heating Oil,,USD,42000,USD,4.20,USD,1.6
 NG0,QNG#C,Commodity,CME,Natural Gas,,USD,10000,UD,10,USD,0
 RS0,@RS#C,Commodity,ICE,Canola,RSH4 Comdty,CAD,20,CAD,2,CAD,0
 W0,QW#C,Commodity,ICE,White Sugar,QWH4 Comdty,USD,50,USD,5,GBP,0.65
@@ -85,7 +85,7 @@ FCE0,MT#C,Index,EURONEXT,CAC 40 Paris,,EUR,10,EUR,10,EUR,0
 FTI0,AEX#C,Index,EURONEXT,Amsterdam Index,EOF4 Index,EUR,200,EUR,10,EUR,0
 HHI0,,Index,HKEX,H Shares Index,,HKD,50,HKD,50,HKD,0
 HSI0,,Index,HKEX,Hong Kong Index,,HKD,50,HKD,50,HKD,0
-ICE-LL_Z0,TUK#C,Index,ICE,FTSE 100,,GBP,10,GBP,5,GBP,0
+ICE-LL_Z0,LF#C,Index,ICE,FTSE 100,,GBP,10,GBP,5,GBP,0
 ICE-US_MME0,MEF#C,Index,ICE,MSCI Emerging Markets,,USD,50,USD,5,USD,0
 ALSI0,ALJ#C,Index,JSE,Johannesburg Index,AIH4 Index,ZAR,10,ZAR,10,ZAR,0
 KS0,,Index,KRX,KOSPI,,KRW,250000,KRW,12500,KRW,0
