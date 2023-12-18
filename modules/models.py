@@ -111,6 +111,7 @@ class assetModel():
         else:
             self.tradeVolume = 0
             self.log = []
+            self.alphasLog = []
 
         self.checkStaleAssets()
         self.updateSeeds()

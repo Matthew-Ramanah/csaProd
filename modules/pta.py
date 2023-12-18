@@ -16,7 +16,7 @@ def formatRawLogs(rawLogs):
                  f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
                  f'{sym}_maxTradeSize', f'{sym}_NormTargetHoldings', f'{sym}_MaxPosition', f'{sym}_notionalPerLot',
                  f'{sym}_{fx}_DailyRate']
-        rawLogs[sym] = pd.DataFrame(rawLogs[sym][:-1], columns=names)
+        rawLogs[sym] = pd.DataFrame(rawLogs[sym], columns=names)
 
     return rawLogs
 
