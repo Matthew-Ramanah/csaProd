@@ -247,11 +247,21 @@ class assetModel():
 
         return
 
+    def constructAlphasLogs(self):
+        alphaLogs = []
+        for name in self.alphaDict:
+            thisAlpha = self.alphaDict[name]
+            thisLog = [name, thisAlpha.rawVal, thisAlpha.smoothVal,  thisAlpha.zVal, thisAlpha.vol, thisAlpha.alphaVal]
+            alphaLogs.append(thisLog)
+        return alphaLogs
+
+
     def updateLog(self):
+        alphaLogs = self.constructAlphasLogs()
         self.log = [utility.formatTsToStrig(self.target.timestamp), self.target.contractChange, self.target.midPrice,
                     self.target.timeDelta, self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt,
                     self.initHoldings, self.tradeVolume, self.maxTradeSize, self.normedHoldings, self.maxPosition,
-                    self.notionalPerLot, self.fxRate]
+                    self.notionalPerLot, self.fxRate, alphaLogs]
         return
 
     def updateSeeds(self):
