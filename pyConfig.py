@@ -96,13 +96,13 @@ hardcodedContracts = {
     "FBTP0": "BTPH24",
     "FGBL0": "BDH24",
     "FGBM0": "BLH24",
-    "AP0": "SPIZ23",
+    "AP0": "SPIH24",
     "ES0": "@ESH24",
     "NQ0": "@NQH24",
     "RTY0": "@RTYH24",
     "FSMI0": "SWH24",
     "FTI0": "AEXF24",
-    "ALSI0": "ALJZ23"
+    "ALSI0": "ALJH24"
 }
 
 exchangeMap = {
