@@ -95,15 +95,15 @@ def plotLogs(logs, alphasLogs, symsToPlot):
         axs[3].step(log.index, log[f'{sym}_CumAlpha'], label='CumAlpha', where='post', color='magenta')
         axs[3].axhline(y=0, color='black', linestyle='--')
         axs[3].legend(loc='upper left')
-        for name in alphasLogs[sym]:
-            axs[4].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['featVal'], label=name, where='post')
+        axs[4].step(log.index, log[f'{sym}_InitHoldings'], label='InitPos', where='post', color='orange')
+        axs[4].step(log.index, log[f'{sym}_TargetPos'], label='TargetPos', where='post', color='olive')
         axs[4].axhline(y=0, color='black', linestyle='--')
-        axs[4].axhline(y=-signalCap, color='black', linestyle='--')
-        axs[4].axhline(y=signalCap, color='black', linestyle='--')
         axs[4].legend(loc='upper left')
-        axs[5].step(log.index, log[f'{sym}_InitHoldings'], label='InitPos', where='post', color='orange')
-        axs[5].step(log.index, log[f'{sym}_TargetPos'], label='TargetPos', where='post', color='olive')
+        for name in alphasLogs[sym]:
+            axs[5].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['featVal'], label=name, where='post')
         axs[5].axhline(y=0, color='black', linestyle='--')
+        axs[5].axhline(y=-signalCap, color='black', linestyle='--')
+        axs[5].axhline(y=signalCap, color='black', linestyle='--')
         axs[5].legend(loc='upper left')
         fig.show()
     return
