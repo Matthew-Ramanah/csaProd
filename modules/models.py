@@ -106,7 +106,7 @@ class assetModel():
                 self.updateNotionals()
 
             self.calcHoldings()
-            self.updateLog()
+            self.constructLogs()
 
         else:
             self.tradeVolume = 0
@@ -247,21 +247,20 @@ class assetModel():
 
         return
 
-    def constructAlphasLogs(self):
-        alphaLogs = []
+    def constructAlphasLog(self):
+        self.alphasLog = []
         for name in self.alphaDict:
             thisAlpha = self.alphaDict[name]
-            thisLog = [name, thisAlpha.rawVal, thisAlpha.smoothVal,  thisAlpha.zVal, thisAlpha.vol, thisAlpha.alphaVal]
-            alphaLogs.append(thisLog)
-        return alphaLogs
+            thisLog = [name, thisAlpha.rawVal, thisAlpha.smoothVal, thisAlpha.zVal, thisAlpha.vol, thisAlpha.alphaVal]
+            self.alphasLog.append(thisLog)
+        return
 
-
-    def updateLog(self):
-        alphaLogs = self.constructAlphasLogs()
+    def constructLogs(self):
+        self.constructAlphasLog()
         self.log = [utility.formatTsToStrig(self.target.timestamp), self.target.contractChange, self.target.midPrice,
                     self.target.timeDelta, self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt,
                     self.initHoldings, self.tradeVolume, self.maxTradeSize, self.normedHoldings, self.maxPosition,
-                    self.notionalPerLot, self.fxRate, alphaLogs]
+                    self.notionalPerLot, self.fxRate]
         return
 
     def updateSeeds(self):

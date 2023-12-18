@@ -7,6 +7,6 @@ with open(cfg_file, 'r') as f:
 logs = pta.loadLogs(cfg)
 logs = pta.formatLogs(logs)
 
-symsToPlot = ['ZF0', 'ES0', 'ZW0', 'KE0', 'RS0']
+symsToPlot = ['RS0']#, 'ES0', 'ZW0', 'KE0', 'RS0']
 pta.plotLogs(logs, symsToPlot)
 lg.info("Completed.")

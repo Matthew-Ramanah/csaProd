@@ -108,19 +108,24 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels):
         "initPositions": initPositions,
         "trades": trades,
         "seedDump": {},
-        "logs": {}
+        "logs": {},
+        "alphasLog" : {}
     }
 
     for sym in fitModels:
         modelState['seedDump'][sym] = fitModels[sym].seedDump
         modelState['logs'][sym] = fitModels[sym].log
+        modelState['alphasLog'][sym] = fitModels[sym].alphasLog
 
     with open(f'{interfaceRoot}modelState.json', 'w') as f:
         json.dump(modelState, f)
 
-    # Save log separately for processing
+    # Save logs separately for processing
     with open(f"{logRoot}models/CBCT_{md['timeSig']}.json", 'w') as f:
         json.dump(modelState["logs"], f)
+
+    with open(f"{logRoot}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
+        json.dump(modelState["alphasLog"], f)
 
     lg.info("Saved Model State.")
     return modelState
