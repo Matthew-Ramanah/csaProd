@@ -88,6 +88,7 @@ hardcodedContracts = {
     "ICE-EU_G0": "GASF24",
     "ICE-US_KC0": "@KCH24",
     "ICE-LL_R0": "LGH24",
+    "ICE-LL_Z0": "LFH24",
     "ZB0": "@USH24",
     "ZN0": "@TYH24",
     "ZF0": "@FVH24",
