@@ -2,11 +2,11 @@
 0,TYH4 Comdty,CME,US 10 Yr Bond,1,2
 1,FVH4 Comdty,CME,US 5 Yr Bond,1,4
 2,IKH4 Comdty,EUREX,Italian Bond,2,6
-3,XPZ3 Index,SFE,Aus Index,1,2
+3,XPH4 Index,SFE,Aus Index,1,2
 4,ESH4 Index,CME,E-Mini Index,1,3
 5,SMH4 Index,EUREX,Swiss Blue Chip Index,1,2
 6,EOF4 Index,EURONEXT,Amsterdam Index,1,3
-7,AIZ3 Index,JSE,Johannesburg Index,4,20
+7,AIH4 Index,JSE,Johannesburg Index,4,20
 8,C H4 Comdty,CME,Corn,3,12
 9,S F4 Comdty,CME,Soybeans,1,2
 10,SMF4 Comdty,CME,Soybean Meal,4,17
