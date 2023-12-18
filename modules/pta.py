@@ -52,7 +52,7 @@ def formatAlphasLogs(rawAL):
                     alphasLogs[sym][name] = []
                 alphasLogs[sym][name].append(alpha[1:])
 
-    cols = ['timestamp', 'rawVal', 'smoothVal', 'zVal', 'vol', 'alphaVal']
+    cols = ['timestamp', 'rawVal', 'smoothVal', 'zVal', 'vol', 'featVal', 'alphaVal']
     for sym in alphasLogs:
         for name in alphasLogs[sym]:
             alphasLogs[sym][name] = pd.DataFrame(alphasLogs[sym][name], columns=cols)
@@ -76,26 +76,34 @@ def loadAlphasLogs(cfg):
     return alphasLogs
 
 
-def plotLogs(logs, symsToPlot):
+def plotLogs(logs, alphasLogs, symsToPlot):
     for sym in symsToPlot:
         log = logs[sym]
-        fig, axs = plt.subplots(5, sharex='all')
+        fig, axs = plt.subplots(6, sharex='all')
         fig.suptitle(f"{sym} Logs")
         axs[0].step(log.index, log[f'{sym}_midPrice'], label='midPrice', where='post', color='blue')
         axs[0].legend(loc='upper left')
         axs[1].step(log.index, log[f'Volatility_{sym}'], label='Volatility', where='post', color='red')
         axs[1].legend(loc='upper left')
-        axs[2].step(log.index, log[f'{sym}_CumAlpha'], label='CumAlpha', where='post', color='magenta')
+        axs[2].step(log.index, log[f'{sym}_NormTargetHoldings'], label='NormHoldings', where='post', color='green')
         axs[2].axhline(y=0, color='black', linestyle='--')
+        axs[2].axhline(y=-1, color='black', linestyle='--')
+        axs[2].axhline(y=1, color='black', linestyle='--')
         axs[2].legend(loc='upper left')
-        axs[3].step(log.index, log[f'{sym}_NormTargetHoldings'], label='NormHoldings', where='post', color='green')
+        for name in alphasLogs[sym]:
+            axs[3].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['alphaVal'], label=name, where='post')
+        axs[3].step(log.index, log[f'{sym}_CumAlpha'], label='CumAlpha', where='post', color='magenta')
         axs[3].axhline(y=0, color='black', linestyle='--')
-        axs[3].axhline(y=-1, color='black', linestyle='--')
-        axs[3].axhline(y=1, color='black', linestyle='--')
         axs[3].legend(loc='upper left')
-        axs[4].step(log.index, log[f'{sym}_InitHoldings'], label='InitPos', where='post', color='orange')
-        axs[4].step(log.index, log[f'{sym}_TargetPos'], label='TargetPos', where='post', color='olive')
+        for name in alphasLogs[sym]:
+            axs[4].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['featVal'], label=name, where='post')
         axs[4].axhline(y=0, color='black', linestyle='--')
+        axs[4].axhline(y=-signalCap, color='black', linestyle='--')
+        axs[4].axhline(y=signalCap, color='black', linestyle='--')
         axs[4].legend(loc='upper left')
+        axs[5].step(log.index, log[f'{sym}_InitHoldings'], label='InitPos', where='post', color='orange')
+        axs[5].step(log.index, log[f'{sym}_TargetPos'], label='TargetPos', where='post', color='olive')
+        axs[5].axhline(y=0, color='black', linestyle='--')
+        axs[5].legend(loc='upper left')
         fig.show()
     return
