@@ -50,10 +50,13 @@ class assetModel():
         if fx == 'USD':
             return 1
         else:
-            return self.predictors[f'{fx}='].lastMid
+            if f'{fx}=' in fxToInvert:
+                return 1 / self.predictors[f'{fx}='].lastMid
+            else:
+                return self.predictors[f'{fx}='].lastMid
 
     def calcNotionalPerLot(self):
-        return round(self.notionalMultiplier * self.target.lastMid / self.fxRate, 2)
+        return round(self.notionalMultiplier * self.target.lastMid * self.fxRate, 2)
 
     def calcMaxPosition(self):
         return min(int(self.totalCapital * self.notionalAlloc / self.notionalPerLot), self.riskLimits['maxPosition'])
