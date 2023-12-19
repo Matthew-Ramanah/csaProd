@@ -102,14 +102,14 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
     return seeds
 
 
-def saveModelState(initSeeds, initPositions, md, trades, fitModels):
+def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
     modelState = {
         "initSeeds": initSeeds,
         "initPositions": initPositions,
         "trades": trades,
         "seedDump": {},
         "logs": {},
-        "alphasLog" : {}
+        "alphasLog": {}
     }
 
     for sym in fitModels:
@@ -119,15 +119,16 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels):
 
     with open(f'{interfaceRoot}modelState.json', 'w') as f:
         json.dump(modelState, f)
-
-    # Save logs separately for processing
-    with open(f"{logRoot}models/CBCT_{md['timeSig']}.json", 'w') as f:
-        json.dump(modelState["logs"], f)
-
-    with open(f"{logRoot}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
-        json.dump(modelState["alphasLog"], f)
-
     lg.info("Saved Model State.")
+
+    if saveLogs:
+        with open(f"{logRoot}models/CBCT_{md['timeSig']}.json", 'w') as f:
+            json.dump(modelState["logs"], f)
+
+        with open(f"{logRoot}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
+            json.dump(modelState["alphasLog"], f)
+        lg.info("Saved Logs.")
+
     return modelState
 
 

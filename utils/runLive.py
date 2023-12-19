@@ -5,8 +5,9 @@ from models.AFBI.interface import AFBI
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-send = False
-save = False
+send = True
+save = True
+saveLogs = True
 
 # Load Seeds
 initSeeds = utility.loadInitSeeds(cfg)
@@ -29,6 +30,6 @@ fitModels = utility.updateModels(fitModels, md)
 trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=send)
 
 if save:
-    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels)
+    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
 
 lg.info("Completed.")
