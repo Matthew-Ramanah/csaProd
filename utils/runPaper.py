@@ -2,7 +2,7 @@ from pyConfig import *
 from modules import dataFeed, utility
 from models.AFBI.interface import AFBI
 
-cfg_file = root + "models/AFBI/config/ftiRemoved.json"
+cfg_file = root + "models/AFBI/config/afbiRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 

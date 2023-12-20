@@ -16,7 +16,7 @@ pctSlipTol = 0.2
 reconTimezone = 'Australia/Sydney'
 
 # Run-time options
-cfg_file = root + "models/AFBI/config/afbiRecon.json"
+cfg_file = root + "models/AFBI/config/ftiRemoved.json"
 interfaceRoot = root + "models/AFBI/interface/"
 logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
 paperLogRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/Paper/"
