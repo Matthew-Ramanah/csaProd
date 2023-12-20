@@ -10,7 +10,7 @@ save = True
 saveLogs = True
 
 # Load Seeds
-initSeeds = utility.loadInitSeeds(cfg)
+initSeeds = utility.loadInitSeeds(cfg, paper=True)
 
 # Load Positions & Limits
 initPositions = AFBI.detectAFBIPositions(cfg)
