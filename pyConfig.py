@@ -18,6 +18,7 @@ reconTimezone = 'Australia/Sydney'
 cfg_file = root + "models/AFBI/config/afbiRecon.json"
 interfaceRoot = root + "models/AFBI/interface/"
 logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
+paperLogRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/Paper/"
 
 # Global Packages
 import pandas as pd

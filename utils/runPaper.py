@@ -2,6 +2,7 @@ from pyConfig import *
 from modules import dataFeed, utility
 from models.AFBI.interface import AFBI
 
+cfg_file = root + "models/AFBI/config/ftiRemoved.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
@@ -21,7 +22,7 @@ fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositio
                                      timezone=AFBI.timezone, prod=True)
 
 # Pull Market Data
-md = dataFeed.feed(cfg, AFBI.timezone).pullLatestMD(syntheticIncrement=0)
+md = dataFeed.feed(cfg, AFBI.timezone).pullLatestMD(syntheticIncrement=1)
 
 # Update Models
 fitModels = utility.updateModels(fitModels, md)
@@ -30,6 +31,6 @@ fitModels = utility.updateModels(fitModels, md)
 trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=send)
 
 if save:
-    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
+    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs, paper=True)
 
 lg.info("Completed.")

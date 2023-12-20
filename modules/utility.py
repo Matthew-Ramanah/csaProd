@@ -103,7 +103,7 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
     return seeds
 
 
-def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
+def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=True, paper=False):
     modelState = {
         "initSeeds": initSeeds,
         "initPositions": initPositions,
@@ -113,20 +113,27 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
         "alphasLog": {}
     }
 
+    if not paper:
+        logDir = logRoot
+        filename = 'modelState'
+    else:
+        logDir = paperLogRoot
+        filename = 'paperState'
+
     for sym in fitModels:
         modelState['seedDump'][sym] = fitModels[sym].seedDump
         modelState['logs'][sym] = fitModels[sym].log[-1]
         modelState['alphasLog'][sym] = fitModels[sym].alphasLog
 
-    with open(f'{interfaceRoot}modelState.json', 'w') as f:
+    with open(f'{interfaceRoot}{filename}.json', 'w') as f:
         json.dump(modelState, f)
     lg.info("Saved Model State.")
 
     if saveLogs:
-        with open(f"{logRoot}models/CBCT_{md['timeSig']}.json", 'w') as f:
+        with open(f"{logDir}models/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["logs"], f)
 
-        with open(f"{logRoot}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
+        with open(f"{logDir}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["alphasLog"], f)
         lg.info("Saved Logs.")
 
@@ -159,12 +166,16 @@ def formatTsToStrig(ts):
     return ts.strftime('%Y_%m_%d_%H')
 
 
-def loadInitSeeds(cfg):
+def loadInitSeeds(cfg, paper=False):
     """
     Load Seed Dump if it exists, else seed with research seeds
     """
     try:
-        with open(f'{interfaceRoot}modelState.json', 'r') as f:
+        if paper:
+            filename = 'paperState'
+        else:
+            filename = 'modelState'
+        with open(f'{interfaceRoot}{filename}.json', 'r') as f:
             oldModelState = json.load(f)
         return oldModelState['seedDump']
     except:

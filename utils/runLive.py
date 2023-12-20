@@ -30,6 +30,6 @@ fitModels = utility.updateModels(fitModels, md)
 trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=send)
 
 if save:
-    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
+    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs, paper=False)
 
 lg.info("Completed.")

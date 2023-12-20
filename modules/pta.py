@@ -26,13 +26,13 @@ def formatRawLogs(rawLogs):
     return logs
 
 
-def loadLogs(cfg):
+def loadLogs(cfg, logDir):
     lg.info("Loading Logs...")
     logs = initialiseLogDict(cfg)
-    for root, dirs, files in os.walk(f'{logRoot}models/'):
+    for root, dirs, files in os.walk(f'{logDir}models/'):
         for file in files:
             if file.endswith(".json"):
-                with open(f'{logRoot}models/{file}', 'r') as f:
+                with open(f'{logDir}models/{file}', 'r') as f:
                     rawLog = json.load(f)
                 for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
@@ -47,6 +47,8 @@ def formatAlphasLogs(rawAL, cfg):
         alphasLogs[sym] = {}
         for row in rawAL[sym]:
             for alpha in row:
+                if len(alpha) == 0:
+                    continue
                 name = alpha[0]
                 if name not in list(alphasLogs[sym].keys()):
                     alphasLogs[sym][name] = []
@@ -63,13 +65,13 @@ def formatAlphasLogs(rawAL, cfg):
     return alphasLogs
 
 
-def loadAlphasLogs(cfg):
+def loadAlphasLogs(cfg, logDir):
     lg.info("Loading AlphasLogs...")
     rawAL = initialiseLogDict(cfg)
-    for root, dirs, files in os.walk(f'{logRoot}alphas/'):
+    for root, dirs, files in os.walk(f'{logDir}alphas/'):
         for file in files:
             if file.endswith(".json"):
-                with open(f'{logRoot}alphas/{file}', 'r') as f:
+                with open(f'{logDir}alphas/{file}', 'r') as f:
                     rawLog = json.load(f)
                 for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
