@@ -1,3 +1,5 @@
+import pandas as pd
+
 from pyConfig import *
 from modules import utility, gmail
 
@@ -12,6 +14,8 @@ unmannedHours = {
     "Saturday": ("04:00", "23:59"),
     "Sunday": ("00:00", "18:59")
 }
+
+cancelAfter = pd.Timedelta(minutes=30)
 
 
 def isDeskManned():
@@ -75,24 +79,43 @@ def findSide(qty):
         return ""
 
 
-def createTradeCSV(fitModels, trades, md, initPositions, timezone):
+def findSlippageTol(cfg, sym):
+    return int(np.ceil(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym]))
+
+
+def findLimitPrices(cfg, md, trades):
+    limitPrices = {}
+    for sym in trades:
+        if trades[sym] == 0:
+            limitPrices[sym] = ""
+        else:
+            slipTol = findSlippageTol(cfg, sym)
+            limitPrices[sym] = md[f'{sym}_midPrice'] + np.sign(trades[sym]) * (
+                        slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym]))
+
+    return limitPrices
+
+
+def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
     refData = utility.loadRefData()
     afbiAccount = "CBCTBULK"
-    orderType = "MKT"
-    limitPrice = ""
+    orderType = "LMT"
+    limitPrices = findLimitPrices(cfg, md, trades)
     stopPrice = ""
     tif = "DAY"
     broker = "MSET"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
-            "refPrice", f'refTime: {timezone}', 'Current Position', 'Target Position', 'Description', 'Exchange',
-            'maxPosition', 'maxTradeSize']
+            "refPrice", f'refTime: {timezone}', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
+            'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
         bbSym = refData.loc[sym]['tradedSym']
         qty = trades[sym]
         side = findSide(qty)
+        limitPrice = limitPrices[sym]
         lastPrice = md[f'{sym}_midPrice']
         lastTime = md[f'{sym}_lastTS']
+        cancelTime = pd.Timestamp(datetime.datetime.strptime(md['timeSig'], '%Y_%m_%d_%H')) + cancelAfter
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
         desc = refData.loc[sym]['description']
@@ -100,24 +123,25 @@ def createTradeCSV(fitModels, trades, md, initPositions, timezone):
         maxPos = fitModels[sym].maxPosition
         maxTradeSize = fitModels[sym].maxTradeSize
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, lastTime,
-                    initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
+                    cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
-def generateAFBITradeFile(fitModels, md, initPositions, timezone, send=True):
-    tradesPath = f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
+def generateAFBITradeFile(cfg, fitModels, md, initPositions, timezone, send=True, paper=False):
+    logDir, _ = utility.findLogDirFileName(paper)
+    tradesPath = f"{logDir}trades/CBCT_{md['timeSig']}.csv"
 
     # Generate CSV & dict
     trades = utility.generateTrades(fitModels)
-    tradeCSV = createTradeCSV(fitModels, trades, md, initPositions, timezone)
+    tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone)
     print(tradeCSV)
 
     # Save to Log & Email
     tradeCSV.to_csv(tradesPath)
 
-    if send:
+    if send and not paper:
         if isDeskManned():
             sendAFBITradeEmail(tradesPath, md['timeSig'])
         else:

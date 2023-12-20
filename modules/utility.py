@@ -113,12 +113,7 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
         "alphasLog": {}
     }
 
-    if not paper:
-        logDir = logRoot
-        filename = 'modelState'
-    else:
-        logDir = paperLogRoot
-        filename = 'paperState'
+    logDir, filename = findLogDirFileName(paper)
 
     for sym in fitModels:
         modelState['seedDump'][sym] = fitModels[sym].seedDump
@@ -171,10 +166,8 @@ def loadInitSeeds(cfg, paper=False):
     Load Seed Dump if it exists, else seed with research seeds
     """
     try:
-        if paper:
-            filename = 'paperState'
-        else:
-            filename = 'modelState'
+        _, filename = findLogDirFileName(paper)
+
         with open(f'{interfaceRoot}{filename}.json', 'r') as f:
             oldModelState = json.load(f)
         return oldModelState['seedDump']
@@ -208,3 +201,12 @@ def updateModels(fitModels, md):
 
     dataFeed.monitorMdhSanity(fitModels, md)
     return fitModels
+
+def findLogDirFileName(paper):
+    if not paper:
+        logDir = logRoot
+        filename = 'modelState'
+    else:
+        logDir = paperLogRoot
+        filename = 'paperState'
+    return logDir, filename

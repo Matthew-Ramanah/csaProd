@@ -27,7 +27,7 @@ md = dataFeed.feed(cfg, AFBI.timezone).pullLatestMD(syntheticIncrement=0)
 fitModels = utility.updateModels(fitModels, md)
 
 # Generate tradeFile
-trades = AFBI.generateAFBITradeFile(fitModels, md, initPositions, AFBI.timezone, send=False)
+trades = AFBI.generateAFBITradeFile(cfg, fitModels, md, initPositions, AFBI.timezone, send=False, paper=True)
 
 if save:
     modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs, paper=True)
