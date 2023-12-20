@@ -56,7 +56,9 @@ def formatAlphasLogs(rawAL, cfg):
 
     cols = ['timestamp', 'rawVal', 'smoothVal', 'zVal', 'vol', 'featVal', 'alphaVal']
     for sym in alphasLogs:
-        for name in alphasLogs[sym]:
+        for name in cfg['fitParams'][sym]['alphaWeights']:
+            if name == 'kappa':
+                continue
             alphasLogs[sym][name] = pd.DataFrame(alphasLogs[sym][name], columns=cols)
             alphasLogs[sym][name]['weighted'] = alphasLogs[sym][name]['alphaVal'] * \
                                                 cfg['fitParams'][sym]['alphaWeights'][name]
@@ -80,7 +82,7 @@ def loadAlphasLogs(cfg, logDir):
     return alphasLogs
 
 
-def plotLogs(logs, alphasLogs, symsToPlot):
+def plotLogs(cfg, logs, alphasLogs, symsToPlot):
     for sym in symsToPlot:
         log = logs[sym]
         fig, axs = plt.subplots(6, sharex='all')
@@ -94,7 +96,9 @@ def plotLogs(logs, alphasLogs, symsToPlot):
         axs[2].axhline(y=-1, color='black', linestyle='--')
         axs[2].axhline(y=1, color='black', linestyle='--')
         axs[2].legend(loc='upper left')
-        for name in alphasLogs[sym]:
+        for name in cfg['fitParams'][sym]['alphaWeights']:
+            if name == 'kappa':
+                continue
             axs[3].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['weighted'], label=name, where='post')
         axs[3].step(log.index, log[f'{sym}_CumAlpha'], label='CumAlpha', where='post', color='magenta')
         axs[3].axhline(y=0, color='black', linestyle='--')
@@ -103,7 +107,9 @@ def plotLogs(logs, alphasLogs, symsToPlot):
         axs[4].step(log.index, log[f'{sym}_TargetPos'], label='TargetPos', where='post', color='olive')
         axs[4].axhline(y=0, color='black', linestyle='--')
         axs[4].legend(loc='upper left')
-        for name in alphasLogs[sym]:
+        for name in cfg['fitParams'][sym]['alphaWeights']:
+            if name == 'kappa':
+                continue
             axs[5].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['featVal'], label=name, where='post')
         axs[5].axhline(y=0, color='black', linestyle='--')
         axs[5].axhline(y=-signalCap, color='black', linestyle='--')
