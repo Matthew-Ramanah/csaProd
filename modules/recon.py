@@ -3,7 +3,7 @@ from modules import utility
 
 
 def setLogIndex(log, col, timezone):
-    log.index = [utility.formatTsSeed(stringTS, timezone) for stringTS in log[col]]
+    log.index = pd.to_datetime(log[col], format='%Y_%m_%d_%H').dt.tz_localize(timezone)
     return log
 
 
