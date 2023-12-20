@@ -107,7 +107,6 @@ hardcodedContracts = {
     "NQ0": "@NQH24",
     "RTY0": "@RTYH24",
     "FSMI0": "SWH24",
-    "FTI0": "AEXF24",
     "ALSI0": "ALJH24"
 }
 

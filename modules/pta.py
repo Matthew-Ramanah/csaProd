@@ -34,7 +34,7 @@ def loadLogs(cfg):
             if file.endswith(".json"):
                 with open(f'{logRoot}models/{file}', 'r') as f:
                     rawLog = json.load(f)
-                for sym in rawLog:
+                for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
                         logs[sym].append(rawLog[sym])
     logs = formatRawLogs(logs)
@@ -71,7 +71,7 @@ def loadAlphasLogs(cfg):
             if file.endswith(".json"):
                 with open(f'{logRoot}alphas/{file}', 'r') as f:
                     rawLog = json.load(f)
-                for sym in rawLog:
+                for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
                         rawAL[sym].append(rawLog[sym])
     alphasLogs = formatAlphasLogs(rawAL, cfg)

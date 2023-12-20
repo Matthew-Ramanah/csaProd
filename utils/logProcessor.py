@@ -7,6 +7,6 @@ with open(cfg_file, 'r') as f:
 logs = pta.loadLogs(cfg)
 alphasLogs = pta.loadAlphasLogs(cfg)
 
-symsToPlot = ["ICE-US_KC0"]
+symsToPlot = cfg['targets']#["ICE-US_KC0"]
 pta.plotLogs(logs, alphasLogs, symsToPlot)
 lg.info("Completed.")
