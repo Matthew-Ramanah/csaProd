@@ -2,12 +2,12 @@ from pyConfig import *
 from modules import utility
 
 
-def setLogIndex(log, col):
-    log.index = [pd.Timestamp(datetime.datetime.strptime(x, '%Y_%m_%d_%H')) for x in log[col]]
+def setLogIndex(log, col, timezone):
+    log.index = [utility.formatTsSeed(stringTS, timezone) for stringTS in log[col]]
     return log
 
 
-def processLogs(fitModels):
+def processLogs(fitModels, timezone):
     logs = {}
     for sym in fitModels:
         logs[sym] = {}
@@ -15,22 +15,23 @@ def processLogs(fitModels):
         logs[sym]['model'] = pd.DataFrame(fitModels[sym].log,
                                           columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_midPrice',
                                                    f'{sym}_timeDR_Delta', f'Volatility_{sym}', f'midDelta_{sym}',
-                                                   f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings', f'{sym}_Trades',
+                                                   f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
                                                    f'{sym}_maxTradeSize', f'{sym}_Holdings', f'{sym}_maxLots',
-                                                   f'{sym}_notionalPerLot', f'{sym}_{fx}_DailyRate'])
-        logs[sym]['model'] = setLogIndex(logs[sym]['model'], col='lastTS')
+                                                   f'{sym}_notionalPerLot', f'{sym}_{fx}_DailyRate']).dropna()
+        logs[sym]['model'][f'{sym}_BasketHoldings'] = logs[sym]['model'][f'{sym}_Trades'].cumsum()
+        logs[sym]['model'] = setLogIndex(logs[sym]['model'], col='lastTS', timezone=timezone)
 
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
                                            columns=['lastTS', 'decay', 'rawVal', 'smoothVal', 'zVal', 'vol',
-                                                    f'feat_{name}'])
+                                                    f'feat_{name}']).dropna()
             logs[sym][name].index = logs[sym][name]['lastTS']
 
         for pred in fitModels[sym].predictors:
             logs[sym][pred] = pd.DataFrame(fitModels[sym].predictors[pred].log,
                                            columns=[f'{pred}_symbol', f'{pred}_lastTS', f'{pred}_contractChange',
-                                                    f'{pred}_midPrice', f'{pred}_timeDR_Delta'])
-            logs[sym][pred] = setLogIndex(logs[sym][pred], col=f'{pred}_lastTS')
+                                                    f'{pred}_midPrice', f'{pred}_timeDR_Delta']).dropna()
+            logs[sym][pred] = setLogIndex(logs[sym][pred], col=f'{pred}_lastTS', timezone=timezone)
 
     lg.info("Processed Logs.")
     return logs
@@ -127,11 +128,11 @@ def calcPnLs(prodLogs, researchFeeds, cfg):
         mpDelta = log[f'{sym}_midPrice'].diff().fillna(0)
         fx = utility.findNotionalFx(sym)
         fxRate = log[f'{sym}_{fx}_DailyRate']
-        tickScaler = float(refData['tickValue'][sym]) / float(cfg['fitParams'][sym]['tickSizes'][sym]) / fxRate
-
+        tickScaler = float(refData['tickValue'][sym]) / float(cfg['fitParams'][sym]['tickSizes'][sym]) * fxRate
+        buyCost = sellCost = float(cfg['fitParams'][sym]['tickSizes'][sym])
         uncostedPnl = np.cumsum(lastHoldings * tickScaler * mpDelta)
-        tCosts = np.cumsum(tickScaler * np.abs(trades) * np.where(trades > 0, log[f'{sym}_BuyCost'],
-                                                                  np.where(trades < 0, log[f'{sym}_SellCost'], 0)))
+        tCosts = np.cumsum(
+            tickScaler * np.abs(trades) * np.where(trades > 0, buyCost, np.where(trades < 0, sellCost, 0)))
         pnls[f'{sym}_TradingProfit'] = uncostedPnl - tCosts
         pnls['TradingProfit'] += pnls[f'{sym}_TradingProfit']
     return pnls.ffill().fillna(0)

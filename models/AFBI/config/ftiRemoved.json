@@ -1,9 +1,27 @@
 {
-  "modelTag": "reconNoFTI",
+  "modelTag": "ftiRemoved",
   "verbose": false,
   "recon": true,
   "targets": [
     "ZN0",
+    "ZF0",
+    "FBTP0",
+    "AP0",
+    "ES0",
+    "FSMI0",
+    "ALSI0",
+    "ZC0",
+    "ZS0",
+    "ZM0",
+    "ZW0",
+    "KE0",
+    "LE0",
+    "CL0",
+    "HO0",
+    "RS0",
+    "W0",
+    "ICE-US_CT0",
+    "ICE-EU_G0",
     "ICE-US_KC0"
   ],
   "predictors": [
@@ -5473,70 +5491,70 @@
     },
     "basket": {
       "notionalAllocs": {
-        "ZN0": 0.036,
-        "ZF0": 0.073,
-        "FBTP0": 0.052,
-        "AP0": 0.084,
-        "ES0": 0.09,
-        "FSMI0": 0.056,
-        "ALSI0": 0.068,
-        "ZC0": 0.022,
-        "ZS0": 0.042,
-        "ZM0": 0.064,
-        "ZW0": 0.052,
-        "KE0": 0.037,
-        "LE0": 0.079,
+        "ZN0": 0.072,
+        "ZF0": 0.056,
+        "FBTP0": 0.066,
+        "AP0": 0.09,
+        "ES0": 0.048,
+        "FSMI0": 0.037,
+        "ALSI0": 0.079,
+        "ZC0": 0.02,
+        "ZS0": 0.038,
+        "ZM0": 0.071,
+        "ZW0": 0.047,
+        "KE0": 0.038,
+        "LE0": 0.086,
         "CL0": 0.019,
-        "HO0": 0.021,
-        "RS0": 0.025,
-        "W0": 0.034,
-        "ICE-US_CT0": 0.073,
-        "ICE-EU_G0": 0.026,
-        "ICE-US_KC0": 0.046
+        "HO0": 0.025,
+        "RS0": 0.02,
+        "W0": 0.058,
+        "ICE-US_CT0": 0.081,
+        "ICE-EU_G0": 0.02,
+        "ICE-US_KC0": 0.029
       },
       "riskLimits": {
         "ZN0": {
-          "maxPosition": 3,
-          "maxTradeSize": 1
-        },
-        "ZF0": {
           "maxPosition": 6,
           "maxTradeSize": 2
         },
+        "ZF0": {
+          "maxPosition": 5,
+          "maxTradeSize": 1
+        },
         "FBTP0": {
-          "maxPosition": 4,
+          "maxPosition": 5,
           "maxTradeSize": 1
         },
         "AP0": {
-          "maxPosition": 7,
+          "maxPosition": 8,
           "maxTradeSize": 2
         },
         "ES0": {
-          "maxPosition": 9,
-          "maxTradeSize": 2
+          "maxPosition": 5,
+          "maxTradeSize": 1
         },
         "FSMI0": {
-          "maxPosition": 6,
-          "maxTradeSize": 2
+          "maxPosition": 4,
+          "maxTradeSize": 1
         },
         "ALSI0": {
-          "maxPosition": 23,
-          "maxTradeSize": 5
+          "maxPosition": 27,
+          "maxTradeSize": 6
         },
         "ZC0": {
-          "maxPosition": 13,
+          "maxPosition": 12,
           "maxTradeSize": 3
         },
         "ZS0": {
-          "maxPosition": 9,
+          "maxPosition": 8,
           "maxTradeSize": 2
         },
         "ZM0": {
-          "maxPosition": 22,
+          "maxPosition": 24,
           "maxTradeSize": 5
         },
         "ZW0": {
-          "maxPosition": 25,
+          "maxPosition": 22,
           "maxTradeSize": 5
         },
         "KE0": {
@@ -5544,36 +5562,36 @@
           "maxTradeSize": 4
         },
         "LE0": {
-          "maxPosition": 19,
-          "maxTradeSize": 4
+          "maxPosition": 21,
+          "maxTradeSize": 5
         },
         "CL0": {
           "maxPosition": 5,
           "maxTradeSize": 1
         },
         "HO0": {
-          "maxPosition": 4,
+          "maxPosition": 5,
           "maxTradeSize": 1
         },
         "RS0": {
-          "maxPosition": 37,
-          "maxTradeSize": 8
+          "maxPosition": 29,
+          "maxTradeSize": 6
         },
         "W0": {
-          "maxPosition": 20,
-          "maxTradeSize": 4
+          "maxPosition": 35,
+          "maxTradeSize": 7
         },
         "ICE-US_CT0": {
-          "maxPosition": 24,
-          "maxTradeSize": 5
+          "maxPosition": 27,
+          "maxTradeSize": 6
         },
         "ICE-EU_G0": {
-          "maxPosition": 7,
+          "maxPosition": 6,
           "maxTradeSize": 2
         },
         "ICE-US_KC0": {
-          "maxPosition": 12,
-          "maxTradeSize": 3
+          "maxPosition": 8,
+          "maxTradeSize": 2
         }
       },
       "symbolsNeeded": [
@@ -5637,26 +5655,26 @@
         "ZL0"
       ],
       "aveTicksProfit": {
-        "ZN0": 8.4,
-        "ZF0": 13.2,
-        "FBTP0": 151.0,
-        "AP0": 24.8,
-        "ES0": 4.6,
-        "FSMI0": 18.1,
-        "ALSI0": 38.8,
-        "ZC0": 24.2,
-        "ZS0": 19.0,
-        "ZM0": 22.4,
-        "ZW0": 13.7,
-        "KE0": 5.9,
-        "LE0": 29.3,
-        "CL0": 68.9,
-        "HO0": 38.9,
-        "RS0": 11.3,
-        "W0": 8.7,
-        "ICE-US_CT0": 15.4,
-        "ICE-EU_G0": 15.8,
-        "ICE-US_KC0": 24.5
+        "ZN0": 7.3,
+        "ZF0": 13.5,
+        "FBTP0": 159.8,
+        "AP0": 24.2,
+        "ES0": 5.3,
+        "FSMI0": 18.9,
+        "ALSI0": 39.4,
+        "ZC0": 28.1,
+        "ZS0": 17.4,
+        "ZM0": 24.8,
+        "ZW0": 14.0,
+        "KE0": 5.4,
+        "LE0": 28.9,
+        "CL0": 44.8,
+        "HO0": 36.5,
+        "RS0": 11.4,
+        "W0": 9.0,
+        "ICE-US_CT0": 13.8,
+        "ICE-EU_G0": 16.3,
+        "ICE-US_KC0": 22.6
       }
     }
   }

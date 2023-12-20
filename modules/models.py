@@ -120,6 +120,7 @@ class assetModel():
 
         self.checkStaleAssets()
         self.updateSeeds()
+
         return
 
     def updateAlphas(self):
@@ -188,6 +189,8 @@ class assetModel():
         self.normedHoldings = self.convertHOptToNormedHoldings(self.hOpt, self.hScaler)
         sizedHoldings = self.convertNormedToSizedHoldings(self.maxPosition, self.normedHoldings)
         self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))
+        if not self.prod:
+            self.updateReconPosition()
         return
 
     @staticmethod
@@ -251,6 +254,10 @@ class assetModel():
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 
+        return
+
+    def updateReconPosition(self):
+        self.initHoldings += self.tradeVolume
         return
 
     def constructAlphasLog(self):
