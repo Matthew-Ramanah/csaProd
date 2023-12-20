@@ -14,7 +14,14 @@ def callRunLive():
     return
 
 
+def callRunPaper():
+    lg.info("Calling runPaper...")
+    exec(open('runPaper.py').read())
+    return
+
+
 schedule.every().hour.at(":00").do(callRunLive)
+schedule.every().hour.at(":05").do(callRunPaper)
 
 lg.info("Starting scheduler...")
 while True:
