@@ -1,34 +1,27 @@
 from pyConfig import *
 from modules import md, utility, recon
+from models.AFBI.interface import AFBI
 
+cfg_file = root + "models/AFBI/config/ftiRemoved.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 researchFeeds = utility.loadResearchFeeds(cfg)
-
 seeds = utility.constructResearchSeeds(researchFeeds, cfg)
-fitModels = utility.initialiseModels(cfg, seeds=seeds)
+initPositions = recon.initialisePositions(cfg)
+riskLimits = cfg['fitParams']['basket']['riskLimits']
+fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=initPositions, riskLimits=riskLimits,
+                                     timezone=AFBI.timezone, prod=False)
 
 # Replace this with the live feed in production
 prodFeed = md.loadSyntheticMD(cfg)
 prodFeed = md.sampleFeed(prodFeed, researchFeeds, maxUpdates=5)
 lg.info("Feed Loaded.")
-runTimes = []
-for i, md in prodFeed.iterrows():
-    t0 = time.time()
-    for sym in fitModels:
-        fitModels[sym].mdUpdate(md)
 
-    t1 = time.time()
-    runTimes.append(1000 * (t1 - t0))
-lg.info(f"Processed {len(prodFeed):,} Updates")
-print(
-    f'Tick2Trade Mean: {round(statistics.mean(runTimes), 2)} ms. Max: {round(max(runTimes), 2)} ms. Min: {round(min(runTimes), 2)}')
-prodLogs = recon.processLogs(fitModels)
+fitModels, prodLogs, md = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
 
 if False:
     recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
     recon.plotPnLDeltas(prodLogs, researchFeeds, cfg)
-    #recon.plotPnLs(prodLogs, researchFeeds, cfg)
-    #recon.reconcile(prodLogs, researchFeeds, fitModels)
-
+    # recon.plotPnLs(prodLogs, researchFeeds, cfg)
+    # recon.reconcile(prodLogs, researchFeeds, fitModels)

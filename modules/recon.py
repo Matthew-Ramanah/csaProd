@@ -248,3 +248,26 @@ def reconRVAlpha(researchFeeds, prodLogs):
     axs[7].legend(loc='upper right')
     fig.show()
     return
+
+def runRecon(prodFeed, fitModels, printRunTimes=False):
+    runTimes = []
+    for i, md in prodFeed.iterrows():
+        t0 = time.time()
+        for sym in fitModels:
+            fitModels[sym].mdUpdate(md)
+
+        t1 = time.time()
+        runTimes.append(1000 * (t1 - t0))
+    lg.info(f"Processed {len(prodFeed):,} Updates")
+
+    if printRunTimes:
+        print(
+            f'Tick2Trade Mean: {round(statistics.mean(runTimes), 2)} ms. Max: {round(max(runTimes), 2)} ms. Min: {round(min(runTimes), 2)}')
+    prodLogs = processLogs(fitModels)
+    return fitModels, prodLogs, md
+
+def initialisePositions(cfg):
+    pos = {}
+    for sym in cfg['targets']:
+        pos[sym] = 0
+    return pos
