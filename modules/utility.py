@@ -115,7 +115,7 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
 
     for sym in fitModels:
         modelState['seedDump'][sym] = fitModels[sym].seedDump
-        modelState['logs'][sym] = fitModels[sym].log
+        modelState['logs'][sym] = fitModels[sym].log[-1]
         modelState['alphasLog'][sym] = fitModels[sym].alphasLog
 
     with open(f'{interfaceRoot}modelState.json', 'w') as f:

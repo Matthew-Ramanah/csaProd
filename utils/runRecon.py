@@ -17,7 +17,7 @@ fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=initPositions, 
                                      timezone=AFBI.timezone, prod=False)
 
 # Market Data
-prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=5)
+prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=100000)
 
 # Models
 fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
@@ -26,6 +26,6 @@ fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
 prodLogs = recon.processLogs(fitModels)
 
 if plot:
-    recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels)
+    recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot=['ZN0', 'ICE-US_KC0'])
     recon.plotPnLDeltas(prodLogs, researchFeeds, cfg)
     recon.plotPnLs(prodLogs, researchFeeds, cfg)

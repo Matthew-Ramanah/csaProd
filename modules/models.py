@@ -7,6 +7,8 @@ class assetModel():
         self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
                                     seeds[targetSym], timezone, prod)
         self.log = []
+        self.alphasLog = []
+
         self.staleAssets = []
         self.prod = prod
         if self.prod:
@@ -113,8 +115,8 @@ class assetModel():
 
         else:
             self.tradeVolume = 0
-            self.log = []
-            self.alphasLog = []
+            self.log.append([])
+            self.alphasLog.append([])
 
         self.checkStaleAssets()
         self.updateSeeds()
@@ -252,7 +254,6 @@ class assetModel():
         return
 
     def constructAlphasLog(self):
-        self.alphasLog = []
         for name in self.alphaDict:
             thisAlpha = self.alphaDict[name]
             thisLog = [name, utility.formatTsToStrig(self.target.timestamp), thisAlpha.rawVal, thisAlpha.smoothVal,
@@ -262,10 +263,11 @@ class assetModel():
 
     def constructLogs(self):
         self.constructAlphasLog()
-        self.log = [utility.formatTsToStrig(self.target.timestamp), self.target.contractChange, self.target.midPrice,
-                    self.target.timeDelta, self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt,
-                    self.initHoldings, self.tradeVolume, self.maxTradeSize, self.normedHoldings, self.maxPosition,
-                    self.notionalPerLot, self.fxRate]
+        thisLog = [utility.formatTsToStrig(self.target.timestamp), self.target.contractChange, self.target.midPrice,
+                   self.target.timeDelta, self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt,
+                   self.initHoldings, self.tradeVolume, self.maxTradeSize, self.normedHoldings, self.maxPosition,
+                   self.notionalPerLot, self.fxRate]
+        self.log.append(thisLog)
         return
 
     def updateSeeds(self):

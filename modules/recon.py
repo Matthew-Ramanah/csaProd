@@ -2,6 +2,11 @@ from pyConfig import *
 from modules import utility
 
 
+def setLogIndex(log, col):
+    log.index = [pd.Timestamp(datetime.datetime.strptime(x, '%Y_%m_%d_%H')) for x in log[col]]
+    return log
+
+
 def processLogs(fitModels):
     logs = {}
     for sym in fitModels:
@@ -12,17 +17,20 @@ def processLogs(fitModels):
                                                    f'{sym}_timeDR_Delta', f'Volatility_{sym}', f'midDelta_{sym}',
                                                    f'{sym}_CumAlpha', 'hOpt', f'{sym}_BasketHoldings', f'{sym}_Trades',
                                                    f'{sym}_maxTradeSize', f'{sym}_Holdings', f'{sym}_maxLots',
-                                                   f'{sym}_notionalPerLot', f'{sym}_{fx}_DailyRate']).set_index(
-            'lastTS')
+                                                   f'{sym}_notionalPerLot', f'{sym}_{fx}_DailyRate'])
+        logs[sym]['model'] = setLogIndex(logs[sym]['model'], col='lastTS')
+
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
                                            columns=['lastTS', 'decay', 'rawVal', 'smoothVal', 'zVal', 'vol',
-                                                    f'feat_{name}']).set_index('lastTS')
+                                                    f'feat_{name}'])
+            logs[sym][name].index = logs[sym][name]['lastTS']
+
         for pred in fitModels[sym].predictors:
             logs[sym][pred] = pd.DataFrame(fitModels[sym].predictors[pred].log,
                                            columns=[f'{pred}_symbol', f'{pred}_lastTS', f'{pred}_contractChange',
-                                                    f'{pred}_midPrice', f'{pred}_timeDR_Delta']).set_index(
-                f'{pred}_lastTS')
+                                                    f'{pred}_midPrice', f'{pred}_timeDR_Delta'])
+            logs[sym][pred] = setLogIndex(logs[sym][pred], col=f'{pred}_lastTS')
 
     lg.info("Processed Logs.")
     return logs
@@ -66,8 +74,8 @@ def reconcile(prodLogs, researchFeeds, fitModels):
     return
 
 
-def plotReconCols(cfg, prodLogs, researchFeeds, fitModels):
-    for sym in fitModels:
+def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot):
+    for sym in symsToPlot:
         fts = cfg['fitParams'][sym]['feats']
         reconCols = [f'{sym}_BasketHoldings', f'Volatility_{sym}']
         prod = prodLogs[sym]['model']
@@ -249,6 +257,7 @@ def reconRVAlpha(researchFeeds, prodLogs):
     fig.show()
     return
 
+
 def runRecon(prodFeed, fitModels, printRunTimes=False):
     runTimes = []
     for i, md in prodFeed.iterrows():
@@ -264,6 +273,7 @@ def runRecon(prodFeed, fitModels, printRunTimes=False):
         print(
             f'Tick2Trade Mean: {round(statistics.mean(runTimes), 2)} ms. Max: {round(max(runTimes), 2)} ms. Min: {round(min(runTimes), 2)}')
     return fitModels
+
 
 def initialisePositions(cfg):
     pos = {}

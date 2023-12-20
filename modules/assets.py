@@ -141,8 +141,9 @@ class asset:
         return
 
     def updateLog(self):
-        self.log = [self.symbol, utility.formatTsToStrig(self.timestamp), self.contractChange, self.midPrice,
+        thisLog = [self.symbol, utility.formatTsToStrig(self.timestamp), self.contractChange, self.midPrice,
                    self.timeDelta]
+        self.log.append(thisLog)
         return
 
 
