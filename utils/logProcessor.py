@@ -9,6 +9,6 @@ logDir = paperLogRoot  # logRoot
 logs = pta.loadLogs(cfg, logDir)
 alphasLogs = pta.loadAlphasLogs(cfg, logDir)
 
-symsToPlot = cfg['targets']  # ["ICE-US_KC0"]
+symsToPlot = ['ALSI0']#cfg['targets']  # ["ICE-US_KC0"]
 pta.plotLogs(logs, alphasLogs, symsToPlot)
 lg.info("Completed.")
