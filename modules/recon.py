@@ -263,8 +263,7 @@ def runRecon(prodFeed, fitModels, printRunTimes=False):
     if printRunTimes:
         print(
             f'Tick2Trade Mean: {round(statistics.mean(runTimes), 2)} ms. Max: {round(max(runTimes), 2)} ms. Min: {round(min(runTimes), 2)}')
-    prodLogs = processLogs(fitModels)
-    return fitModels, prodLogs, md
+    return fitModels
 
 def initialisePositions(cfg):
     pos = {}

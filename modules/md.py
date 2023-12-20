@@ -25,12 +25,23 @@ def loadRawData(sym):
     return addPrefix(raw, sym)
 
 
-def loadSyntheticMD(cfg):
-    md = pd.DataFrame()
+def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
+    feed = pd.DataFrame()
     for sym in cfg['predictors']:
         raw = loadRawData(sym)
-        md = pd.concat([md, raw], axis=1)
+        feed = pd.concat([feed, raw], axis=1)
+
+    feed = sampleFeed(feed, researchFeeds, maxUpdates=maxUpdates)
+    feed = convertToProdFormat(feed, cfg)
     lg.info(f"Synthetic Market Data Feed Loaded")
+    return feed
+
+
+def convertToProdFormat(md, cfg):
+    for sym in cfg['predictors']:
+        md[f'{sym}_midPrice'] = 0.5 * (md[f'{sym}_ask_price'] + md[f'{sym}_bid_price'])
+        md[f'{sym}_lastTS'] = md[f'{sym}_end_ts']
+
     return md
 
 

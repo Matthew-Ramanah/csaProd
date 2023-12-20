@@ -18,6 +18,7 @@ def loadRefData():
 
 
 def loadResearchFeeds(cfg):
+    lg.info("Loading Research Feeds...")
     researchFeeds = {}
     researchFeeds['recon'] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/recon.h5", key='recon', mode='r')
     for sym in cfg['targets']:
