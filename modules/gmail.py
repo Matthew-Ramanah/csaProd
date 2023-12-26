@@ -120,5 +120,5 @@ def sendTradeFile(path, sendFrom, sendTo, sendCC, username, password, subject, m
     smtp.login(username, password)
     smtp.sendmail(sendFrom, sendTo + sendCC, msg.as_string())
     smtp.quit()
-
+    lg.info("tradeFile Sent.")
     return
