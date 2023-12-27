@@ -1,5 +1,7 @@
 # Directories
 root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
+logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
+paperLogRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/Paper/"
 rawDataRoot = "C:/Users/matth/PycharmProjects/AlphaGrep/data/raw/hourly/quotes/"
 proDataRoot = "C:/Users/matth/PycharmProjects/AlphaGrep/data/processed/"
 
@@ -18,8 +20,6 @@ reconTimezone = 'Australia/Sydney'
 # Run-time options
 cfg_file = root + "models/AFBI/config/ftiRemoved.json"
 interfaceRoot = root + "models/AFBI/interface/"
-logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
-paperLogRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/Paper/"
 
 # Global Packages
 import pandas as pd
