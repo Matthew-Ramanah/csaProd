@@ -79,10 +79,9 @@ def findSide(qty):
         return ""
 
 
-def findSlippageTol(cfg, sym, signedVolume):
+def findSlippageTol(cfg, sym):
     # Need polarity here so we don't ceil -ve trades less than we should
-    polarity = np.sign(signedVolume)
-    return polarity * int(np.ceil(abs(signedVolume) * pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym]))
+    return int(np.ceil(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym]))
 
 
 def findLimitPrices(cfg, md, trades):
@@ -91,8 +90,9 @@ def findLimitPrices(cfg, md, trades):
         if trades[sym] == 0:
             limitPrices[sym] = ""
         else:
-            slipTol = findSlippageTol(cfg, sym, trades[sym])
-            limitPrices[sym] = md[f'{sym}_midPrice'] + (slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym]))
+            slipTol = findSlippageTol(cfg, sym)
+            limitPrices[sym] = md[f'{sym}_midPrice'] + (
+                        np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym]))
 
     return limitPrices
 
