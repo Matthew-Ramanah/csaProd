@@ -151,8 +151,9 @@ def generateAFBITradeFile(cfg, fitModels, md, initPositions, timezone, send=True
 
 def sendAFBITradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["matthew.ramanah@sydneyquantitative.com"]  # ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
-    sendCC = []  # []["stephen.klein@afbillc.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com","matthew.ramanah@sydneyquantitative.com"]
+    sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
+    sendCC = ["stephen.klein@afbillc.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com",
+              "matthew.ramanah@sydneyquantitative.com"]
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"
