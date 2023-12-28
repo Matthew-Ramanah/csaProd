@@ -14,7 +14,7 @@ logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
 maxAssetDelta = 0.2
-pctSlipTol = 0.2
+pctSlipTol = 0.1
 reconTimezone = 'Australia/Sydney'
 
 # Run-time options
