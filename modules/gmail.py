@@ -91,12 +91,6 @@ def pullLatestPosFile(service, searchQuery):
 
 def sendTradeFile(path, sendFrom, sendTo, sendCC, username, password, subject, message, filename):
     lg.info("Sending tradeFile...")
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.base import MIMEBase
-    from email.mime.text import MIMEText
-    from email.utils import formatdate
-    from email import encoders
 
     msg = MIMEMultipart()
     msg['From'] = sendFrom
