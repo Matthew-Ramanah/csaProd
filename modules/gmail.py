@@ -114,7 +114,7 @@ def sendTradeFile(path, sendFrom, sendTo, sendCC, username, password, subject, m
         part.add_header('Content-Disposition', f'attachment; filename={filename}')
         msg.attach(part)
 
-    smtp = smtplib.SMTP("smtp.gmail.com", 587)
+    smtp = smtplib.SMTP(host="smtp.gmail.com", port=587)
     smtp.ehlo()
     smtp.starttls()
     smtp.login(username, password)
