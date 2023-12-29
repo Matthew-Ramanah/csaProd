@@ -82,12 +82,25 @@ def loadAlphasLogs(cfg, logDir):
     return alphasLogs
 
 
-def plotLogs(cfg, logs, alphasLogs, symsToPlot):
+def findTradePriceScaler(sym):
+    tradePriceMultipliers = {'ICE-US_KC0': 100, 'ICE-US_CT0': 100, 'KE0': 100, 'ZW0': 100}
+    if sym in list(tradePriceMultipliers):
+        return tradePriceMultipliers[sym]
+    return 1
+
+
+def plotLogs(cfg, logs, alphasLogs, tradeLogs, symsToPlot):
     for sym in symsToPlot:
         log = logs[sym]
+        trades = tradeLogs[sym]
+        buys = trades.loc[trades['Notional Quantity'] > 0].dropna()
+        sells = trades.loc[trades['Notional Quantity'] < 0].dropna()
+        tpScaler = findTradePriceScaler(sym)
         fig, axs = plt.subplots(6, sharex='all')
         fig.suptitle(f"{sym} Logs")
-        axs[0].step(log.index, log[f'{sym}_midPrice'], label='midPrice', where='post', color='blue')
+        axs[0].step(log.index, log[f'{sym}_midPrice'], label='midPrice', where='post', color='orange')
+        axs[0].plot(buys['execTime'], buys['tradePrice'] * tpScaler, "^", color='blue')
+        axs[0].plot(sells['execTime'], sells['tradePrice'] * tpScaler, "v", color='red')
         axs[0].legend(loc='upper left')
         axs[1].step(log.index, log[f'Volatility_{sym}'], label='Volatility', where='post', color='red')
         axs[1].legend(loc='upper left')
@@ -117,3 +130,49 @@ def plotLogs(cfg, logs, alphasLogs, symsToPlot):
         axs[5].legend(loc='upper left')
         fig.show()
     return
+
+
+def constructExecTime(symTradeLog, timezone):
+    if len(symTradeLog) == 0:
+        symTradeLog['execTime'] = pd.Series()
+    else:
+        symTradeLog['execTime'] = (
+            [parser.parse(x, tzinfos={"AWST": 8 * 3600}) for x in symTradeLog['Trade Modify Date']])
+        symTradeLog['execTime'] = symTradeLog['execTime'].dt.tz_convert(timezone)
+    return symTradeLog
+
+
+def constructTradePrice(symTradeLog):
+    fx = ''
+    if len(symTradeLog) == 0:
+        symTradeLog['tradePrice'] = np.nan
+    else:
+        try:
+            float(symTradeLog['Trade Price'].iloc[0])
+        except:
+            if not ',' in symTradeLog['Trade Price'].iloc[0]:
+                fx = symTradeLog['Trade Price'].iloc[0][:3]
+
+        try:
+            symTradeLog['tradePrice'] = [float(x.replace(fx, '')) for x in symTradeLog['Trade Price']]
+        except:
+            if ',' in symTradeLog['Trade Price'].iloc[0]:
+                symTradeLog['tradePrice'] = [locale.atof(x) for x in symTradeLog['Trade Price']]
+            else:
+                symTradeLog['tradePrice'] = np.nan
+    symTradeLog['fx'] = fx
+    return symTradeLog
+
+
+def loadTradeLogs(cfg, timezone):
+    refData = utility.loadRefData()
+    rawTrades = pd.read_csv(f'{tradeBlotterRoot}lastTradeBlotter.csv').dropna()
+    tradeLogs = {}
+    for sym in cfg['targets']:
+        id = refData.loc[sym]['description']
+        tradeLogs[sym] = rawTrades[[id in e for e in rawTrades['Description']]]
+        tradeLogs[sym]['Currency'] = tradeLogs[sym]['Trade Price']
+        tradeLogs[sym] = constructExecTime(tradeLogs[sym], timezone)
+        tradeLogs[sym] = constructTradePrice(tradeLogs[sym])
+
+    return tradeLogs

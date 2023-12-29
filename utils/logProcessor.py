@@ -1,14 +1,16 @@
 from pyConfig import *
 from modules import pta
+from models.AFBI.interface import AFBI
 
-cfg_file = root + "models/AFBI/config/afbiRecon.json"
+# cfg_file = root + "models/AFBI/config/afbiRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 logDir = logRoot  # paperLogRoot  #
 logs = pta.loadLogs(cfg, logDir)
 alphasLogs = pta.loadAlphasLogs(cfg, logDir)
+tradeLogs = pta.loadTradeLogs(cfg, timezone=AFBI.timezone)
 
-symsToPlot = ['AP0', 'KE0', 'ALSI0']  # cfg['targets']
-pta.plotLogs(cfg, logs, alphasLogs, symsToPlot)
+symsToPlot = cfg['targets']
+pta.plotLogs(cfg, logs, alphasLogs, tradeLogs, symsToPlot)
 lg.info("Completed.")

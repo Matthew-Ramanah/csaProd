@@ -2,6 +2,7 @@
 root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
 logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/"
 paperLogRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/Paper/"
+tradeBlotterRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/AFBI/tradeBlotter/"
 rawDataRoot = "C:/Users/matth/PycharmProjects/AlphaGrep/data/raw/hourly/quotes/"
 proDataRoot = "C:/Users/matth/PycharmProjects/AlphaGrep/data/processed/"
 
@@ -58,6 +59,8 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.utils import formatdate
 from email import encoders
+from dateutil import parser
+import locale
 
 # Environment Variables
 lg.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=lg.INFO, datefmt='%H:%M:%S')
@@ -66,6 +69,7 @@ pd.set_option('expand_frame_repr', False)
 pd.options.mode.chained_assignment = None
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
+locale.setlocale(locale.LC_ALL, '')
 
 # Deal with terribly designed data source
 fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
@@ -97,7 +101,7 @@ hardcodedContracts = {
     "RS0": "@RSH24",
     "RS1": "@RSK24",
     "W0": "QWH24",
-    "VX0" : "@VXF24",
+    "VX0": "@VXF24",
     "ICE-US_MME0": "MEFH24",
     "ICE-US_CT0": "@CTH24",
     "ICE-EU_G0": "GASF24",
