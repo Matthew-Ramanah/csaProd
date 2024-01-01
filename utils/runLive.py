@@ -5,7 +5,7 @@ from models.AFBI.interface import AFBI
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-send = True
+send = False
 save = True
 saveLogs = True
 
