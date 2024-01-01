@@ -92,7 +92,7 @@ def findLimitPrices(cfg, md, trades):
         else:
             slipTol = findSlippageTol(cfg, sym)
             limitPrices[sym] = md[f'{sym}_midPrice'] + (
-                        np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym]))
+                    np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym]))
 
     return limitPrices
 
