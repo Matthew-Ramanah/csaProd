@@ -19,7 +19,7 @@ pctSlipTol = 0.15
 reconTimezone = 'Australia/Sydney'
 
 # Run-time options
-cfg_file = root + "models/AFBI/config/ftiRemoved.json"
+cfg_file = root + "models/AFBI/config/afbiRecon.json"
 interfaceRoot = root + "models/AFBI/interface/"
 
 # Global Packages
