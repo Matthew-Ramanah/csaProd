@@ -11,6 +11,6 @@ logs = pta.loadLogs(cfg, logDir)
 alphasLogs = pta.loadAlphasLogs(cfg, logDir)
 tradeLogs = pta.loadTradeLogs(cfg, timezone=AFBI.timezone)
 
-symsToPlot = cfg['targets']
+symsToPlot = ['CL0']  # cfg['targets']
 pta.plotLogs(cfg, logs, alphasLogs, tradeLogs, symsToPlot)
 lg.info("Completed.")
