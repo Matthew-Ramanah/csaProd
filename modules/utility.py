@@ -2,7 +2,6 @@ from pyConfig import *
 from modules import models, dataFeed
 
 
-@functools.cache
 def findSmoothFactor(invTau, decay):
     return np.exp(-invTau * decay)
 
