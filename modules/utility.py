@@ -12,7 +12,7 @@ def emaUpdate(lastValue, thisValue, decay, invTau):
 
 
 def loadRefData():
-    refData = pd.read_csv(f'{root}asaRefData.csv')
+    refData = pd.read_csv(refDataPath)
     return refData.set_index('symbol')
 
 

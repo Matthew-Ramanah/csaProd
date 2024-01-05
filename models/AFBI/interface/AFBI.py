@@ -80,7 +80,7 @@ def findSlippageTol(cfg, sym):
     return int(np.ceil(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym]))
 
 
-def findLimitPrices(cfg, md, trades):
+def findLimitPrices(cfg, md, trades, noDec=8):
     limitPrices = {}
     for sym in trades:
         if trades[sym] == 0:
@@ -88,7 +88,7 @@ def findLimitPrices(cfg, md, trades):
         else:
             slipTol = findSlippageTol(cfg, sym)
             limitPrices[sym] = round(md[f'{sym}_midPrice'] + (
-                    np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym])), 6)
+                    np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym])), noDec)
 
     return limitPrices
 
@@ -167,7 +167,6 @@ def sendAFBITradeEmail(tradesPath, timeSig):
 
 
 def detectRiskLimits(cfg):
-    riskPath = f"{root}models/AFBI/config/riskLimits.csv"
     dfLimits = pd.read_csv(riskPath)
     refData = utility.loadRefData()
     riskLimits = {}
