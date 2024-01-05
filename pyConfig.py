@@ -1,6 +1,8 @@
 # Directories
 root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/"
 dataRoot = "C:/Users/matth/PycharmProjects/AlphaGrep/data/"
+# root = "C:Users/Owner/Desktop/CBCT/code/"
+# logRoot = "C:Users/Owner/Desktop/CBCT/logs/"
 
 codeRoot = f'{root}csaProd/'
 logRoot = f"{root}logs/AFBI/"
