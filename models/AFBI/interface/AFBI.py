@@ -1,5 +1,3 @@
-import pandas as pd
-
 from pyConfig import *
 from modules import utility, gmail
 
@@ -14,8 +12,6 @@ unmannedHours = {
     "Saturday": ("00:00", "23:59"),
     "Sunday": ("00:00", "18:59")
 }
-
-cancelAfter = pd.Timedelta(minutes=30)
 
 
 def isDeskManned():
@@ -91,10 +87,15 @@ def findLimitPrices(cfg, md, trades):
             limitPrices[sym] = ""
         else:
             slipTol = findSlippageTol(cfg, sym)
-            limitPrices[sym] = md[f'{sym}_midPrice'] + (
-                    np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym]))
+            limitPrices[sym] = round(md[f'{sym}_midPrice'] + (
+                    np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym])), 6)
 
     return limitPrices
+
+
+def createCancelTime(md):
+    cancelAfter = pd.Timedelta(minutes=30)
+    return pd.Timestamp(datetime.datetime.strptime(md['timeSig'], '%Y_%m_%d_%H')) + cancelAfter
 
 
 def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
@@ -102,6 +103,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
     afbiAccount = "CBCTBULK"
     orderType = "LMT"
     limitPrices = findLimitPrices(cfg, md, trades)
+    cancelTime = createCancelTime(md)
     stopPrice = ""
     tif = "DAY"
     broker = "MSET"
@@ -116,7 +118,6 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
         limitPrice = limitPrices[sym]
         lastPrice = md[f'{sym}_midPrice']
         lastTime = md[f'{sym}_lastTS']
-        cancelTime = pd.Timestamp(datetime.datetime.strptime(md['timeSig'], '%Y_%m_%d_%H')) + cancelAfter
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
         desc = refData.loc[sym]['description']

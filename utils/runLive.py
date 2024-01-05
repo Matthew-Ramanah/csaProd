@@ -5,9 +5,9 @@ from models.AFBI.interface import AFBI
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-send = True
-save = True
-saveLogs = True
+send = False
+save = False
+saveLogs = False
 
 # Load Seeds
 initSeeds = utility.loadInitSeeds(cfg)
