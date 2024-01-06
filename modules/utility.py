@@ -124,10 +124,12 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
     lg.info("Saved Model State.")
 
     if saveLogs:
+        os.makedirs(f"{logDir}models/", exist_ok=True)
         with open(f"{logDir}models/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["logs"], f)
 
-        with open(f"{logDir}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
+        os.makedirs(f"{logDir}models/", exist_ok=True)
+        with open(f"{logDir}models/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["alphasLog"], f)
         lg.info("Saved Logs.")
 

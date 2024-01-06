@@ -133,7 +133,6 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
 
 def generateAFBITradeFile(cfg, fitModels, md, initPositions, timezone, send=True, paper=False):
     logDir, _ = utility.findLogDirFileName(paper)
-    tradesPath = f"{logDir}trades/CBCT_{md['timeSig']}.csv"
 
     # Generate CSV & dict
     trades = utility.generateTrades(fitModels)
@@ -141,6 +140,8 @@ def generateAFBITradeFile(cfg, fitModels, md, initPositions, timezone, send=True
     print(tradeCSV)
 
     # Save to Log & Email
+    os.makedirs(f"{logDir}trades/", exist_ok=True)
+    tradesPath = f"{logDir}trades/CBCT_{md['timeSig']}.csv"
     tradeCSV.to_csv(tradesPath)
 
     if send and not paper:
