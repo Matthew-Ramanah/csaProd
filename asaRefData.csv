@@ -15,7 +15,7 @@ PA0,QPA#C,Commodity,CME,Palladium,,USD,100,USD,50,USD,1.65
 PL0,QPL#C,Commodity,CME,Platinum,,USD,50,USD,5,USD,1.65
 RB0,QRB#C,Commodity,CME,Gasoline,,USD,42000,USD,4.2,USD,1.6
 CL0,QCL#C,Commodity,CME,LIGHT CRUDE,CLG4 Comdty,USD,1000,USD,10,USD,1.65
-HO0,QHO#C,Commodity,CME,Heating Oil,HOF4 Comdty,USD,42000,USD,4.20,USD,1.6
+HO0,QHO#C,Commodity,CME,Heating Oil,HOG4 Comdty,USD,42000,USD,4.20,USD,1.6
 NG0,QNG#C,Commodity,CME,Natural Gas,,USD,10000,UD,10,USD,0
 RS0,@RS#C,Commodity,ICE,ICE CANOLA,RSH4 Comdty,CAD,20,CAD,2,CAD,0
 W0,QW#C,Commodity,ICE,White Sugar,QWH4 Comdty,USD,50,USD,5,GBP,0.65
