@@ -1,12 +1,12 @@
 # Directories
-root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/"
-# root = "C:Users/Owner/Desktop/CBCT/code/"
+
+root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
+# root = "C:/Users/Owner/Desktop/CBCT/code/"
+logRoot = f"{root}logs/AFBI/"
 dataRoot = "C:/Users/matth/PycharmProjects/AlphaGrep/data/"
 
-codeRoot = f'{root}csaProd/'
-logRoot = f"{root}logs/AFBI/"
-refDataPath = f'{codeRoot}asaRefData.csv'
-riskPath = f"{codeRoot}models/AFBI/config/riskLimits.csv"
+refDataPath = f'{root}asaRefData.csv'
+riskPath = f"{root}models/AFBI/config/riskLimits.csv"
 paperLogRoot = f"{logRoot}Paper/"
 liveLogRoot = f"{logRoot}Live/"
 tradeBlotterRoot = f"{logRoot}tradeBlotter/"
@@ -27,13 +27,15 @@ reconTimezone = 'Australia/Sydney'
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
 
 # Run-time options
-cfg_file = codeRoot + "models/AFBI/config/afbiRecon.json"
-interfaceRoot = codeRoot + "models/AFBI/interface/"
+cfg_file = root + "models/AFBI/config/afbiRecon.json"
+interfaceRoot = root + "models/AFBI/interface/"
 
 # Global Packages
 import pandas as pd
 import numpy as np
 import matplotlib
+
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import logging as lg
@@ -76,7 +78,6 @@ pd.options.mode.chained_assignment = None
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 locale.setlocale(locale.LC_ALL, '')
-matplotlib.use('TkAgg')
 
 # Deal with terribly designed data source
 fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
