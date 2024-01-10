@@ -90,6 +90,9 @@ def findLimitPrices(cfg, md, trades, noDec=8):
             limitPrices[sym] = round(md[f'{sym}_midPrice'] + (
                     np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym])), noDec)
 
+            if sym in list(priceMultipliers.keys()):
+                limitPrices[sym] *= round(priceMultipliers[sym], noDec)
+
     return limitPrices
 
 

@@ -81,6 +81,7 @@ locale.setlocale(locale.LC_ALL, '')
 
 # Deal with terribly designed data source
 fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
+priceMultipliers = {"HO0" : 100}
 
 hardcodedContracts = {
     "ZL0": "@BOF24",
