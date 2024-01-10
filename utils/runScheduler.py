@@ -1,7 +1,7 @@
 import sys
 
 sys.path.insert(0, "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/")
-# sys.path.insert(0, "C:Users/Owner/Desktop/CBCT/code/csaProd/")
+# sys.path.insert(0, "C:/Users/Owner/Desktop/CBCT/code/")
 
 from pyConfig import *
 import schedule
