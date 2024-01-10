@@ -1,21 +1,21 @@
 ,Bloom Ticker,Exchange,Description,maxTradeSize,maxPosition
-0,TYH4 Comdty,CME,US 10 Yr Bond,2,6
-1,FVH4 Comdty,CME,US 5 Yr Bond,1,5
-2,IKH4 Comdty,EUREX,Italian Bond,1,5
-3,XPH4 Index,SFE,Aus Index,2,8
-4,ESH4 Index,CME,E-Mini Index,1,5
-5,SMH4 Index,EUREX,Swiss Blue Chip Index,1,4
-6,AIH4 Index,JSE,Johannesburg Index,6,27
-7,C H4 Comdty,CME,Corn,3,12
-8,S H4 Comdty,CME,Soybeans,2,8
-9,SMH4 Comdty,CME,Soybean Meal,5,24
-10,W H4 Comdty,CME,Chicago Wheat,5,22
-11,KWH4 Comdty,CME,Kansas Wheat,4,18
-12,LCG4 Comdty,CME,Live Cattle,5,21
-13,CLG4 Comdty,CME,Crude Light,1,5
-14,HOH4 Comdty,CME,Heating Oil,1,5
-15,RSH4 Comdty,ICE,Canola,6,29
-16,QWH4 Comdty,ICE,White Sugar,7,35
-17,CTH4 Comdty,ICE,Cotton,6,27
-18,QSG4 Comdty,ICE,Low Sulphur Gasoil,2,6
-19,KCH4 Comdty,ICE,Arabica Coffee,2,8
+0,TYH4 Comdty,CME,10Y TNotes,6,28
+1,FVH4 Comdty,CME,5YR T NOTES,7,31
+2,IKH4 Comdty,EUREX,Italian Bond,4,20
+3,XPH4 Index,SFE,SPI 200,6,28
+4,ESH4 Index,CME,EMINI S&P,7,31
+5,SMH4 Index,EUREX,Swiss Blue Chip Index,4,18
+6,AIH4 Index,JSE,ED OPI ALSI,21,105
+7,C H4 Comdty,CME,Corn,11,55
+8,S H4 Comdty,CME,Soybeans,4,19
+9,SMH4 Comdty,CME,Soybean Meal,19,92
+10,W H4 Comdty,CME,WHEAT SRW,15,73
+11,KWH4 Comdty,CME,WHEAT HRW,10,50
+12,LCG4 Comdty,CME,Live Cattle,18,86
+13,CLG4 Comdty,CME,LIGHT CRUDE,5,21
+14,HOH4 Comdty,CME,Heating Oil,7,32
+15,RSH4 Comdty,ICE,ICE CANOLA,30,148
+16,QWH4 Comdty,ICE,White Sugar,18,86
+17,CTH4 Comdty,ICE,ICE COT 2,18,86
+18,QSG4 Comdty,ICE,Low Sulphur Gasoil,6,30
+19,KCH4 Comdty,ICE,ICE COFFEE,8,38

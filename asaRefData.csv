@@ -1,11 +1,11 @@
 symbol,iqfSym,assetClass,exchange,description,tradedSym,notionalCurrency,notionalMultiplier,tickValueCurrency,tickValue,feesCurrency,feesPerLot
 ZL0,@BO#C,Commodity,CME,Soybean Oil,BOF4 Comdty,USD,600,USD,6,USD,0.33
 ZC0,@C#C,Commodity,CME,Corn,C H4 Comdty,USD,50,USD,12.5,USD,0.33
-ZS0,@S#C,Commodity,CME,Soybeans,S H4 Comdty,USD,50,USD,12.5,USD,0.33
-ZM0,@SM#C,Commodity,CME,Soybean Meal,SMH4 Comdty,USD,100,USD,10,USD,0.33
+ZS0,@S#C,Commodity,CME,SOYBEANS,S H4 Comdty,USD,50,USD,12.5,USD,0.33
+ZM0,@SM#C,Commodity,CME,SOY MEAL,SMH4 Comdty,USD,100,USD,10,USD,0.33
 ZW0,@W#C,Commodity,CME,WHEAT SRW,W H4 Comdty,USD,50,USD,12.5,USD,0.33
 KE0,@KW#C,Commodity,CME,WHEAT HRW,KWH4 Comdty,USD,50,USD,12.5,USD,0.33
-LE0,@LE#C,Commodity,CME,Live Cattle,LCG4 Comdty,USD,400,USD,10,USD,0.61
+LE0,@LE#C,Commodity,CME,LIVE CATTLE,LCG4 Comdty,USD,400,USD,10,USD,0.61
 GF0,@GF#C,Commodity,CME,Feeder Cattle,,USD,500,USD,12.5,USD,0.61
 HE0,@HE#C,Commodity,CME,Lean Hog,,USD,400,USD,10,USD,0.61
 HG0,QHG#C,Commodity,CME,Copper,HGH4 Comdty,USD,2500,USD,12.5,USD,1.65
@@ -18,7 +18,7 @@ CL0,QCL#C,Commodity,CME,LIGHT CRUDE,CLG4 Comdty,USD,1000,USD,10,USD,1.65
 HO0,QHO#C,Commodity,CME,Heating Oil,HOH4 Comdty,USD,42000,USD,4.20,USD,1.6
 NG0,QNG#C,Commodity,CME,Natural Gas,,USD,10000,UD,10,USD,0
 RS0,@RS#C,Commodity,ICE,ICE CANOLA,RSH4 Comdty,CAD,20,CAD,2,CAD,0
-W0,QW#C,Commodity,ICE,White Sugar,QWH4 Comdty,USD,50,USD,5,GBP,0.65
+W0,QW#C,Commodity,ICE,SUGAR NO5,QWH4 Comdty,USD,50,USD,5,GBP,0.65
 RC0,LRC#C,Commodity,ICE,Robusta Coffee,,USD,10,USD,10,GBP,0.65
 ECO0,PG#C,Commodity,EURONEXT,Rapeseed / Colza,,EUR,50,EUR,12.5,EUR,0
 ICE-US_CT0,@CT#C,Commodity,ICE,ICE COT 2,CTH4 Comdty,USD,500,USD,5,USD,2.2

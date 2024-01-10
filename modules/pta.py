@@ -41,7 +41,7 @@ def loadLogs(cfg, logDir):
     return logs
 
 
-def formatAlphasLogs(rawAL, cfg):
+def convertRawToListALogs(rawAL):
     alphasLogs = {}
     for sym in rawAL:
         alphasLogs[sym] = {}
@@ -54,6 +54,20 @@ def formatAlphasLogs(rawAL, cfg):
                     alphasLogs[sym][name] = []
                 alphasLogs[sym][name].append(alpha[1:])
 
+    return alphasLogs
+
+
+def removeEmptyALogs(alphasLogs):
+    toDelete = []
+    for sym in alphasLogs:
+        if len(alphasLogs[sym]) == 0:
+            toDelete.append(sym)
+    for i in toDelete:
+        del alphasLogs[i]
+    return alphasLogs
+
+
+def converListToDfALogs(alphasLogs, cfg):
     cols = ['timestamp', 'rawVal', 'smoothVal', 'zVal', 'vol', 'featVal', 'alphaVal']
     for sym in alphasLogs:
         for name in cfg['fitParams'][sym]['alphaWeights']:
@@ -64,6 +78,13 @@ def formatAlphasLogs(rawAL, cfg):
                                                 cfg['fitParams'][sym]['alphaWeights'][name]
             alphasLogs[sym][name].index = pd.to_datetime(alphasLogs[sym][name]['timestamp'], format='%Y_%m_%d_%H')
 
+    return alphasLogs
+
+
+def formatAlphasLogs(rawAL, cfg):
+    alphasLogs = convertRawToListALogs(rawAL)
+    alphasLogs = removeEmptyALogs(alphasLogs)
+    alphasLogs = converListToDfALogs(alphasLogs, cfg)
     return alphasLogs
 
 
@@ -91,6 +112,9 @@ def findTradePriceScaler(sym):
 
 def plotLogs(cfg, logs, alphasLogs, tradeLogs, symsToPlot):
     for sym in symsToPlot:
+        if len(logs[sym]) == 0:
+            print(f"Can't plot {sym} logs as no logFiles detected")
+            continue
         log = logs[sym]
         trades = tradeLogs[sym]
         buys = trades.loc[trades['Notional Quantity'] > 0].dropna()
