@@ -84,7 +84,7 @@ fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
 priceMultipliers = {"HO0" : 100}
 
 hardcodedContracts = {
-    "ZL0": "@BOF24",
+    "ZL0": "@BOH24",
     "ZC0": "@CH24",
     "ZC1": "@CK24",
     "ZS0": "@SH24",
@@ -100,7 +100,7 @@ hardcodedContracts = {
     "GC0": "QGCG24",
     "GC1": "QGCJ24",
     "SI0": "QSIH24",
-    "PL0": "QPLF24",
+    "PL0": "QPLH24",
     "PA0": "QPAH24",
     "RB0": "QRBG24",
     "CL0": "QCLG24",
