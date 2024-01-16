@@ -9,7 +9,7 @@ def initialiseLogDict(cfg):
     return logs
 
 
-def formatRawLogs(rawLogs):
+def formatRawLogs(rawLogs, timezone):
     logs = {}
     for sym in rawLogs:
         fx = utility.findNotionalFx(sym)
@@ -21,12 +21,13 @@ def formatRawLogs(rawLogs):
 
     for sym in logs:
         logs[sym].index = pd.to_datetime(logs[sym]['lastTS'], format='%Y_%m_%d_%H')
+        logs[sym].index = logs[sym].index.tz_localize(timezone)
         logs[sym][f'{sym}_TargetPos'] = logs[sym][f'{sym}_InitHoldings'] + logs[sym][f'{sym}_Trades']
 
     return logs
 
 
-def loadLogs(cfg, logDir):
+def loadLogs(cfg, logDir, timezone):
     lg.info("Loading Logs...")
     logs = initialiseLogDict(cfg)
     for root, dirs, files in os.walk(f'{logDir}models/'):
@@ -37,7 +38,7 @@ def loadLogs(cfg, logDir):
                 for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
                         logs[sym].append(rawLog[sym])
-    logs = formatRawLogs(logs)
+    logs = formatRawLogs(logs, timezone)
     return logs
 
 
@@ -67,7 +68,7 @@ def removeEmptyALogs(alphasLogs):
     return alphasLogs
 
 
-def converListToDfALogs(alphasLogs, cfg):
+def converListToDfALogs(alphasLogs, cfg, timezone):
     cols = ['timestamp', 'rawVal', 'smoothVal', 'zVal', 'vol', 'featVal', 'alphaVal']
     for sym in alphasLogs:
         for name in cfg['fitParams'][sym]['alphaWeights']:
@@ -76,19 +77,21 @@ def converListToDfALogs(alphasLogs, cfg):
             alphasLogs[sym][name] = pd.DataFrame(alphasLogs[sym][name], columns=cols)
             alphasLogs[sym][name]['weighted'] = alphasLogs[sym][name]['alphaVal'] * \
                                                 cfg['fitParams'][sym]['alphaWeights'][name]
-            alphasLogs[sym][name].index = pd.to_datetime(alphasLogs[sym][name]['timestamp'], format='%Y_%m_%d_%H')
+            alphasLogs[sym][name].index = pd.to_datetime(alphasLogs[sym][name]['timestamp'],
+                                                         format='%Y_%m_%d_%H')
+            alphasLogs[sym][name].index = alphasLogs[sym][name].index.tz_localize(timezone)
 
     return alphasLogs
 
 
-def formatAlphasLogs(rawAL, cfg):
+def formatAlphasLogs(rawAL, cfg, timezone):
     alphasLogs = convertRawToListALogs(rawAL)
     alphasLogs = removeEmptyALogs(alphasLogs)
-    alphasLogs = converListToDfALogs(alphasLogs, cfg)
+    alphasLogs = converListToDfALogs(alphasLogs, cfg, timezone)
     return alphasLogs
 
 
-def loadAlphasLogs(cfg, logDir):
+def loadAlphasLogs(cfg, logDir, timezone):
     lg.info("Loading AlphasLogs...")
     rawAL = initialiseLogDict(cfg)
     for root, dirs, files in os.walk(f'{logDir}alphas/'):
@@ -99,12 +102,12 @@ def loadAlphasLogs(cfg, logDir):
                 for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
                         rawAL[sym].append(rawLog[sym])
-    alphasLogs = formatAlphasLogs(rawAL, cfg)
+    alphasLogs = formatAlphasLogs(rawAL, cfg, timezone)
     return alphasLogs
 
 
 def findTradePriceScaler(sym):
-    tradePriceMultipliers = {'ICE-US_KC0': 100, 'ICE-US_CT0': 100, 'KE0': 100, 'ZW0': 100}
+    tradePriceMultipliers = {'ICE-US_KC0': 100, 'ICE-US_CT0': 100, 'KE0': 100, 'ZW0': 100, "LE0" : 100, "ZS0" : 100}
     if sym in list(tradePriceMultipliers):
         return tradePriceMultipliers[sym]
     return 1
