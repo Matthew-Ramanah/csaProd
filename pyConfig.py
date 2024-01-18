@@ -103,7 +103,7 @@ hardcodedContracts = {
     "PL0": "QPLH24",
     "PA0": "QPAH24",
     "RB0": "QRBG24",
-    "CL0": "QCLG24",
+    "CL0": "QCLH24",
     "HO0": "QHOH24",
     "RS0": "@RSH24",
     "RS1": "@RSK24",
