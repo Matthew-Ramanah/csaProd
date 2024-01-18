@@ -107,7 +107,7 @@ def loadAlphasLogs(cfg, logDir, timezone):
 
 
 def findTradePriceScaler(sym):
-    tradePriceMultipliers = {'ICE-US_KC0': 100, 'ICE-US_CT0': 100, 'KE0': 100, 'ZW0': 100, "LE0" : 100, "ZS0" : 100}
+    tradePriceMultipliers = {'ICE-US_KC0': 100, 'ICE-US_CT0': 100, 'KE0': 100, 'ZW0': 100, "LE0": 100, "ZS0": 100}
     if sym in list(tradePriceMultipliers):
         return tradePriceMultipliers[sym]
     return 1
@@ -119,15 +119,15 @@ def plotLogs(cfg, logs, alphasLogs, tradeLogs, symsToPlot):
             print(f"Can't plot {sym} logs as no logFiles detected")
             continue
         log = logs[sym]
-        trades = tradeLogs[sym]
-        buys = trades.loc[trades['Notional Quantity'] > 0].dropna()
-        sells = trades.loc[trades['Notional Quantity'] < 0].dropna()
-        tpScaler = findTradePriceScaler(sym)
+        # trades = tradeLogs[sym]
+        # buys = trades.loc[trades['Notional Quantity'] > 0].dropna()
+        # sells = trades.loc[trades['Notional Quantity'] < 0].dropna()
+        # tpScaler = findTradePriceScaler(sym)
         fig, axs = plt.subplots(6, sharex='all')
         fig.suptitle(f"{sym} Logs")
         axs[0].step(log.index, log[f'{sym}_midPrice'], label='midPrice', where='post', color='orange')
-        axs[0].plot(buys['execTime'], buys['tradePrice'] * tpScaler, "^", color='blue')
-        axs[0].plot(sells['execTime'], sells['tradePrice'] * tpScaler, "v", color='red')
+        # axs[0].plot(buys['execTime'], buys['tradePrice'] * tpScaler, "^", color='blue', label='buy')
+        # axs[0].plot(sells['execTime'], sells['tradePrice'] * tpScaler, "v", color='red', label='sell')
         axs[0].legend(loc='upper left')
         axs[1].step(log.index, log[f'Volatility_{sym}'], label='Volatility', where='post', color='red')
         axs[1].legend(loc='upper left')
