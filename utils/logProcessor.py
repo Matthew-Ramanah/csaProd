@@ -8,7 +8,7 @@ with open(cfg_file, 'r') as f:
 logDir = logRoot  # paperLogRoot  #
 logs = pta.loadLogs(cfg, logDir, AFBI.timezone)
 alphasLogs = pta.loadAlphasLogs(cfg, logDir, AFBI.timezone)
-tradeLogs = {}  # pta.loadTradeLogs(cfg, timezone=AFBI.timezone)
+tradeLogs = pta.loadTradeLogs(cfg, timezone=AFBI.timezone)
 
 symsToPlot = cfg['targets']
 pta.plotLogs(cfg, logs, alphasLogs, tradeLogs, symsToPlot)
