@@ -38,6 +38,7 @@ class feed():
             else:
                 baseSym = refData.loc[sym[:-1] + '0']['iqfSym'][:-2]
                 iqfSym = self.findNthSymbol(baseSym, n=int(sym[-1]))
+                lg.info(f"Need to add {sym} to hardcoded contracts")
             self.symbolMap[sym] = iqfSym
         return self.symbolMap
 

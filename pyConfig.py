@@ -21,7 +21,7 @@ minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
-maxAssetDelta = 0.1
+maxAssetDelta = 0.05
 pctSlipTol = 0.2
 reconTimezone = 'Australia/Sydney'
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
@@ -81,14 +81,12 @@ locale.setlocale(locale.LC_ALL, '')
 
 # Deal with terribly designed data source
 fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
-priceMultipliers = {"HO0" : 100}
+priceMultipliers = {"HO0": 100}
 
 hardcodedContracts = {
     "ZL0": "@BOH24",
     "ZC0": "@CH24",
-    "ZC1": "@CK24",
     "ZS0": "@SH24",
-    "ZS1": "@SK24",
     "ZM0": "@SMH24",
     "ZW0": "@WH24",
     "KE0": "@KWH24",
@@ -96,23 +94,25 @@ hardcodedContracts = {
     "GF0": "@GFF24",
     "HG0": "QHGH24",
     "HE0": "@HEG24",
-    "HE1": "@HEJ24",
     "GC0": "QGCG24",
-    "GC1": "QGCJ24",
     "SI0": "QSIH24",
-    "PL0": "QPLH24",
+    "PL0": "QPLJ24",
     "PA0": "QPAH24",
     "RB0": "QRBG24",
+    "NG0": "QNGG24",
     "CL0": "QCLH24",
     "HO0": "QHOH24",
     "RS0": "@RSH24",
-    "RS1": "@RSK24",
     "W0": "QWH24",
     "VX0": "@VXF24",
     "ICE-US_MME0": "MEFH24",
     "ICE-US_CT0": "@CTH24",
+    "ICE-EU_BRN0": "QBZH24",
+    "ICE-US_SB0": "@SBH24",
     "ICE-EU_G0": "GASG24",
     "ICE-US_KC0": "@KCH24",
+    "ICE-LX_C0": "QCH24",
+    "ICE-US_CC0": "@CCH24",
     "ICE-LL_R0": "LGH24",
     "ICE-LL_Z0": "LFH24",
     "ZB0": "@USH24",
@@ -122,12 +122,23 @@ hardcodedContracts = {
     "FBTP0": "BTPH24",
     "FGBL0": "BDH24",
     "FGBM0": "BLH24",
+    "CONF0": "COH24",
     "AP0": "SPIH24",
     "ES0": "@ESH24",
+    "YM0": "@YMH24",
     "NQ0": "@NQH24",
     "RTY0": "@RTYH24",
     "FSMI0": "SWH24",
-    "ALSI0": "ALJH24"
+    "FESB0": "SXH24",
+    "ALSI0": "ALJH24",
+    "IND0": "INDG24",
+    "FTI0": "AEXG24",
+    "FCE0": "MTG24",
+    "FBTS0": "BTSH24",
+    "FDAX0": "DXMH24",
+    "FESX0": "EXH24",
+    "XT0": "XTH24",
+    "ECO0": "PGK24"
 }
 
 exchangeMap = {
