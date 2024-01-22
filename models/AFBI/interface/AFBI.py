@@ -80,7 +80,7 @@ def findSlippageTol(cfg, sym):
     return int(np.ceil(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym]))
 
 
-def findLimitPrices(cfg, md, trades, noDec=8):
+def findLimitPrices(cfg, md, trades):
     limitPrices = {}
     for sym in trades:
         if trades[sym] == 0:
@@ -91,7 +91,7 @@ def findLimitPrices(cfg, md, trades, noDec=8):
                     np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym])), noDec)
 
             if sym in list(priceMultipliers.keys()):
-                limitPrices[sym] *= round(priceMultipliers[sym], noDec)
+                limitPrices[sym] = round(priceMultipliers[sym] * limitPrices[sym], noDec)
 
     return limitPrices
 

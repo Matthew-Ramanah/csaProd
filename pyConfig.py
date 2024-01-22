@@ -21,6 +21,7 @@ minsPerYear = 60 * 24 * daysPerYear
 logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
+noDec = 8
 maxAssetDelta = 0.05
 pctSlipTol = 0.2
 reconTimezone = 'Australia/Sydney'
