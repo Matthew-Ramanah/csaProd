@@ -134,25 +134,16 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
-def generateAFBITradeFile(cfg, fitModels, md, initPositions, timezone, send=True, paper=False):
-    logDir, _ = utility.findLogDirFileName(paper)
-
-    # Generate CSV & dict
-    trades = utility.generateTrades(fitModels)
-    tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone)
-    print(tradeCSV)
-
-    # Save to Log & Email
-    os.makedirs(f"{logDir}trades/", exist_ok=True)
-    tradesPath = f"{logDir}trades/CBCT_{md['timeSig']}.csv"
-    tradeCSV.to_csv(tradesPath)
-
-    if send and not paper:
-        if isDeskManned():
-            sendAFBITradeEmail(tradesPath, md['timeSig'])
-        else:
-            lg.info("Not sending email as desk is unmanned.")
-    return trades
+def detectRiskLimits(cfg):
+    dfLimits = pd.read_csv(riskPath)
+    refData = utility.loadRefData()
+    riskLimits = {}
+    for sym in cfg['targets']:
+        tradedSym = refData.loc[sym]['tradedSym']
+        row = np.where(dfLimits['Bloom Ticker'] == tradedSym)[0][0]
+        riskLimits[sym] = {"maxPosition": int(dfLimits.iloc[row]['maxPosition']),
+                           "maxTradeSize": int(dfLimits.iloc[row]['maxTradeSize'])}
+    return riskLimits
 
 
 def sendAFBITradeEmail(tradesPath, timeSig):
@@ -170,13 +161,21 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     return
 
 
-def detectRiskLimits(cfg):
-    dfLimits = pd.read_csv(riskPath)
-    refData = utility.loadRefData()
-    riskLimits = {}
-    for sym in cfg['targets']:
-        tradedSym = refData.loc[sym]['tradedSym']
-        row = np.where(dfLimits['Bloom Ticker'] == tradedSym)[0][0]
-        riskLimits[sym] = {"maxPosition": int(dfLimits.iloc[row]['maxPosition']),
-                           "maxTradeSize": int(dfLimits.iloc[row]['maxTradeSize'])}
-    return riskLimits
+def generateAFBITradeFile(cfg, fitModels, md, initPositions, timezone, send=True, saveLogs=True):
+    # Generate CSV & dict
+    trades = utility.generateTrades(fitModels)
+    tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone)
+    print(tradeCSV)
+
+    # Save to Log & Email
+    os.makedirs(f"{logRoot}trades/", exist_ok=True)
+    tradesPath = f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
+    if saveLogs:
+        tradeCSV.to_csv(tradesPath)
+
+    if send:
+        if isDeskManned():
+            sendAFBITradeEmail(tradesPath, md['timeSig'])
+        else:
+            lg.info("Not sending email as desk is unmanned.")
+    return trades

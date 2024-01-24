@@ -6,7 +6,7 @@ with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 send = False
-save = False
+saveModel = False
 saveLogs = False
 
 # Load Seeds
@@ -27,9 +27,9 @@ md = dataFeed.feed(cfg, AFBI.timezone).pullLatestMD(syntheticIncrement=0)
 fitModels = utility.updateModels(fitModels, md)
 
 # Generate tradeFile
-trades = AFBI.generateAFBITradeFile(cfg, fitModels, md, initPositions, AFBI.timezone, send=send, paper=False)
+trades = AFBI.generateAFBITradeFile(cfg, fitModels, md, initPositions, AFBI.timezone, send=send, saveLogs=saveLogs)
 
-if save:
-    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs, paper=False)
+if saveModel:
+    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
 
 lg.info("Completed.")

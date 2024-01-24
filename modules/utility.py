@@ -102,7 +102,7 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
     return seeds
 
 
-def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=True, paper=False):
+def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
     modelState = {
         "initSeeds": initSeeds,
         "initPositions": initPositions,
@@ -112,32 +112,28 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
         "alphasLog": {}
     }
 
-    logDir, filename = findLogDirFileName(paper)
-
     for sym in fitModels:
         modelState['seedDump'][sym] = fitModels[sym].seedDump
         modelState['logs'][sym] = fitModels[sym].log[-1]
         modelState['alphasLog'][sym] = fitModels[sym].alphasLog
 
-    with open(f'{interfaceRoot}{filename}.json', 'w') as f:
+    with open(f'{interfaceRoot}modelState.json', 'w') as f:
         json.dump(modelState, f)
     lg.info("Saved Model State.")
 
     if saveLogs:
-        os.makedirs(f"{logDir}models/", exist_ok=True)
-        with open(f"{logDir}models/CBCT_{md['timeSig']}.json", 'w') as f:
+        os.makedirs(f"{logRoot}models/", exist_ok=True)
+        with open(f"{logRoot}models/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["logs"], f)
 
-        os.makedirs(f"{logDir}alphas/", exist_ok=True)
-        with open(f"{logDir}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
+        os.makedirs(f"{logRoot}alphas/", exist_ok=True)
+        with open(f"{logRoot}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["alphasLog"], f)
         lg.info("Saved Logs.")
 
         os.makedirs(f"{logDir}seeds/", exist_ok=True)
         with open(f"{logDir}seeds/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["seedDump"], f)
-
-
 
     return modelState
 
@@ -208,6 +204,7 @@ def updateModels(fitModels, md):
 
     dataFeed.monitorMdhSanity(fitModels, md)
     return fitModels
+
 
 def findLogDirFileName(paper):
     if not paper:
