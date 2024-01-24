@@ -131,9 +131,11 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
             json.dump(modelState["alphasLog"], f)
         lg.info("Saved Logs.")
 
-        os.makedirs(f"{logDir}seeds/", exist_ok=True)
-        with open(f"{logDir}seeds/CBCT_{md['timeSig']}.json", 'w') as f:
+        os.makedirs(f"{logRoot}seeds/", exist_ok=True)
+        with open(f"{logRoot}seeds/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["seedDump"], f)
+
+
 
     return modelState
 
@@ -204,7 +206,6 @@ def updateModels(fitModels, md):
 
     dataFeed.monitorMdhSanity(fitModels, md)
     return fitModels
-
 
 def findLogDirFileName(paper):
     if not paper:
