@@ -105,7 +105,7 @@ hardcodedContracts = {
     "HO0": "QHOH24",
     "RS0": "@RSH24",
     "W0": "QWH24",
-    "VX0": "@VXF24",
+    "VX0": "@VXG24",
     "ICE-US_MME0": "MEFH24",
     "ICE-US_CT0": "@CTH24",
     "ICE-EU_BRN0": "QBZH24",

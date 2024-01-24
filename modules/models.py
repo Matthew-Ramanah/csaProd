@@ -4,8 +4,8 @@ from modules import utility, alphas, assets
 
 class assetModel():
     def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, riskLimits, timezone, prod=False):
-        self.target = assets.traded(targetSym, cfg, params['tickSizes'][targetSym], params['spreadCutoff'][targetSym],
-                                    seeds[targetSym], timezone, prod)
+        self.target = assets.traded(targetSym, cfg, float(refData['tickSize'][targetSym]),
+                                    params['spreadCutoff'][targetSym], seeds[targetSym], timezone, prod)
         self.log = []
         self.alphasLog = []
 
@@ -28,7 +28,7 @@ class assetModel():
         self.riskLimits = riskLimits[targetSym]
 
         # Construct Predictors & Alpha Objects
-        self.initialisePreds(cfg, params, seeds, timezone)
+        self.initialisePreds(cfg, refData, params, seeds, timezone)
         self.initialiseAlphas(cfg, params, seeds)
 
         # Initialisations
@@ -216,12 +216,12 @@ class assetModel():
 
         return predsNeeded
 
-    def initialisePreds(self, cfg, params, seeds, timezone):
+    def initialisePreds(self, cfg, refData, params, seeds, timezone):
         self.predictors = {}
         predsNeeded = self.findPredsNeeded(self.target.sym, params['feats'])
 
         for pred in list(set(predsNeeded)):
-            self.predictors[pred] = assets.asset(pred, cfg['inputParams']['aggFreq'], params['tickSizes'][pred],
+            self.predictors[pred] = assets.asset(pred, cfg['inputParams']['aggFreq'], float(refData['tickSize'][pred]),
                                                  params['spreadCutoff'][pred], cfg['inputParams']['volHL'],
                                                  seeds[self.target.sym], timezone, self.prod)
         return
