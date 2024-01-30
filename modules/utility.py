@@ -12,8 +12,7 @@ def emaUpdate(lastValue, thisValue, decay, invTau):
 
 
 def loadRefData():
-    refData = pd.read_csv(refDataPath)
-    return refData.set_index('symbol')
+    return pd.read_csv(f'{root}csaRefData.csv')
 
 
 def loadResearchFeeds(cfg):
@@ -39,22 +38,31 @@ def initialiseModels(cfg, seeds, positions, riskLimits, timezone, prod=False):
 
 def findNotionalFx(target):
     refData = loadRefData()
-    return refData.loc[target]['notionalCurrency']
+    return refData.loc[refData['iqfUnadjusted'] == target]['notionalCurrency'].values[0]
 
 
-def findFeatPred(ft, target):
-    partitions = ft.replace(f'feat_{target}_', '').split('_')
-    if len(partitions) == 4:
-        return partitions[0]
-    else:
-        return f'{partitions[0]}_{partitions[1]}'
+def findFxSym(fx):
+    refData = loadRefData()
+    return refData.loc[refData['description'] == f'{fx}=']['iqfUnadjusted'].values[0]
 
 
 def findBasisFrontSym(backSym):
     return backSym.replace('1', '0')
 
 
-def constructResearchSeeds(researchFeeds, cfg, location=0):
+def findSymsNeeded(cfg, target):
+    symsNeeded = [target]
+    for ft in cfg['fitParams'][target]['feats']:
+        partitions = ft.replace(f'feat_{target}_', '').split('_')
+        symsNeeded += partitions[0].split('-')
+
+    fx = findNotionalFx(target)
+    if fx != 'USD':
+        symsNeeded += [findFxSym(fx)]
+    return list(set(symsNeeded))
+
+
+def constructResearchSeeds(resFeed, cfg, location=0):
     """
     Seed in models using researchFeeds
     Location=0 is used for reconciling
@@ -63,41 +71,17 @@ def constructResearchSeeds(researchFeeds, cfg, location=0):
     seeds = {}
     for target in cfg['targets']:
         seeds[target] = {}
-        seeds[target] = {f'{target}_midPrice': researchFeeds[target][f'{target}_midPrice'].iloc[location],
-                         f'Volatility_{target}': researchFeeds[target][f'Volatility_{target}'].iloc[location],
-                         f'{target}_lastTS': researchFeeds[target][f'{target}_lastTS'].iloc[location].strftime(
-                             '%Y_%m_%d_%H'),
-                         f'{target}_symbol': researchFeeds[target][f'{target}_symbol'].iloc[location]}
+        symsNeeded = findSymsNeeded(cfg, target)
+        for sym in symsNeeded:
+            seeds[target][f'{sym}_close'] = resFeed[target][f'{sym}_close'].iloc[location]
+            seeds[target][f'{sym}_Volatility'] = resFeed[target][f'{sym}_Volatility'].iloc[location]
+            seeds[target][f'{sym}_lastTS'] = resFeed[target][f'{sym}_lastTS'].iloc[location].strftime('%Y_%m_%d_%H')
 
         for ft in cfg['fitParams'][target]['feats']:
-            pred = findFeatPred(ft, target)
-            seeds[target][f'{pred}_midPrice'] = researchFeeds[target][f'{pred}_midPrice'].iloc[location]
-            seeds[target][f'Volatility_{pred}'] = researchFeeds[target][f'Volatility_{pred}'].iloc[location]
-            seeds[target][f'{pred}_symbol'] = researchFeeds[target][f'{pred}_symbol'].iloc[location]
-            seeds[target][f'{pred}_lastTS'] = researchFeeds[target][f'{pred}_lastTS'].iloc[location].strftime(
-                '%Y_%m_%d_%H')
-
-            ftType = ft.split('_')[-3]
-            if ftType == "Basis":
-                frontSym = findBasisFrontSym(pred)
-                seeds[target][f'{frontSym}_midPrice'] = researchFeeds[target][f'{frontSym}_midPrice'].iloc[location]
-                seeds[target][f'Volatility_{frontSym}'] = researchFeeds[target][f'Volatility_{frontSym}'].iloc[location]
-                seeds[target][f'{frontSym}_symbol'] = researchFeeds[target][f'{frontSym}_symbol'].iloc[location]
-                seeds[target][f'{frontSym}_lastTS'] = researchFeeds[target][f'{frontSym}_lastTS'].iloc[
-                    location].strftime('%Y_%m_%d_%H')
-
             name = ft.replace('feat_', '')
-            seeds[target][f'{name}_smoothSeed'] = researchFeeds[target][f'{name}_Smooth'].iloc[location]
-            seeds[target][f'{name}_zSeed'] = researchFeeds[target][f'{name}_Z'].iloc[location]
-            seeds[target][f'{name}_volSeed'] = researchFeeds[target][f'{name}_Std'].iloc[location]
-
-        fx = findNotionalFx(target)
-        if fx != 'USD':
-            seeds[target][f'{fx}=_midPrice'] = researchFeeds[target][f'{fx}=_midPrice'].iloc[location]
-            seeds[target][f'Volatility_{fx}='] = researchFeeds[target][f'Volatility_{fx}='].iloc[location]
-            seeds[target][f'{fx}=_symbol'] = researchFeeds[target][f'{fx}=_symbol'].iloc[location]
-            seeds[target][f'{fx}=_lastTS'] = researchFeeds[target][f'{fx}=_lastTS'].iloc[location].strftime(
-                '%Y_%m_%d_%H')
+            seeds[target][f'{name}_smoothSeed'] = resFeed[target][f'{name}_Smooth'].iloc[location]
+            seeds[target][f'{name}_zSeed'] = resFeed[target][f'{name}_Z'].iloc[location]
+            seeds[target][f'{name}_volSeed'] = resFeed[target][f'{name}_Std'].iloc[location]
 
     return seeds
 
@@ -134,8 +118,6 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
         os.makedirs(f"{logRoot}seeds/", exist_ok=True)
         with open(f"{logRoot}seeds/CBCT_{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["seedDump"], f)
-
-
 
     return modelState
 
@@ -207,6 +189,7 @@ def updateModels(fitModels, md):
     dataFeed.monitorMdhSanity(fitModels, md)
     return fitModels
 
+
 def findLogDirFileName(paper):
     if not paper:
         logDir = logRoot
@@ -215,3 +198,13 @@ def findLogDirFileName(paper):
         logDir = paperLogRoot
         filename = 'paperState'
     return logDir, filename
+
+
+def findTickSize(target):
+    refData = loadRefData()
+    return float(refData.loc[refData['iqfUnadjusted'] == target]['tickSize'].values[0])
+
+
+def findEffSpread(target):
+    refData = loadRefData()
+    return float(refData.loc[refData['iqfUnadjusted'] == target]['effSpread'].values[0])

@@ -94,11 +94,7 @@ class feed():
                 md[f'{sym}_lastTS'] = utility.localizeTS(self.dataMap[sym][0], self.timezone) + datetime.timedelta(
                     hours=syntheticIncrement)
                 md[f'{sym}_symbol'] = self.symbolMap[sym]
-                if sym in fxToInvert:
-                    md[f'{sym}_midPrice'] = 1 / float(self.dataMap[sym][4])
-                    lg.info(f"Inverting {sym} price to:  {1 / float(self.dataMap[sym][4])}")
-                else:
-                    md[f'{sym}_midPrice'] = float(self.dataMap[sym][4])
+                md[f'{sym}_midPrice'] = float(self.dataMap[sym][4])
             else:
                 md[f'{sym}_lastTS'] = np.nan
                 md[f'{sym}_midPrice'] = np.nan

@@ -4,8 +4,7 @@ from modules import utility, alphas, assets
 
 class assetModel():
     def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, riskLimits, timezone, prod=False):
-        self.target = assets.traded(targetSym, cfg, float(refData['tickSize'][targetSym]),
-                                    params['spreadCutoff'][targetSym], seeds[targetSym], timezone, prod)
+        self.target = assets.traded(targetSym, cfg, seeds[targetSym], timezone, prod)
         self.log = []
         self.alphasLog = []
 
@@ -28,7 +27,7 @@ class assetModel():
         self.riskLimits = riskLimits[targetSym]
 
         # Construct Predictors & Alpha Objects
-        self.initialisePreds(cfg, refData, params, seeds, timezone)
+        self.initialisePreds(cfg, seeds, timezone)
         self.initialiseAlphas(cfg, params, seeds)
 
         # Initialisations
@@ -52,10 +51,7 @@ class assetModel():
         if fx == 'USD':
             return 1
         else:
-            if f'{fx}=' in fxToInvert:
-                return 1 / self.predictors[f'{fx}='].lastMid
-            else:
-                return self.predictors[f'{fx}='].lastMid
+            return self.predictors[f'{fx}='].lastMid
 
     def calcNotionalPerLot(self):
         return round(self.notionalMultiplier * self.target.lastMid * self.fxRate, 2)
@@ -193,37 +189,13 @@ class assetModel():
             self.updateReconPosition()
         return
 
-    @staticmethod
-    def findPredsNeeded(targetSym, feats):
-        # Target
-        predsNeeded = [targetSym]
-
-        # Fx needed for notionals calc
-        fx = utility.findNotionalFx(targetSym)
-        if fx != 'USD':
-            predsNeeded.append(f'{fx}=')
-
-        # Any symbols used in features
-        for ft in feats:
-            ftType = ft.split('_')[-3]
-            pred = utility.findFeatPred(ft, targetSym)
-            if ftType in ['Move', 'VSR']:
-                predsNeeded.append(pred)
-
-            elif ftType == 'Basis':
-                predsNeeded.append(pred)
-                predsNeeded.append(utility.findBasisFrontSym(pred))
-
-        return predsNeeded
-
-    def initialisePreds(self, cfg, refData, params, seeds, timezone):
+    def initialisePreds(self, cfg, seeds, timezone):
         self.predictors = {}
-        predsNeeded = self.findPredsNeeded(self.target.sym, params['feats'])
+        predsNeeded = utility.findSymsNeeded(cfg, self.target.sym)
 
         for pred in list(set(predsNeeded)):
-            self.predictors[pred] = assets.asset(pred, cfg['inputParams']['aggFreq'], float(refData['tickSize'][pred]),
-                                                 params['spreadCutoff'][pred], cfg['inputParams']['volHL'],
-                                                 seeds[self.target.sym], timezone, self.prod)
+            self.predictors[pred] = assets.asset(pred, self.target.sym, cfg, seeds[self.target.sym], timezone,
+                                                 self.prod)
         return
 
     def initialiseAlphas(self, cfg, params, seeds):
@@ -247,10 +219,6 @@ class assetModel():
             elif ftType == 'VSR':
                 self.alphaDict[name] = alphas.vsr(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
                                                   volHL, volSeed, ncc, False, predSeed)
-            elif ftType == "Basis":
-                frontSym = utility.findBasisFrontSym(pred)
-                self.alphaDict[name] = alphas.basis(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
-                                                    volHL, volSeed, ncc, False, self.predictors[frontSym], basisSeed)
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 

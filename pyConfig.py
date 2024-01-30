@@ -1,17 +1,16 @@
 # Directories
-
 root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
 # root = "C:/Users/Owner/Desktop/CBCT/code/"
-logRoot = f"{root}logs/AFBI/"
-dataRoot = "C:/Users/matth/PycharmProjects/AlphaGrep/data/"
 
-refDataPath = f'{root}asaRefData.csv'
+logRoot = f"{root}logs/AFBI/"
+rawDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/raw/"
+proDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/processed/"
+
+refDataPath = f'{root}csaRefData.csv'
 riskPath = f"{root}models/AFBI/config/riskLimits.csv"
 paperLogRoot = f"{logRoot}Paper/"
 liveLogRoot = f"{logRoot}Live/"
 tradeBlotterRoot = f"{logRoot}tradeBlotter/"
-rawDataRoot = f"{dataRoot}raw/hourly/quotes/"
-proDataRoot = f"{dataRoot}processed/"
 
 # Constants
 signalCap = 3
@@ -24,11 +23,10 @@ dollarFmt = '${x:,.0f}'
 noDec = 8
 maxAssetDelta = 0.05
 pctSlipTol = 0.1
-reconTimezone = 'Australia/Sydney'
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
 
 # Run-time options
-cfg_file = root + "models/AFBI/config/ftiRemoved.json"
+cfg_file = root + "models/AFBI/config/iqfRecon.json"
 interfaceRoot = root + "models/AFBI/interface/"
 
 # Global Packages
@@ -81,7 +79,6 @@ lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 locale.setlocale(locale.LC_ALL, '')
 
 # Deal with terribly designed data source
-fxToInvert = ["CAD=", "JPY=", "CHF=", "ZAR=", "CNH=", "THB=", "SGD="]
 priceMultipliers = {"HO0": 100}
 
 hardcodedContracts = {
