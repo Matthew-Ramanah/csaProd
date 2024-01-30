@@ -3,7 +3,6 @@
   "recon": true,
   "verbose": false,
   "inputParams": {
-    "timezone": "US/Eastern",
     "trainStart": "2023-08-31",
     "testStart": "2023-12-01",
     "testEnd": "2024-01-01",
