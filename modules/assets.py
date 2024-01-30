@@ -3,15 +3,15 @@ from modules import utility
 
 
 class asset:
-    def __init__(self, sym, target, cfg, seeds, timezone, prod):
+    def __init__(self, sym, target, cfg, seeds, prod):
         self.sym = sym
         self.tickSize = utility.findTickSize(sym)
         self.effSpread = utility.findEffSpread(sym)
         self.volumeCutoff = cfg['fitParams'][target]['volumeCutoff'][sym]
         self.log = []
         self.vol = seeds[f'{sym}_Volatility']
-        self.lastMid = seeds[f'{sym}_close']
-        self.lastTS = utility.formatTsSeed(seeds[f'{self.sym}_lastTS'], timezone)
+        self.lastClose = seeds[f'{sym}_close']
+        self.lastTS = utility.formatStringToTs(seeds[f'{self.sym}_lastTS'])
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
         self.prod = prod
         if self.prod:
@@ -36,7 +36,7 @@ class asset:
         return
 
     def maintainContractState(self):
-        self.midPrice = self.lastClose
+        self.close = self.lastClose
         self.timestamp = self.lastTS
         self.contractChange = False
         self.timeDelta = 0
@@ -65,24 +65,12 @@ class asset:
             self.timeDelta = 1
         return
 
-    def midDeltaCalc(self):
+    def priceDeltaCalc(self):
         if self.contractChange:
-            self.midDelta = 0
+            self.priceDelta = 0
         else:
-            self.midDelta = self.midPrice - self.lastMid
-        self.lastMid = self.midPrice
-        return
-
-    def _annualPctChangeCalc(self):
-        """
-        Deprecated for now
-        """
-        if (self.timeDelta == 0) | (self.contractChange):
-            self.annPctChange = 0
-        else:
-            pctChange = (self.midPrice - self.lastMid) / self.lastMid
-            self.annPctChange = pctChange * np.sqrt(minsPerYear / self.timeDelta)
-        self.lastMid = self.midPrice
+            self.priceDelta = self.close - self.lastClose
+        self.lastClose = self.close
         return
 
     def mdUpdate(self, md):
@@ -97,7 +85,7 @@ class asset:
     def modelUpdate(self):
         self.contractChange = self.isContractChange()
         self.decayCalc()
-        self.midDeltaCalc()
+        self.priceDeltaCalc()
         self.updateVolatility()
         self.updateLog()
         return
@@ -108,14 +96,14 @@ class asset:
         return
 
     def updateLog(self):
-        thisLog = [utility.formatTsToStrig(self.timestamp), self.contractChange, self.close, self.timeDelta]
+        thisLog = [utility.formatTsToString(self.timestamp), self.contractChange, self.close, self.timeDelta]
         self.log.append(thisLog)
         return
 
 
 class traded(asset):
-    def __init__(self, sym, cfg, seeds, timezone, prod):
-        super(traded, self).__init__(sym, sym, cfg, seeds, timezone, prod)
+    def __init__(self, sym, cfg, seeds, prod):
+        super(traded, self).__init__(sym, sym, cfg, seeds, prod)
 
     def updateContractState(self, md):
         super().updateContractState(md)

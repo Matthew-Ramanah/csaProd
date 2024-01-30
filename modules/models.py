@@ -3,8 +3,8 @@ from modules import utility, alphas, assets
 
 
 class assetModel():
-    def __init__(self, targetSym, cfg, params, refData, seeds, initHoldings, riskLimits, timezone, prod=False):
-        self.target = assets.traded(targetSym, cfg, seeds[targetSym], timezone, prod)
+    def __init__(self, targetSym, cfg, params, seeds, initHoldings, riskLimits, prod=False):
+        self.target = assets.traded(targetSym, cfg, seeds[targetSym], prod)
         self.log = []
         self.alphasLog = []
 
@@ -22,16 +22,16 @@ class assetModel():
         self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
         self.pRate = cfg['inputParams']['basket']['execution']['pRate']
         self.notionalAlloc = cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}']
-        self.notionalMultiplier = refData['notionalMultiplier'][self.target.sym]
+        self.notionalMultiplier = utility.findNotionalMultiplier(targetSym)
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
         self.riskLimits = riskLimits[targetSym]
 
         # Construct Predictors & Alpha Objects
-        self.initialisePreds(cfg, seeds, timezone)
+        self.initialisePreds(cfg, seeds)
         self.initialiseAlphas(cfg, params, seeds)
 
         # Initialisations
-        self.tradingDate = utility.formatTsSeed(seeds[targetSym][f'{targetSym}_lastTS'], timezone).date()
+        self.tradingDate = utility.findTsSeedDate(seeds[targetSym][f'{targetSym}_lastTS'])
         self.updateNotionals()
         self.initHoldings = initHoldings
         self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxPosition, self.hScaler)
@@ -43,7 +43,6 @@ class assetModel():
         self.notionalPerLot = self.calcNotionalPerLot()
         self.maxPosition = self.calcMaxPosition()
         self.calcMaxTradeSize()
-
         return
 
     def calcFxRate(self):
@@ -51,10 +50,11 @@ class assetModel():
         if fx == 'USD':
             return 1
         else:
-            return self.predictors[f'{fx}='].lastMid
+            fxSym = utility.findFxSym(fx)
+            return self.predictors[fxSym].lastClose
 
     def calcNotionalPerLot(self):
-        return round(self.notionalMultiplier * self.target.lastMid * self.fxRate, 2)
+        return round(self.notionalMultiplier * self.target.lastClose * self.fxRate, 2)
 
     def calcMaxPosition(self):
         return min(int(self.totalCapital * self.notionalAlloc / self.notionalPerLot), self.riskLimits['maxPosition'])
@@ -95,7 +95,7 @@ class assetModel():
         if self.seeding:
             self.checkifSeeded()
 
-        elif self.target.mdhSane(md, self.target.sym, self.target.spreadCutoff, self.prod):
+        elif self.target.mdhSane(md, self.target.sym, self.target.volumeCutoff):
             self.target.modelUpdate()
 
             for pred in self.predictors:
@@ -127,8 +127,8 @@ class assetModel():
         return
 
     def calcBuySellCosts(self):
-        self.buyCost = self.target.tickSize  # self.target.askPrice - self.target.midPrice
-        self.sellCost = self.target.tickSize  # self.target.midPrice - self.target.bidPrice
+        self.buyCost = self.target.effSpread
+        self.sellCost = self.target.effSpread
         return
 
     def calcVar(self):
@@ -147,9 +147,6 @@ class assetModel():
             self.hOpt = sellBound
 
         return
-
-    def calcInstLiquidity(self):
-        return 0.5 * (self.target.bidSize + self.target.askSize)
 
     def calcMaxTradeSize(self):
         self.maxTradeSize = min(int(np.ceil(maxAssetDelta * self.maxPosition)), self.riskLimits['maxTradeSize'])
@@ -189,13 +186,12 @@ class assetModel():
             self.updateReconPosition()
         return
 
-    def initialisePreds(self, cfg, seeds, timezone):
+    def initialisePreds(self, cfg, seeds):
         self.predictors = {}
         predsNeeded = utility.findSymsNeeded(cfg, self.target.sym)
 
         for pred in list(set(predsNeeded)):
-            self.predictors[pred] = assets.asset(pred, self.target.sym, cfg, seeds[self.target.sym], timezone,
-                                                 self.prod)
+            self.predictors[pred] = assets.asset(pred, self.target.sym, cfg, seeds[self.target.sym], self.prod)
         return
 
     def initialiseAlphas(self, cfg, params, seeds):
@@ -203,22 +199,20 @@ class assetModel():
         for ft in params['feats']:
             name = ft.replace('feat_', '')
             ftType = ft.split('_')[-3]
-            pred = utility.findFeatPred(ft, self.target.sym)
             hl = int(ft.split('_')[-1])
             volHL = cfg['inputParams']['volHL']
             zSeed = seeds[self.target.sym][f'{name}_zSeed']
             smoothSeed = seeds[self.target.sym][f'{name}_smoothSeed']
             volSeed = seeds[self.target.sym][f'{name}_volSeed']
-            predSeed = seeds[self.target.sym][f'{pred}_midPrice']
-            basisSeed = self.target.lastMid - predSeed
             ncc = params['NCCs'][ft]
+            preds = utility.findFtSyms(self.target.sym, ft)
 
             if ftType == 'Move':
-                self.alphaDict[name] = alphas.move(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
-                                                   volHL, volSeed, ncc, False)
+                self.alphaDict[name] = alphas.move(self.target, self.predictors[preds[0]], name, hl, zSeed, smoothSeed,
+                                                   volHL, volSeed, ncc)
             elif ftType == 'VSR':
-                self.alphaDict[name] = alphas.vsr(self.target, self.predictors[pred], name, hl, zSeed, smoothSeed,
-                                                  volHL, volSeed, ncc, False, predSeed)
+                self.alphaDict[name] = alphas.vsr(self.target, self.predictors[preds[0]], self.predictors[preds[1]],
+                                                  name, hl, zSeed, smoothSeed, volHL, volSeed, ncc)
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 
@@ -231,30 +225,28 @@ class assetModel():
     def constructAlphasLog(self):
         for name in self.alphaDict:
             thisAlpha = self.alphaDict[name]
-            thisLog = [name, utility.formatTsToStrig(self.target.timestamp), thisAlpha.rawVal, thisAlpha.smoothVal,
+            thisLog = [name, utility.formatTsToString(self.target.timestamp), thisAlpha.rawVal, thisAlpha.smoothVal,
                        thisAlpha.zVal, thisAlpha.vol, thisAlpha.featVal, thisAlpha.alphaVal]
             self.alphasLog.append(thisLog)
         return
 
     def constructLogs(self):
         self.constructAlphasLog()
-        thisLog = [utility.formatTsToStrig(self.target.timestamp), self.target.contractChange, self.target.midPrice,
-                   self.target.timeDelta, self.target.vol, self.target.midDelta, self.cumAlpha, self.hOpt,
+        thisLog = [utility.formatTsToString(self.target.timestamp), self.target.contractChange, self.target.close,
+                   self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.hOpt,
                    self.initHoldings, self.tradeVolume, self.maxTradeSize, self.normedHoldings, self.maxPosition,
                    self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
         return
 
     def updateSeeds(self):
-        self.seedDump = {f"{self.target.sym}_midPrice": self.target.midPrice,
-                         f"Volatility_{self.target.sym}": self.target.vol,
-                         f"{self.target.sym}_lastTS": self.target.timestamp.strftime('%Y_%m_%d_%H'),
-                         f"{self.target.sym}_symbol": self.target.symbol}
+        self.seedDump = {f"{self.target.sym}_close": self.target.close,
+                         f"{self.target.sym}_Volatility": self.target.vol,
+                         f"{self.target.sym}_lastTS": self.target.timestamp.strftime('%Y_%m_%d_%H')}
 
         for pred in self.predictors:
-            self.seedDump[f'{pred}_midPrice'] = self.predictors[pred].midPrice
-            self.seedDump[f'Volatility_{pred}'] = self.predictors[pred].vol
-            self.seedDump[f'{pred}_symbol'] = self.predictors[pred].symbol
+            self.seedDump[f'{pred}_close'] = self.predictors[pred].close
+            self.seedDump[f'{pred}_Volatility'] = self.predictors[pred].vol
             self.seedDump[f'{pred}_lastTS'] = self.predictors[pred].timestamp.strftime('%Y_%m_%d_%H')
 
         for name in self.alphaDict:

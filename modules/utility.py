@@ -25,13 +25,11 @@ def loadResearchFeeds(cfg):
     return researchFeeds
 
 
-def initialiseModels(cfg, seeds, positions, riskLimits, timezone, prod=False):
-    refData = loadRefData()
+def initialiseModels(cfg, seeds, positions, riskLimits, prod=False):
     fitModels = {}
     for sym in cfg['targets']:
-        fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], refData=refData,
-                                           seeds=seeds, initHoldings=positions[sym], riskLimits=riskLimits,
-                                           timezone=timezone, prod=prod)
+        fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], seeds=seeds,
+                                           initHoldings=positions[sym], riskLimits=riskLimits, prod=prod)
     lg.info("Models Initialised.")
     return fitModels
 
@@ -50,11 +48,15 @@ def findBasisFrontSym(backSym):
     return backSym.replace('1', '0')
 
 
+def findFtSyms(target, ft):
+    partitions = ft.replace(f'feat_{target}_', '').split('_')
+    return partitions[0].split('-')
+
+
 def findSymsNeeded(cfg, target):
     symsNeeded = [target]
     for ft in cfg['fitParams'][target]['feats']:
-        partitions = ft.replace(f'feat_{target}_', '').split('_')
-        symsNeeded += partitions[0].split('-')
+        symsNeeded += findFtSyms(target, ft)
 
     fx = findNotionalFx(target)
     if fx != 'USD':
@@ -139,12 +141,15 @@ def localizeTS(stringTS, timezone):
     return pytz.timezone(timezone).localize(pd.Timestamp(stringTS))
 
 
-def formatTsSeed(tsSeed, timezone):
-    tsNaive = pd.Timestamp(datetime.datetime.strptime(tsSeed, '%Y_%m_%d_%H'))
-    return localizeTS(tsNaive, timezone)
+def findTsSeedDate(tsSeed):
+    return formatStringToTs(tsSeed).date()
 
 
-def formatTsToStrig(ts):
+def formatStringToTs(tsString):
+    return pd.Timestamp(datetime.datetime.strptime(tsString, '%Y_%m_%d_%H'))
+
+
+def formatTsToString(ts):
     return ts.strftime('%Y_%m_%d_%H')
 
 
@@ -208,3 +213,8 @@ def findTickSize(target):
 def findEffSpread(target):
     refData = loadRefData()
     return float(refData.loc[refData['iqfUnadjusted'] == target]['effSpread'].values[0])
+
+
+def findNotionalMultiplier(target):
+    refData = loadRefData()
+    return float(refData.loc[refData['iqfUnadjusted'] == target]['notionalMultiplier'].values[0])

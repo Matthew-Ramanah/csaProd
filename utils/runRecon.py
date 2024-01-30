@@ -17,8 +17,7 @@ researchFeeds = utility.loadResearchFeeds(cfg)
 seeds = utility.constructResearchSeeds(researchFeeds, cfg)
 initPositions = recon.initialisePositions(cfg)
 riskLimits = cfg['fitParams']['basket']['riskLimits']
-fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=initPositions, riskLimits=riskLimits,
-                                     timezone=AFBI.timezone, prod=False)
+fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=initPositions, riskLimits=riskLimits, prod=False)
 
 # Market Data
 prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=100)

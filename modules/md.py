@@ -1,4 +1,5 @@
 from pyConfig import *
+from modules import utility
 
 
 def findExch(sym):
@@ -18,9 +19,7 @@ def mergeOnEndTS(md, raw, sym):
 
 
 def loadRawData(sym):
-    exch = findExch(sym)
-    raw = pd.read_hdf(f"{rawDataRoot}{exch}/{sym}.h5", key=sym)
-    raw = raw.set_index('end_ts', drop=False)
+    raw = pd.read_hdf(f"{rawDataRoot}/{sym}.h5", key=sym)
     raw = raw[~raw.index.duplicated(keep='first')]
     return addPrefix(raw, sym)
 
@@ -31,23 +30,19 @@ def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
         raw = loadRawData(sym)
         feed = pd.concat([feed, raw], axis=1)
 
+    feed = dropFeedTimezone(feed)
     feed = sampleFeed(feed, researchFeeds, maxUpdates=maxUpdates)
-    feed = convertToProdFormat(feed, cfg)
     lg.info(f"Synthetic Market Data Feed Loaded")
     return feed
 
 
-def convertToProdFormat(md, cfg):
-    for sym in cfg['predictors']:
-        md[f'{sym}_midPrice'] = 0.5 * (md[f'{sym}_ask_price'] + md[f'{sym}_bid_price'])
-        md[f'{sym}_lastTS'] = md[f'{sym}_end_ts']
-
-    return md
+def dropFeedTimezone(feed):
+    feed.index = feed.index.tz_localize(None)
+    return feed
 
 
 def sampleFeed(feed, researchFeeds, maxUpdates):
-    feed['end_ts'] = feed.index
     start = researchFeeds['recon'].index[0]
     end = researchFeeds['recon'].index[-1]
-    feed = feed.loc[(feed['end_ts'] >= start) & (feed['end_ts'] <= end)]
+    feed = feed.loc[(feed.index >= start) & (feed.index <= end)]
     return feed.iloc[0:maxUpdates]
