@@ -149,8 +149,7 @@ def detectRiskLimits(cfg):
 def sendAFBITradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
-    sendCC = ["stephen.klein@afbillc.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com",
-              "matthew.ramanah@sydneyquantitative.com"]
+    sendCC = ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"
