@@ -21,7 +21,7 @@ logTwo = 1.4426950408889634
 scoreFactor = 10
 dollarFmt = '${x:,.0f}'
 noDec = 8
-maxAssetDelta = 0.05
+maxAssetDelta = 0.1
 pctSlipTol = 0.1
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
 
