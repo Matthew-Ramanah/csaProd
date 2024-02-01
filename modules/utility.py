@@ -218,3 +218,8 @@ def findEffSpread(target):
 def findNotionalMultiplier(target):
     refData = loadRefData()
     return float(refData.loc[refData['iqfUnadjusted'] == target]['notionalMultiplier'].values[0])
+
+
+def findAdjSym(sym):
+    refData = loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['iqfAdjusted'].values[0]

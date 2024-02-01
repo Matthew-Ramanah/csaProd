@@ -5,6 +5,7 @@ from modules import utility
 class asset:
     def __init__(self, sym, target, cfg, seeds, prod):
         self.sym = sym
+        self.adjSym = utility.findAdjSym(sym)
         self.tickSize = utility.findTickSize(sym)
         self.effSpread = utility.findEffSpread(sym)
         self.volumeCutoff = cfg['fitParams'][target]['volumeCutoff'][sym]
@@ -24,7 +25,8 @@ class asset:
         """
         DataFilters
         """
-        if (pd.Timestamp(md[f'{sym}_lastTS']) <= self.lastTS) or math.isnan(md[f'{sym}_close']):
+        if (pd.Timestamp(md[f'{sym}_lastTS']) <= self.lastTS) or math.isnan(md[f'{sym}_close']) or (
+                md[f'{sym}_intervalVolume'] < volumeCutoff):
             self.stale = True
             return False
         self.stale = False
@@ -33,6 +35,7 @@ class asset:
     def updateContractState(self, md):
         self.close = md[f'{self.sym}_close']
         self.timestamp = md[f'{self.sym}_lastTS']
+        self.adjustment = self.calcAdjustment(md)
         return
 
     def maintainContractState(self):
@@ -50,11 +53,18 @@ class asset:
         self.priceDelta = 0
         self.lastClose = md[f'{self.sym}_close']
         self.lastTS = md[f'{self.sym}_lastTS']
+        self.lastAdjustment = self.calcAdjustment(md)
+        return
+
+    def calcAdjustment(self, md):
+        self.adjustment = round(md[f'{self.sym}_close'] - md[f'{self.adjSym}_close'], noDec)
         return
 
     def isContractChange(self):
-        if self.lastSymbol != self.symbol:
-            self.lastSymbol = self.symbol
+        if self.sym == self.adjSym:
+            return False
+        if self.lastAdjustment != self.adjustment:
+            self.lastAdjustment = self.adjustment
             return True
         return False
 
@@ -96,7 +106,7 @@ class asset:
         return
 
     def updateLog(self):
-        thisLog = [utility.formatTsToString(self.timestamp), self.contractChange, self.close, self.timeDelta]
+        thisLog = [utility.formatTsToString(self.timestamp), self.contractChange, self.close, self.vol]
         self.log.append(thisLog)
         return
 

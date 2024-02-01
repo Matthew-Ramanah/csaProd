@@ -8,7 +8,7 @@ with open(cfg_file, 'r') as f:
 
 target = cfg['targets'][0]
 
-symsToPlot = cfg['targets']
+symsToPlot = cfg['targets'][1:2]
 cfg['targets'] = symsToPlot
 plot = True
 
@@ -20,7 +20,7 @@ riskLimits = cfg['fitParams']['basket']['riskLimits']
 fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=initPositions, riskLimits=riskLimits, prod=False)
 
 # Market Data
-prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=100)
+prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=5000)
 
 # Models
 fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
@@ -29,5 +29,5 @@ fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
 prodLogs = recon.processLogs(fitModels, timezone=AFBI.timezone)
 
 if plot:
-    recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot=symsToPlot)
-    recon.plotPnLs(prodLogs, researchFeeds, cfg)
+    recon.plotReconCols(cfg, prodLogs, researchFeeds, symsToPlot=symsToPlot)
+    #recon.plotPnLs(prodLogs, researchFeeds, cfg)

@@ -26,11 +26,10 @@ def loadRawData(sym):
 
 def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
     feed = pd.DataFrame()
-    for sym in cfg['predictors']:
+    for sym in cfg['fitParams']['basket']['symbolsNeeded']:
         raw = loadRawData(sym)
         feed = pd.concat([feed, raw], axis=1)
 
-    feed = dropFeedTimezone(feed)
     feed = sampleFeed(feed, researchFeeds, maxUpdates=maxUpdates)
     lg.info(f"Synthetic Market Data Feed Loaded")
     return feed
