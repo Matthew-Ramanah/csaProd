@@ -117,8 +117,10 @@ class traded(asset):
 
     def updateContractState(self, md):
         super().updateContractState(md)
+        self.intervalVolume = md[f'{self.sym}_intervalVolume']
         return
 
     def firstSaneUpdate(self, md):
         super().firstSaneUpdate(md)
+        self.intervalVolume = md[f'{self.sym}_intervalVolume']
         return

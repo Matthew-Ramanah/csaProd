@@ -19,6 +19,7 @@ class assetModel():
         self.kappa = params['alphaWeights']['kappa']
         self.hScaler = cfg['fitParams'][targetSym]['hScaler']
         self.alphaWeights = params['alphaWeights']
+        self.liquidity = seeds[f'{targetSym}_Liquidity']
         self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
         self.pRate = cfg['inputParams']['basket']['execution']['pRate']
         self.notionalAlloc = cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}']
@@ -42,7 +43,6 @@ class assetModel():
         self.fxRate = self.calcFxRate()
         self.notionalPerLot = self.calcNotionalPerLot()
         self.maxPosition = self.calcMaxPosition()
-        self.calcMaxTradeSize()
         return
 
     def calcFxRate(self):
@@ -126,41 +126,27 @@ class assetModel():
             self.cumAlpha += self.alphaWeights[name] * self.alphaDict[name].alphaVal
         return
 
-    def calcBuySellCosts(self):
-        self.buyCost = self.target.effSpread
-        self.sellCost = self.target.effSpread
-        return
-
     def calcVar(self):
         self.var = self.target.vol ** 2
         return
 
     def calcHOpt(self):
-        self.calcBuySellCosts()
         self.calcVar()
-        buyBound = (self.cumAlpha - self.kappa * self.buyCost) / (self.var)
-        sellBound = (self.cumAlpha + self.kappa * self.sellCost) / (self.var)
+        tCost = self.kappa * 0.5 * self.target.effSpread
+        buyBound = np.clip((self.cumAlpha - tCost) / (self.var * self.hScaler), -1, 1)
+        sellBound = np.clip((self.cumAlpha + tCost) / (self.var * self.hScaler), -1, 1)
 
         if self.hOpt < buyBound:
-            self.hOpt = buyBound
+            self.hOpt = np.clip(buyBound, self.hOpt, self.hOpt + maxAssetDelta)
         elif self.hOpt > sellBound:
-            self.hOpt = sellBound
+            self.hOpt = np.clip(sellBound, self.hOpt - maxAssetDelta, self.hOpt)
 
         return
 
     def calcMaxTradeSize(self):
-        self.maxTradeSize = min(int(np.ceil(maxAssetDelta * self.maxPosition)), self.riskLimits['maxTradeSize'])
-
-        """
-        Deprecate liquidity filter until we have live bid/ask data
-        instLiquidity = self.calcInstLiquidity()
-        if self.target.isSessionChange():
-            self.liquidity = instLiquidity
-        else:
-            self.liquidity = utility.emaUpdate(self.liquidity, instLiquidity, self.target.timeDelta,
-                                               self.liquidityInvTau)
-        self.maxTradeSize = int(np.clip(self.pRate * self.liquidity, 0, self.tradeSizeCap))
-        """
+        self.liquidity = utility.emaUpdate(self.liquidity, self.target.intervalVolume, self.target.timeDelta,
+                                           self.liquidityInvTau)
+        self.maxTradeSize = int(np.clip(self.pRate * self.liquidity, 1, self.riskLimits['maxTradeSize']))
         return
 
     @staticmethod
@@ -170,17 +156,13 @@ class assetModel():
         return np.clip(holdings / maxPosition, -1, 1) * hScaler
 
     @staticmethod
-    def convertHOptToNormedHoldings(hOpt, hScaler):
-        return np.clip(hOpt / hScaler, -1, 1)
-
-    @staticmethod
     def convertNormedToSizedHoldings(maxPosition, normedHoldings):
         return int(maxPosition * normedHoldings)
 
     def calcHoldings(self):
         self.calcHOpt()
-        self.normedHoldings = self.convertHOptToNormedHoldings(self.hOpt, self.hScaler)
-        sizedHoldings = self.convertNormedToSizedHoldings(self.maxPosition, self.normedHoldings)
+        sizedHoldings = int(self.maxPosition * self.hOpt)
+        self.calcMaxTradeSize()
         self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))
         if not self.prod:
             self.updateReconPosition()
@@ -234,7 +216,7 @@ class assetModel():
         self.constructAlphasLog()
         thisLog = [utility.formatTsToString(self.target.timestamp), self.target.contractChange, self.target.close,
                    self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.hOpt,
-                   self.initHoldings, self.tradeVolume, self.maxTradeSize, self.normedHoldings, self.maxPosition,
+                   self.initHoldings, self.tradeVolume, self.maxTradeSize, self.liquidity, self.maxPosition,
                    self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
         return

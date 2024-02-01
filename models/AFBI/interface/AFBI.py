@@ -75,9 +75,8 @@ def findSide(qty):
         return ""
 
 
-def findSlippageTol(cfg, sym):
-    # Need polarity here so we don't ceil -ve trades less than we should
-    return int(np.ceil(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym]))
+def findTickSlipTol(cfg, sym):
+    return int(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym])
 
 
 def findLimitPrices(cfg, md, trades):
@@ -86,9 +85,10 @@ def findLimitPrices(cfg, md, trades):
         if trades[sym] == 0:
             limitPrices[sym] = ""
         else:
-            slipTol = findSlippageTol(cfg, sym)
-            limitPrices[sym] = round(md[f'{sym}_midPrice'] + (
-                    np.sign(trades[sym]) * slipTol * float(cfg['fitParams'][sym]['tickSizes'][sym])), noDec)
+            sign = np.sign(trades[sym])
+            tCost = sign * 0.5 * utility.findEffSpread(sym)
+            slippage = sign * findTickSlipTol(cfg, sym) * utility.findTickSize(sym)
+            limitPrices[sym] = round(md[f'{sym}_close'] + tCost + slippage, noDec)
 
             if sym in list(priceMultipliers.keys()):
                 limitPrices[sym] = round(priceMultipliers[sym] * limitPrices[sym], noDec)
@@ -112,7 +112,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
     broker = "SGXE"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
             "refPrice", f'refTime: {timezone}', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
-            'Exchange', 'maxPosition', 'maxTradeSize']
+            'Exchange', 'maxPosition', 'maxTradeSize', 'liq', 'hOpt']
     out = []
     for sym in trades:
         bbSym = refData.loc[sym]['tradedSym']
@@ -127,8 +127,10 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
         exchange = refData.loc[sym]['exchange']
         maxPos = fitModels[sym].maxPosition
         maxTradeSize = fitModels[sym].maxTradeSize
+        liquidity = fitModels[sym].liquidity
+        hOpt = fitModels[sym].hOpt
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, lastTime,
-                    cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
+                    cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize, liquidity, hOpt]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
