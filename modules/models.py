@@ -93,7 +93,7 @@ class assetModel():
         if self.seeding:
             self.checkifSeeded()
 
-        elif self.target.mdhSane(md, self.target.sym, self.target.volumeCutoff):
+        elif not self.target.stale:
             self.target.modelUpdate()
 
             for pred in self.predictors:
@@ -155,11 +155,15 @@ class assetModel():
     def convertNormedToSizedHoldings(maxPosition, normedHoldings):
         return int(maxPosition * normedHoldings)
 
+    def calcTradeVolume(self):
+        uncappedDelta = self.maxPosition * self.hOpt - self.initHoldings
+        self.tradeVolume = int(np.clip(uncappedDelta, -self.maxTradeSize, self.maxTradeSize))
+        return
+
     def calcHoldings(self):
         self.calcHOpt()
-        sizedHoldings = int(self.maxPosition * self.hOpt)
         self.calcMaxTradeSize()
-        self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))
+        self.calcTradeVolume()
         if not self.prod:
             self.updateReconPosition()
         return
@@ -220,12 +224,12 @@ class assetModel():
     def updateSeeds(self):
         self.seedDump = {f"{self.target.sym}_close": self.target.close,
                          f"{self.target.sym}_Volatility": self.target.vol,
-                         f"{self.target.sym}_lastTS": self.target.timestamp.strftime('%Y_%m_%d_%H')}
+                         f"{self.target.sym}_lastTS": self.target.lastTS.strftime('%Y_%m_%d_%H')}
 
         for pred in self.predictors:
             self.seedDump[f'{pred}_close'] = self.predictors[pred].close
             self.seedDump[f'{pred}_Volatility'] = self.predictors[pred].vol
-            self.seedDump[f'{pred}_lastTS'] = self.predictors[pred].timestamp.strftime('%Y_%m_%d_%H')
+            self.seedDump[f'{pred}_lastTS'] = self.predictors[pred].lastTS.strftime('%Y_%m_%d_%H')
 
         for name in self.alphaDict:
             self.seedDump[f'{name}_smoothSeed'] = self.alphaDict[name].smoothVal

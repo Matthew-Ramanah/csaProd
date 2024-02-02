@@ -69,7 +69,7 @@ class alpha:
         return
 
     def updateLog(self):
-        thisLog = [self.target.timestamp, self.decay, self.rawVal, self.smoothVal, self.zVal, self.vol, self.featVal]
+        thisLog = [self.target.lastTS, self.decay, self.rawVal, self.smoothVal, self.zVal, self.vol, self.featVal]
         self.log.append(thisLog)
         return
 
@@ -83,13 +83,6 @@ class move(alpha):
         self.rawVal = self.predictor.priceDelta / self.predictor.vol
         return
 
-    def decayCalc(self):
-        """
-        May get overloaded
-        """
-        self.decay = self.target.timeDelta
-        return
-
 
 class vsr(alpha):
     def __init__(self, target, pred1, pred2, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc):
@@ -99,11 +92,4 @@ class vsr(alpha):
 
     def calcRawVal(self):
         self.rawVal = self.pred1.priceDelta / self.pred1.vol - self.pred2.priceDelta / self.pred2.vol
-        return
-
-    def decayCalc(self):
-        """
-        May get overloaded
-        """
-        self.decay = self.target.timeDelta
         return

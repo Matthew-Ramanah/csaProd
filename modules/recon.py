@@ -76,15 +76,16 @@ def reconcile(prodLogs, researchFeeds, fitModels):
     return
 
 
-def plotReconCols(cfg, prodLogs, researchFeeds, symsToPlot):
+def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot):
     for sym in symsToPlot:
         fts = cfg['fitParams'][sym]['feats']
+        preds = list(fitModels[sym].predictors.keys())
         reconCols = [f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
         prod = prodLogs[sym]['model']
         res = researchFeeds[sym]
         recon = researchFeeds['recon']
 
-        fig, axs = plt.subplots(len(reconCols) + len(fts) + 1, sharex='all')
+        fig, axs = plt.subplots(len(reconCols) + len(preds) + 1, sharex='all')
         fig.suptitle(f"{sym} Reconciliation")
         axs[0].step(res.index, res[f'{sym}_close'], label=f'Research: {sym}_close', where='post')
         axs[0].step(prod.index, prod[f'{sym}_close'], label=f'Prod: {sym}_close', where='post')
@@ -96,14 +97,22 @@ def plotReconCols(cfg, prodLogs, researchFeeds, symsToPlot):
             axs[i + 1].step(prod.index, prod[col], label=f'Prod: {col}', where='post')
             axs[i + 1].legend(loc='upper right')
 
-        # Plot Alphas
-        for j, ft in enumerate(fts):
-            name = ft.replace('feat_', '')
-            axs[i + j + 2].step(res.index, res[ft], label=f'Research: {ft}', where='post')
-            axs[i + j + 2].step(prodLogs[sym][name].index, prodLogs[sym][name][ft], label=f'Prod: {ft}',
-                                where='post')
-            axs[i + j + 2].axhline(y=0, color='black', linestyle='--')
-            axs[i + j + 2].legend(loc='upper right')
+        if False:
+            # Plot Alphas
+            for j, ft in enumerate(fts):
+                name = ft.replace('feat_', '')
+                axs[i + j + 2].step(res.index, res[ft], label=f'Research: {ft}', where='post')
+                axs[i + j + 2].step(prodLogs[sym][name].index, prodLogs[sym][name][ft], label=f'Prod: {ft}',
+                                    where='post')
+                axs[i + j + 2].axhline(y=0, color='black', linestyle='--')
+                axs[i + j + 2].legend(loc='upper right')
+
+        for k, pred in enumerate(preds):
+            axs[i + k + 2].step(res.index, res[f'{pred}_close'], label=f'Research: {pred}_close', where='post')
+            axs[i + k + 2].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_close'],
+                                label=f'Prod: {pred}_close', where='post')
+            axs[i + k + 2].axhline(y=0, color='black', linestyle='--')
+            axs[i + k + 2].legend(loc='upper right')
 
         fig.show()
     return

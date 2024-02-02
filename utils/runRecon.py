@@ -1,16 +1,16 @@
 from pyConfig import *
 from modules import md, utility, recon
-from models.AFBI.interface import AFBI
 
 cfg_file = root + "models/AFBI/config/iqfRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-
 symsToPlot = cfg['targets'][1:2]
 cfg['targets'] = symsToPlot
 plot = True
+
 target = cfg['targets'][0]
+pred = 'QCL#'
 
 # Initialisations
 researchFeeds = utility.loadResearchFeeds(cfg)
@@ -29,5 +29,5 @@ fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
 prodLogs = recon.processLogs(fitModels)
 
 if plot:
-    recon.plotReconCols(cfg, prodLogs, researchFeeds, symsToPlot=symsToPlot)
-    #recon.plotPnLs(prodLogs, researchFeeds, cfg)
+    recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot=symsToPlot)
+    # recon.plotPnLs(prodLogs, researchFeeds, cfg)

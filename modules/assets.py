@@ -21,12 +21,12 @@ class asset:
             self.initialised = False
         self.stale = False
 
-    def mdhSane(self, md, sym, volumeCutoff):
+    def mdhSane(self, md):
         """
         DataFilters
         """
-        if (pd.Timestamp(md[f'{sym}_lastTS']) <= self.lastTS) or math.isnan(md[f'{sym}_close']) or (
-                md[f'{sym}_intervalVolume'] < volumeCutoff):
+        if md[f'{self.sym}_lastTS'] <= self.lastTS or math.isnan(md[f'{self.sym}_close']) or md[
+            f'{self.sym}_intervalVolume'] < self.volumeCutoff:
             self.stale = True
             return False
         self.stale = False
@@ -34,13 +34,12 @@ class asset:
 
     def updateContractState(self, md):
         self.close = md[f'{self.sym}_close']
-        self.timestamp = md[f'{self.sym}_lastTS']
-        self.adjustment = self.calcAdjustment(md)
+        self.lastTS = md[f'{self.sym}_lastTS']
+        self.calcAdjustment(md)
         return
 
     def maintainContractState(self):
         self.close = self.lastClose
-        self.timestamp = self.lastTS
         self.contractChange = False
         self.timeDelta = 0
         self.priceDelta = 0
@@ -52,8 +51,7 @@ class asset:
         self.timeDelta = 0
         self.priceDelta = 0
         self.lastClose = md[f'{self.sym}_close']
-        self.lastTS = md[f'{self.sym}_lastTS']
-        self.lastAdjustment = self.calcAdjustment(md)
+        self.lastAdjustment = 0
         return
 
     def calcAdjustment(self, md):
@@ -84,7 +82,7 @@ class asset:
         return
 
     def mdUpdate(self, md):
-        if not self.mdhSane(md, self.sym, self.volumeCutoff):
+        if not self.mdhSane(md):
             self.maintainContractState()
             return
         if not self.initialised:
@@ -102,11 +100,11 @@ class asset:
 
     def updateVolatility(self):
         self.vol = np.sqrt(
-            utility.emaUpdate(self.vol ** 2, (self.priceDelta) ** 2, self.timeDelta, self.volInvTau))
+            utility.emaUpdate(self.vol ** 2, self.priceDelta ** 2, self.timeDelta, self.volInvTau))
         return
 
     def updateLog(self):
-        thisLog = [utility.formatTsToString(self.timestamp), self.contractChange, self.close, self.vol]
+        thisLog = [utility.formatTsToString(self.lastTS), self.contractChange, self.close, self.vol]
         self.log.append(thisLog)
         return
 
@@ -114,13 +112,19 @@ class asset:
 class traded(asset):
     def __init__(self, sym, cfg, seeds, prod):
         super(traded, self).__init__(sym, sym, cfg, seeds, prod)
+        self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
 
     def updateContractState(self, md):
         super().updateContractState(md)
-        self.intervalVolume = md[f'{self.sym}_intervalVolume']
+        self.updateLiquidity(md)
         return
 
     def firstSaneUpdate(self, md):
         super().firstSaneUpdate(md)
-        self.intervalVolume = md[f'{self.sym}_intervalVolume']
+        self.liquidity = md[f'{self.sym}_intervalVolume']
+        return
+
+    def updateLiquidity(self, md):
+        self.liquidity = utility.emaUpdate(self.liquidity, md[f'{self.sym}_intervalVolume'], self.timeDelta,
+                                           self.liquidityInvTau)
         return
