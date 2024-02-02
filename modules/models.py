@@ -19,8 +19,6 @@ class assetModel():
         self.kappa = params['alphaWeights']['kappa']
         self.hScaler = cfg['fitParams'][targetSym]['hScaler']
         self.alphaWeights = params['alphaWeights']
-        self.liquidity = seeds[f'{targetSym}_Liquidity']
-        self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
         self.pRate = cfg['inputParams']['basket']['execution']['pRate']
         self.notionalAlloc = cfg['fitParams']['basket']['notionalAllocs'][f'{targetSym}']
         self.notionalMultiplier = utility.findNotionalMultiplier(targetSym)
@@ -144,9 +142,7 @@ class assetModel():
         return
 
     def calcMaxTradeSize(self):
-        self.liquidity = utility.emaUpdate(self.liquidity, self.target.intervalVolume, self.target.timeDelta,
-                                           self.liquidityInvTau)
-        self.maxTradeSize = int(np.clip(self.pRate * self.liquidity, 1, self.riskLimits['maxTradeSize']))
+        self.maxTradeSize = int(np.clip(self.pRate * self.target.liquidity, 1, self.riskLimits['maxTradeSize']))
         return
 
     @staticmethod
@@ -216,7 +212,7 @@ class assetModel():
         self.constructAlphasLog()
         thisLog = [utility.formatTsToString(self.target.timestamp), self.target.contractChange, self.target.close,
                    self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.hOpt,
-                   self.initHoldings, self.tradeVolume, self.maxTradeSize, self.liquidity, self.maxPosition,
+                   self.initHoldings, self.tradeVolume, self.maxTradeSize, self.target.liquidity, self.maxPosition,
                    self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
         return

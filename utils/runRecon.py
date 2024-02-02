@@ -6,11 +6,11 @@ cfg_file = root + "models/AFBI/config/iqfRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-target = cfg['targets'][0]
 
 symsToPlot = cfg['targets'][1:2]
 cfg['targets'] = symsToPlot
 plot = True
+target = cfg['targets'][0]
 
 # Initialisations
 researchFeeds = utility.loadResearchFeeds(cfg)
@@ -26,7 +26,7 @@ prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=5000)
 fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
 
 # Logs
-prodLogs = recon.processLogs(fitModels, timezone=AFBI.timezone)
+prodLogs = recon.processLogs(fitModels)
 
 if plot:
     recon.plotReconCols(cfg, prodLogs, researchFeeds, symsToPlot=symsToPlot)

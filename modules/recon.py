@@ -2,12 +2,12 @@ from pyConfig import *
 from modules import utility
 
 
-def setLogIndex(log, col, timezone):
-    log.index = pd.to_datetime(log[col], format='%Y_%m_%d_%H').dt.tz_localize(timezone)
+def setLogIndex(log, col):
+    log.index = pd.to_datetime(log[col], format='%Y_%m_%d_%H')
     return log
 
 
-def processLogs(fitModels, timezone):
+def processLogs(fitModels):
     logs = {}
     for sym in fitModels:
         logs[sym] = {}
@@ -15,11 +15,12 @@ def processLogs(fitModels, timezone):
         logs[sym]['model'] = pd.DataFrame(fitModels[sym].log,
                                           columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_close',
                                                    f'{sym}_timeDelta', f'{sym}_Volatility', f'{sym}_priceDelta',
-                                                   f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
-                                                   f'{sym}_maxTradeSize', f'{sym}_Holdings', f'{sym}_maxLots',
-                                                   f'{sym}_notionalPerLot', f'{sym}_{fx}_DailyRate']).dropna()
+                                                   f'{sym}_CumAlpha', f'{sym}_Holdings', f'{sym}_InitHoldings',
+                                                   f'{sym}_Trades', f'{sym}_maxTradeSize', f'{sym}_Liquidity',
+                                                   f'{sym}_maxLots', f'{sym}_notionalPerLot',
+                                                   f'{sym}_{fx}_DailyRate']).dropna()
         logs[sym]['model'][f'{sym}_BasketHoldings'] = logs[sym]['model'][f'{sym}_Trades'].cumsum()
-        logs[sym]['model'] = setLogIndex(logs[sym]['model'], col='lastTS', timezone=timezone)
+        logs[sym]['model'] = setLogIndex(logs[sym]['model'], col='lastTS')
 
         for name in fitModels[sym].alphaDict:
             logs[sym][name] = pd.DataFrame(fitModels[sym].alphaDict[name].log,
@@ -31,7 +32,7 @@ def processLogs(fitModels, timezone):
             logs[sym][pred] = pd.DataFrame(fitModels[sym].predictors[pred].log,
                                            columns=[f'{pred}_lastTS', f'{pred}_contractChange', f'{pred}_close',
                                                     f'{pred}_Volatility']).dropna()
-            logs[sym][pred] = setLogIndex(logs[sym][pred], col=f'{pred}_lastTS', timezone=timezone)
+            logs[sym][pred] = setLogIndex(logs[sym][pred], col=f'{pred}_lastTS')
 
     lg.info("Processed Logs.")
     return logs
@@ -78,7 +79,7 @@ def reconcile(prodLogs, researchFeeds, fitModels):
 def plotReconCols(cfg, prodLogs, researchFeeds, symsToPlot):
     for sym in symsToPlot:
         fts = cfg['fitParams'][sym]['feats']
-        reconCols = [f'{sym}_BasketHoldings', f'{sym}_Volatility']
+        reconCols = [f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
         prod = prodLogs[sym]['model']
         res = researchFeeds[sym]
         recon = researchFeeds['recon']
