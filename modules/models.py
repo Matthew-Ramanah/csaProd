@@ -141,8 +141,8 @@ class assetModel():
 
         return
 
-    def calcMaxTradeSize(self):
-        self.maxTradeSize = int(np.clip(self.pRate * self.target.liquidity, 1, self.riskLimits['maxTradeSize']))
+    def calcLiquidityCap(self):
+        self.liquidityCap = int(np.clip(self.pRate * self.target.liquidity, 1, self.riskLimits['maxTradeSize']))
         return
 
     @staticmethod
@@ -156,13 +156,13 @@ class assetModel():
         return int(maxPosition * normedHoldings)
 
     def calcTradeVolume(self):
-        uncappedDelta = self.maxPosition * self.hOpt - self.initHoldings
-        self.tradeVolume = int(np.clip(uncappedDelta, -self.maxTradeSize, self.maxTradeSize))
+        uncappedDelta = int(self.maxPosition * self.hOpt) - self.initHoldings
+        self.tradeVolume = int(np.clip(uncappedDelta, -self.liquidityCap, self.liquidityCap))
         return
 
     def calcHoldings(self):
         self.calcHOpt()
-        self.calcMaxTradeSize()
+        self.calcLiquidityCap()
         self.calcTradeVolume()
         if not self.prod:
             self.updateReconPosition()
@@ -207,16 +207,16 @@ class assetModel():
     def constructAlphasLog(self):
         for name in self.alphaDict:
             thisAlpha = self.alphaDict[name]
-            thisLog = [name, utility.formatTsToString(self.target.timestamp), thisAlpha.rawVal, thisAlpha.smoothVal,
+            thisLog = [name, utility.formatTsToString(self.target.lastTS), thisAlpha.rawVal, thisAlpha.smoothVal,
                        thisAlpha.zVal, thisAlpha.vol, thisAlpha.featVal, thisAlpha.alphaVal]
             self.alphasLog.append(thisLog)
         return
 
     def constructLogs(self):
         self.constructAlphasLog()
-        thisLog = [utility.formatTsToString(self.target.timestamp), self.target.contractChange, self.target.close,
+        thisLog = [utility.formatTsToString(self.target.lastTS), self.target.contractChange, self.target.close,
                    self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.hOpt,
-                   self.initHoldings, self.tradeVolume, self.maxTradeSize, self.target.liquidity, self.maxPosition,
+                   self.initHoldings, self.tradeVolume, self.liquidityCap, self.target.liquidity, self.maxPosition,
                    self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
         return

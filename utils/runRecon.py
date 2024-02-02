@@ -5,7 +5,7 @@ cfg_file = root + "models/AFBI/config/iqfRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-symsToPlot = cfg['targets'][1:2]
+symsToPlot = cfg['targets'][0:5]
 cfg['targets'] = symsToPlot
 plot = True
 
@@ -30,4 +30,4 @@ prodLogs = recon.processLogs(fitModels)
 
 if plot:
     recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot=symsToPlot)
-    # recon.plotPnLs(prodLogs, researchFeeds, cfg)
+    recon.plotPnLs(prodLogs, researchFeeds, cfg)

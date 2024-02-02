@@ -16,7 +16,7 @@ def processLogs(fitModels):
                                           columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_close',
                                                    f'{sym}_timeDelta', f'{sym}_Volatility', f'{sym}_priceDelta',
                                                    f'{sym}_CumAlpha', f'{sym}_Holdings', f'{sym}_InitHoldings',
-                                                   f'{sym}_Trades', f'{sym}_maxTradeSize', f'{sym}_Liquidity',
+                                                   f'{sym}_Trades', f'{sym}_LiquidityCaps', f'{sym}_Liquidity',
                                                    f'{sym}_maxLots', f'{sym}_notionalPerLot',
                                                    f'{sym}_{fx}_DailyRate']).dropna()
         logs[sym]['model'][f'{sym}_BasketHoldings'] = logs[sym]['model'][f'{sym}_Trades'].cumsum()
@@ -80,12 +80,12 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot):
     for sym in symsToPlot:
         fts = cfg['fitParams'][sym]['feats']
         preds = list(fitModels[sym].predictors.keys())
-        reconCols = [f'{sym}_CumAlpha', f'{sym}_BasketHoldings']
+        reconCols = [f'{sym}_Volatility', f'{sym}_Holdings', f'{sym}_BasketHoldings', f'{sym}_notionalPerLot']
         prod = prodLogs[sym]['model']
         res = researchFeeds[sym]
         recon = researchFeeds['recon']
 
-        fig, axs = plt.subplots(len(reconCols) + len(preds) + 1, sharex='all')
+        fig, axs = plt.subplots(len(reconCols) + 1, sharex='all')
         fig.suptitle(f"{sym} Reconciliation")
         axs[0].step(res.index, res[f'{sym}_close'], label=f'Research: {sym}_close', where='post')
         axs[0].step(prod.index, prod[f'{sym}_close'], label=f'Prod: {sym}_close', where='post')
@@ -107,43 +107,39 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot):
                 axs[i + j + 2].axhline(y=0, color='black', linestyle='--')
                 axs[i + j + 2].legend(loc='upper right')
 
-        for k, pred in enumerate(preds):
-            axs[i + k + 2].step(res.index, res[f'{pred}_close'], label=f'Research: {pred}_close', where='post')
-            axs[i + k + 2].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_close'],
-                                label=f'Prod: {pred}_close', where='post')
-            axs[i + k + 2].axhline(y=0, color='black', linestyle='--')
-            axs[i + k + 2].legend(loc='upper right')
+        if False:
+            for k, pred in enumerate(preds):
+                axs[i + k + 2].step(res.index, res[f'{pred}_close'], label=f'Research: {pred}_close', where='post')
+                axs[i + k + 2].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_close'],
+                                    label=f'Prod: {pred}_close', where='post')
+                axs[i + k + 2].axhline(y=0, color='black', linestyle='--')
+                axs[i + k + 2].legend(loc='upper right')
 
         fig.show()
     return
 
 
-def calcPnLs(prodLogs, researchFeeds, cfg):
+def calcPnLs(prodLogs, researchFeeds):
     pnls = pd.DataFrame(index=researchFeeds['recon'].index)
     pnls['TradingProfit'] = np.zeros(len(pnls))
-    refData = utility.loadRefData()
     for sym in prodLogs:
         log = prodLogs[sym]['model']
         trades = log[f'{sym}_Trades']
         lastHoldings = log[f'{sym}_BasketHoldings'].shift(1).fillna(0)
-        mpDelta = log[f'{sym}_midPrice'].diff().fillna(0)
+        priceDelta = log[f'{sym}_close'].diff().fillna(0)
         fx = utility.findNotionalFx(sym)
-        fxRate = log[f'{sym}_{fx}_DailyRate']
-        tickScaler = float(refData['tickValue'][sym]) / float(cfg['fitParams'][sym]['tickSizes'][sym]) * fxRate
-        buyCost = sellCost = float(cfg['fitParams'][sym]['tickSizes'][sym])
-        uncostedPnl = np.cumsum(lastHoldings * tickScaler * mpDelta)
-        tCosts = np.cumsum(
-            tickScaler * np.abs(trades) * np.where(trades > 0, buyCost, np.where(trades < 0, sellCost, 0)))
+        tickScaler = log[f'{sym}_{fx}_DailyRate'] * utility.findTickValue(sym) / utility.findTickSize(sym)
+        uncostedPnl = np.cumsum(lastHoldings * tickScaler * priceDelta)
+        tCosts = np.cumsum(tickScaler * np.abs(trades) * 0.5 * utility.findEffSpread(sym))
         pnls[f'{sym}_TradingProfit'] = uncostedPnl - tCosts
         pnls['TradingProfit'] += pnls[f'{sym}_TradingProfit']
     return pnls.ffill().fillna(0)
 
 
 def findAssClasses(cfg):
-    refData = utility.loadRefData()
     assClasses = {}
     for target in cfg['targets']:
-        assClass = refData.loc[target]['assetClass']
+        assClass = utility.findAssetClass(target)
         if assClass not in assClasses:
             assClasses[assClass] = [target]
         else:
@@ -153,7 +149,7 @@ def findAssClasses(cfg):
 
 
 def plotPnLDeltas(prodLogs, researchFeeds, cfg):
-    pnls = calcPnLs(prodLogs, researchFeeds, cfg)
+    pnls = calcPnLs(prodLogs, researchFeeds)
     assClasses = findAssClasses(cfg)
     tick = mtick.StrMethodFormatter(dollarFmt)
 
@@ -183,7 +179,7 @@ def plotPnLDeltas(prodLogs, researchFeeds, cfg):
 
 
 def plotPnLs(prodLogs, researchFeeds, cfg):
-    pnls = calcPnLs(prodLogs, researchFeeds, cfg)
+    pnls = calcPnLs(prodLogs, researchFeeds)
     assClasses = findAssClasses(cfg)
     tick = mtick.StrMethodFormatter(dollarFmt)
 

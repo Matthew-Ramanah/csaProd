@@ -209,6 +209,13 @@ def findTickSize(target):
     refData = loadRefData()
     return float(refData.loc[refData['iqfUnadjusted'] == target]['tickSize'].values[0])
 
+def findTickValue(target):
+    refData = loadRefData()
+    return float(refData.loc[refData['iqfUnadjusted'] == target]['tickValue'].values[0])
+
+def findAssetClass(target):
+    refData = loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == target]['assetClass'].values[0]
 
 def findEffSpread(target):
     refData = loadRefData()
