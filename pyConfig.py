@@ -3,7 +3,7 @@ root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
 # root = "C:/Users/Owner/Desktop/CBCT/code/"
 
 logRoot = f"{root}logs/AFBI/"
-rawDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/raw/"
+rawDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/recon/"
 proDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/processed/"
 
 refDataPath = f'{root}csaRefData.csv'
