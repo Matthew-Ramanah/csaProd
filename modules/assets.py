@@ -63,6 +63,7 @@ class asset:
             return False
         if self.lastAdjustment != self.adjustment:
             self.lastAdjustment = self.adjustment
+            lg.info(f'{self.sym} contractChange detected')
             return True
         return False
 
