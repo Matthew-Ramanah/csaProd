@@ -21,6 +21,7 @@ class asset:
         else:
             self.initialised = False
         self.stale = False
+        self.contractChange = False
 
     def mdhSane(self, md):
         """
@@ -41,6 +42,7 @@ class asset:
 
     def maintainContractState(self):
         self.close = self.lastClose
+        self.adjustment = self.lastAdjustment
         self.contractChange = False
         self.timeDelta = 0
         self.priceDelta = 0

@@ -151,7 +151,7 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     sendCC = []  # ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
     username = sendFrom
     password = "SydQuantPos23"
-    subject = "CBCT tradeFile"
+    subject = "PAPER tradeFile"
     message = f"CBCT_{timeSig}"
     filename = f"CBCT_{timeSig}.csv"
     gmail.sendTradeFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
