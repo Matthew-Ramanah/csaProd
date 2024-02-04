@@ -5,9 +5,9 @@ from models.AFBI.interface import AFBI
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-send = False
-saveModel = False
-saveLogs = False
+send = True
+saveModel = True
+saveLogs = True
 
 # Load Seeds
 initSeeds = utility.loadInitSeeds(cfg)
@@ -20,13 +20,13 @@ riskLimits = AFBI.detectRiskLimits(cfg)
 fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, riskLimits=riskLimits,prod=True)
 
 # Pull Market Data
-md = dataFeed.feed(cfg, AFBI.timezone).pullLatestMD(syntheticIncrement=0)
+md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=0)
 
 # Update Models
 fitModels = utility.updateModels(fitModels, md)
 
 # Generate tradeFile
-trades = AFBI.generateAFBITradeFile(cfg, fitModels, md, initPositions, AFBI.timezone, send=send, saveLogs=saveLogs)
+trades = AFBI.generateAFBITradeFile(cfg, fitModels, md, initPositions, send=send, saveLogs=saveLogs)
 
 if saveModel:
     modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)

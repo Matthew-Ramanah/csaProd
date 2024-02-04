@@ -9,6 +9,7 @@ class assetModel():
         self.alphasLog = []
 
         self.staleAssets = []
+        self.contractChanges = []
         self.prod = prod
         if self.prod:
             self.seeding = False
@@ -85,6 +86,15 @@ class assetModel():
                 self.staleAssets.append(self.predictors[pred].sym)
         return
 
+    def checkContractChanges(self):
+        self.contractChanges = []
+        if self.target.contractChange:
+            self.contractChanges.append(self.target.sym)
+        for pred in self.predictors:
+            if self.predictors[pred].contractChange:
+                self.contractChanges.append(self.predictors[pred].sym)
+        return
+
     def mdUpdate(self, md):
         self.target.mdUpdate(md)
         for pred in self.predictors:
@@ -94,10 +104,10 @@ class assetModel():
             self.checkifSeeded()
 
         elif not self.target.stale:
-            self.target.modelUpdate()
+            self.target.modelUpdate(md)
 
             for pred in self.predictors:
-                self.predictors[pred].modelUpdate()
+                self.predictors[pred].modelUpdate(md)
 
             self.updateAlphas()
 
@@ -109,10 +119,12 @@ class assetModel():
 
         else:
             self.tradeVolume = 0
+            self.liquidityCap = 0
             self.log.append([])
             self.alphasLog.append([])
 
         self.checkStaleAssets()
+        self.checkContractChanges()
         self.updateSeeds()
 
         return
@@ -224,7 +236,8 @@ class assetModel():
     def updateSeeds(self):
         self.seedDump = {f"{self.target.sym}_close": self.target.close,
                          f"{self.target.sym}_Volatility": self.target.vol,
-                         f"{self.target.sym}_lastTS": self.target.lastTS.strftime('%Y_%m_%d_%H')}
+                         f"{self.target.sym}_lastTS": self.target.lastTS.strftime('%Y_%m_%d_%H'),
+                         f"{self.target.sym}_Liquidity": self.target.liquidity}
 
         for pred in self.predictors:
             self.seedDump[f'{pred}_close'] = self.predictors[pred].close

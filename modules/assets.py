@@ -13,6 +13,7 @@ class asset:
         self.vol = seeds[f'{sym}_Volatility']
         self.lastClose = seeds[f'{sym}_close']
         self.lastTS = utility.formatStringToTs(seeds[f'{self.sym}_lastTS'])
+        self.lastAdjustment = 0
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
         self.prod = prod
         if self.prod:
@@ -63,7 +64,6 @@ class asset:
             return False
         if self.lastAdjustment != self.adjustment:
             self.lastAdjustment = self.adjustment
-            lg.info(f'{self.sym} contractChange detected')
             return True
         return False
 
@@ -91,7 +91,7 @@ class asset:
         self.updateContractState(md)
         return
 
-    def modelUpdate(self):
+    def modelUpdate(self, md):
         self.contractChange = self.isContractChange()
         self.decayCalc()
         self.priceDeltaCalc()
@@ -114,9 +114,10 @@ class traded(asset):
     def __init__(self, sym, cfg, seeds, prod):
         super(traded, self).__init__(sym, sym, cfg, seeds, prod)
         self.liquidityInvTau = np.float64(1 / (cfg['inputParams']['basket']['execution']['liquidityHL'] * logTwo))
+        self.liquidity = seeds[f'{sym}_Liquidity']
 
-    def updateContractState(self, md):
-        super().updateContractState(md)
+    def modelUpdate(self, md):
+        super().modelUpdate(md)
         self.updateLiquidity(md)
         return
 

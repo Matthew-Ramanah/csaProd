@@ -33,7 +33,7 @@
       "leverage": 5,
       "execution": {
         "liquidityHL": 1,
-        "pRate": 0.05
+        "pRate": 0.02
       }
     }
   },

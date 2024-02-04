@@ -72,7 +72,7 @@ def constructResearchSeeds(resFeed, cfg, location=0):
     """
     seeds = {}
     for target in cfg['targets']:
-        seeds[target] = {}
+        seeds[target] = {f"{target}_Liquidity": resFeed['recon'][f'{target}_Liquidity'].iloc[location]}
         symsNeeded = findSymsNeeded(cfg, target)
         for sym in symsNeeded:
             seeds[target][f'{sym}_close'] = resFeed[target][f'{sym}_close'].iloc[location]
@@ -132,8 +132,8 @@ def generateTrades(fitModels):
     return trades
 
 
-def createTimeSig(timezone='UTC'):
-    timeSig = datetime.datetime.now(pytz.timezone(timezone)).strftime('%Y_%m_%d_%H')
+def createTimeSig():
+    timeSig = datetime.datetime.now().strftime('%Y_%m_%d_%H')
     return timeSig
 
 
@@ -192,6 +192,7 @@ def updateModels(fitModels, md):
         fitModels[sym].mdUpdate(md)
 
     dataFeed.monitorMdhSanity(fitModels, md)
+    dataFeed.monitorContractChanges(fitModels)
     return fitModels
 
 
@@ -209,13 +210,16 @@ def findTickSize(target):
     refData = loadRefData()
     return float(refData.loc[refData['iqfUnadjusted'] == target]['tickSize'].values[0])
 
+
 def findTickValue(target):
     refData = loadRefData()
     return float(refData.loc[refData['iqfUnadjusted'] == target]['tickValue'].values[0])
 
+
 def findAssetClass(target):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == target]['assetClass'].values[0]
+
 
 def findEffSpread(target):
     refData = loadRefData()
@@ -230,3 +234,17 @@ def findNotionalMultiplier(target):
 def findAdjSym(sym):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['iqfAdjusted'].values[0]
+
+
+def findTradedSym(sym):
+    refData = loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['tradedSym'].values[0]
+
+def findDescription(sym):
+    refData = loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['description'].values[0]
+
+
+def findExchange(sym):
+    refData = loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['exchange'].values[0]

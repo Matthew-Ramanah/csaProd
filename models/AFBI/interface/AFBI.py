@@ -30,12 +30,11 @@ def isDeskManned():
 
 
 def detectAFBIPositions(cfg):
-    refData = utility.loadRefData()
     dfPositions = pullAFBIPositions()
     notDetected = []
     positions = {}
     for sym in cfg['targets']:
-        tradedSym = refData.loc[sym]['tradedSym']
+        tradedSym = utility.findTradedSym(sym)
         if tradedSym in dfPositions['BB Yellow Key'].values:
             row = np.where(dfPositions['BB Yellow Key'] == tradedSym)[0][0]
             positions[sym] = int(dfPositions.iloc[row]['Notional Quantity'])
@@ -101,8 +100,7 @@ def createCancelTime(md):
     return pd.Timestamp(datetime.datetime.strptime(md['timeSig'], '%Y_%m_%d_%H')) + cancelAfter
 
 
-def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
-    refData = utility.loadRefData()
+def createTradeCSV(cfg, fitModels, trades, md, initPositions):
     afbiAccount = "CBCTBULK"
     orderType = "LMT"
     limitPrices = findLimitPrices(cfg, md, trades)
@@ -111,26 +109,26 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
     tif = "DAY"
     broker = "SGXE"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
-            "refPrice", f'refTime: {timezone}', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
+            "refPrice", f'refTime', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
             'Exchange', 'maxPosition', 'maxTradeSize', 'liq', 'hOpt']
     out = []
     for sym in trades:
-        bbSym = refData.loc[sym]['tradedSym']
+        bbSym = utility.findTradedSym(sym)
         qty = trades[sym]
         side = findSide(qty)
         limitPrice = limitPrices[sym]
-        lastPrice = md[f'{sym}_midPrice']
+        lastPrice = md[f'{sym}_close']
         lastTime = md[f'{sym}_lastTS']
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
-        desc = refData.loc[sym]['description']
-        exchange = refData.loc[sym]['exchange']
+        desc = utility.findDescription(sym)
+        exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
-        maxTradeSize = fitModels[sym].maxTradeSize
-        liquidity = fitModels[sym].liquidity
-        hOpt = fitModels[sym].hOpt
+        liquidityCap = fitModels[sym].liquidityCap
+        liquidity = int(fitModels[sym].target.liquidity)
+        hOpt = round(fitModels[sym].hOpt, 4)
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, lastTime,
-                    cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize, liquidity, hOpt]
+                    cancelTime, initPos, targetPos, desc, exchange, maxPos, liquidityCap, liquidity, hOpt]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
@@ -138,10 +136,9 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone):
 
 def detectRiskLimits(cfg):
     dfLimits = pd.read_csv(riskPath)
-    refData = utility.loadRefData()
     riskLimits = {}
     for sym in cfg['targets']:
-        tradedSym = refData.loc[sym]['tradedSym']
+        tradedSym = utility.findTradedSym(sym)
         row = np.where(dfLimits['Bloom Ticker'] == tradedSym)[0][0]
         riskLimits[sym] = {"maxPosition": int(dfLimits.iloc[row]['maxPosition']),
                            "maxTradeSize": int(dfLimits.iloc[row]['maxTradeSize'])}
@@ -150,8 +147,8 @@ def detectRiskLimits(cfg):
 
 def sendAFBITradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
-    sendCC = ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
+    sendTo = ["matthew.ramanah@sydneyquantitative.com"]  # ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
+    sendCC = []  # ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"
@@ -162,10 +159,10 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     return
 
 
-def generateAFBITradeFile(cfg, fitModels, md, initPositions, timezone, send=True, saveLogs=True):
+def generateAFBITradeFile(cfg, fitModels, md, initPositions, send=True, saveLogs=True):
     # Generate CSV & dict
     trades = utility.generateTrades(fitModels)
-    tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions, timezone)
+    tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions)
     print(tradeCSV)
 
     # Save to Log & Email
