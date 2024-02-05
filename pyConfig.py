@@ -1,8 +1,9 @@
 # Directories
 root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
 # root = "C:/Users/Owner/Desktop/CBCT/code/"
-
 logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/"
+# logRoot = "C:/Users/Owner/Desktop/CBCT/logs/"
+
 rawDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/recon/"
 proDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/processed/"
 

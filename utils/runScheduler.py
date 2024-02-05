@@ -21,7 +21,7 @@ def callRunPaper():
     return
 
 
-schedule.every().hour.at(":05").do(callRunLive)
+schedule.every().hour.at(":00").do(callRunLive)
 
 lg.info("Starting scheduler...")
 while True:
