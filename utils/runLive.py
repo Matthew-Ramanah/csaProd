@@ -17,7 +17,7 @@ initPositions = AFBI.detectAFBIPositions(cfg)
 riskLimits = AFBI.detectRiskLimits(cfg)
 
 # Initialise models
-fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, riskLimits=riskLimits,prod=True)
+fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, riskLimits=riskLimits, prod=True)
 
 # Pull Market Data
 md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=0)

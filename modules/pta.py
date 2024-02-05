@@ -9,25 +9,24 @@ def initialiseLogDict(cfg):
     return logs
 
 
-def formatRawLogs(rawLogs, timezone):
+def formatRawLogs(rawLogs):
     logs = {}
     for sym in rawLogs:
         fx = utility.findNotionalFx(sym)
-        names = [f'lastTS', f'{sym}_contractChange', f'{sym}_midPrice', f'{sym}_timeDR_Delta', f'Volatility_{sym}',
-                 f'midDelta_{sym}', f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
-                 f'{sym}_maxTradeSize', f'{sym}_NormTargetHoldings', f'{sym}_MaxPosition', f'{sym}_notionalPerLot',
+        names = [f'lastTS', f'{sym}_contractChange', f'{sym}_close', f'{sym}_timeDelta', f'{sym}_Volatility',
+                 f'{sym}_priceDelta', f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
+                 f'{sym}_maxTradeSize', f'{sym}_Liquidity', f'{sym}_MaxPosition', f'{sym}_notionalPerLot',
                  f'{sym}_{fx}_DailyRate']
         logs[sym] = pd.DataFrame(rawLogs[sym], columns=names)
 
     for sym in logs:
         logs[sym].index = pd.to_datetime(logs[sym]['lastTS'], format='%Y_%m_%d_%H')
-        logs[sym].index = logs[sym].index.tz_localize(timezone)
         logs[sym][f'{sym}_TargetPos'] = logs[sym][f'{sym}_InitHoldings'] + logs[sym][f'{sym}_Trades']
 
     return logs
 
 
-def loadLogs(cfg, logDir, timezone):
+def loadLogs(cfg, logDir):
     lg.info("Loading Logs...")
     logs = initialiseLogDict(cfg)
     for root, dirs, files in os.walk(f'{logDir}models/'):
@@ -38,7 +37,7 @@ def loadLogs(cfg, logDir, timezone):
                 for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
                         logs[sym].append(rawLog[sym])
-    logs = formatRawLogs(logs, timezone)
+    logs = formatRawLogs(logs)
     return logs
 
 
@@ -68,7 +67,7 @@ def removeEmptyALogs(alphasLogs):
     return alphasLogs
 
 
-def converListToDfALogs(alphasLogs, cfg, timezone):
+def converListToDfALogs(alphasLogs, cfg):
     cols = ['timestamp', 'rawVal', 'smoothVal', 'zVal', 'vol', 'featVal', 'alphaVal']
     for sym in alphasLogs:
         for name in cfg['fitParams'][sym]['alphaWeights']:
@@ -79,19 +78,18 @@ def converListToDfALogs(alphasLogs, cfg, timezone):
                                                 cfg['fitParams'][sym]['alphaWeights'][name]
             alphasLogs[sym][name].index = pd.to_datetime(alphasLogs[sym][name]['timestamp'],
                                                          format='%Y_%m_%d_%H')
-            alphasLogs[sym][name].index = alphasLogs[sym][name].index.tz_localize(timezone)
 
     return alphasLogs
 
 
-def formatAlphasLogs(rawAL, cfg, timezone):
+def formatAlphasLogs(rawAL, cfg):
     alphasLogs = convertRawToListALogs(rawAL)
     alphasLogs = removeEmptyALogs(alphasLogs)
-    alphasLogs = converListToDfALogs(alphasLogs, cfg, timezone)
+    alphasLogs = converListToDfALogs(alphasLogs, cfg)
     return alphasLogs
 
 
-def loadAlphasLogs(cfg, logDir, timezone):
+def loadAlphasLogs(cfg, logDir):
     lg.info("Loading AlphasLogs...")
     rawAL = initialiseLogDict(cfg)
     for root, dirs, files in os.walk(f'{logDir}alphas/'):
@@ -102,7 +100,7 @@ def loadAlphasLogs(cfg, logDir, timezone):
                 for sym in cfg['targets']:
                     if len(rawLog[sym]) != 0:
                         rawAL[sym].append(rawLog[sym])
-    alphasLogs = formatAlphasLogs(rawAL, cfg, timezone)
+    alphasLogs = formatAlphasLogs(rawAL, cfg)
     return alphasLogs
 
 
@@ -113,49 +111,39 @@ def findTradePriceScaler(sym):
     return 1
 
 
-def plotLogs(cfg, logs, alphasLogs, tradeLogs, symsToPlot):
+def plotLogs(cfg, logs, alphasLogs, symsToPlot):
     for sym in symsToPlot:
+        desc = utility.findDescription(sym)
         if len(logs[sym]) == 0:
             print(f"Can't plot {sym} logs as no logFiles detected")
             continue
         log = logs[sym]
-        fig, axs = plt.subplots(6, sharex='all')
-        fig.suptitle(f"{sym} Logs")
-        axs[0].step(log.index, log[f'{sym}_midPrice'], label='midPrice', where='post', color='orange')
-        if len(tradeLogs) != 0:
-            trades = tradeLogs[sym]
-            buys = trades.loc[trades['Notional Quantity'] > 0].dropna()
-            sells = trades.loc[trades['Notional Quantity'] < 0].dropna()
-            tpScaler = findTradePriceScaler(sym)
-            axs[0].plot(buys['execTime'], buys['tradePrice'] * tpScaler, "^", color='blue', label='buy')
-            axs[0].plot(sells['execTime'], sells['tradePrice'] * tpScaler, "v", color='red', label='sell')
+        fig, axs = plt.subplots(4, sharex='all')
+        fig.suptitle(f"{desc}")
+        axs[0].step(log.index, log[f'{sym}_close'], label='close', where='post', color='orange')
+        """
+        trades = tradeLogs[sym]
+        buys = trades.loc[trades['Notional Quantity'] > 0].dropna()
+        sells = trades.loc[trades['Notional Quantity'] < 0].dropna()
+        tpScaler = findTradePriceScaler(sym)
+        axs[0].plot(buys['execTime'], buys['tradePrice'] * tpScaler, "^", color='blue', label='buy')
+        axs[0].plot(sells['execTime'], sells['tradePrice'] * tpScaler, "v", color='red', label='sell')
+        """
         axs[0].legend(loc='upper left')
-        axs[1].step(log.index, log[f'Volatility_{sym}'], label='Volatility', where='post', color='red')
+        axs[1].step(log.index, log[f'hOpt'], label='hOpt', where='post', color='green')
+        axs[1].axhline(y=0, color='black', linestyle='--')
         axs[1].legend(loc='upper left')
-        axs[2].step(log.index, log[f'{sym}_NormTargetHoldings'], label='NormHoldings', where='post', color='green')
-        axs[2].axhline(y=0, color='black', linestyle='--')
-        axs[2].axhline(y=-1, color='black', linestyle='--')
-        axs[2].axhline(y=1, color='black', linestyle='--')
-        axs[2].legend(loc='upper left')
         for name in cfg['fitParams'][sym]['alphaWeights']:
             if name == 'kappa':
                 continue
-            axs[3].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['weighted'], label=name, where='post')
-        axs[3].step(log.index, log[f'{sym}_CumAlpha'], label='CumAlpha', where='post', color='magenta')
+            axs[2].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['weighted'], label=name, where='post')
+        axs[2].step(log.index, log[f'{sym}_CumAlpha'], label='CumAlpha', where='post', color='magenta')
+        axs[2].axhline(y=0, color='black', linestyle='--')
+        axs[2].legend(loc='upper left')
+        axs[3].step(log.index, log[f'{sym}_InitHoldings'], label='InitPos', where='post', color='orange')
+        axs[3].step(log.index, log[f'{sym}_TargetPos'], label='TargetPos', where='post', color='olive')
         axs[3].axhline(y=0, color='black', linestyle='--')
         axs[3].legend(loc='upper left')
-        axs[4].step(log.index, log[f'{sym}_InitHoldings'], label='InitPos', where='post', color='orange')
-        axs[4].step(log.index, log[f'{sym}_TargetPos'], label='TargetPos', where='post', color='olive')
-        axs[4].axhline(y=0, color='black', linestyle='--')
-        axs[4].legend(loc='upper left')
-        for name in cfg['fitParams'][sym]['alphaWeights']:
-            if name == 'kappa':
-                continue
-            axs[5].step(alphasLogs[sym][name].index, alphasLogs[sym][name]['featVal'], label=name, where='post')
-        axs[5].axhline(y=0, color='black', linestyle='--')
-        axs[5].axhline(y=-signalCap, color='black', linestyle='--')
-        axs[5].axhline(y=signalCap, color='black', linestyle='--')
-        axs[5].legend(loc='upper left')
         fig.show()
     return
 

@@ -89,9 +89,7 @@ def pullLatestPosFile(service, searchQuery):
         return {'emailsubject': subject, 'filename': attPart['filename'], 'data': df}
 
 
-def sendTradeFile(path, sendFrom, sendTo, sendCC, username, password, subject, message, filename):
-    lg.info("Sending tradeFile...")
-
+def sendFile(path, sendFrom, sendTo, sendCC, username, password, subject, message, filename):
     msg = MIMEMultipart()
     msg['From'] = sendFrom
     msg['To'] = ", ".join(sendTo)
@@ -114,5 +112,4 @@ def sendTradeFile(path, sendFrom, sendTo, sendCC, username, password, subject, m
     smtp.login(username, password)
     smtp.sendmail(sendFrom, sendTo + sendCC, msg.as_string())
     smtp.quit()
-    lg.info("tradeFile Sent.")
     return

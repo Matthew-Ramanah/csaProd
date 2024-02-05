@@ -53,7 +53,7 @@ class assetModel():
             return self.predictors[fxSym].lastClose
 
     def calcNotionalPerLot(self):
-        return round(self.notionalMultiplier * self.target.lastClose * self.fxRate, 2)
+        return int(self.notionalMultiplier * self.target.lastClose * self.fxRate)
 
     def calcMaxPosition(self):
         return min(int(self.totalCapital * self.notionalAlloc / self.notionalPerLot), self.riskLimits['maxPosition'])

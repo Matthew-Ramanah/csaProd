@@ -110,7 +110,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
     broker = "SGXE"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
             "refPrice", f'refTime', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
-            'Exchange', 'maxPosition', 'maxTradeSize', 'liq', 'hOpt']
+            'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
         bbSym = utility.findTradedSym(sym)
@@ -125,13 +125,40 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
         liquidityCap = fitModels[sym].liquidityCap
-        liquidity = int(fitModels[sym].target.liquidity)
-        hOpt = round(fitModels[sym].hOpt, 4)
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, lastTime,
-                    cancelTime, initPos, targetPos, desc, exchange, maxPos, liquidityCap, liquidity, hOpt]
+                    cancelTime, initPos, targetPos, desc, exchange, maxPos, liquidityCap]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
+
+
+def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
+    limitPrices = findLimitPrices(cfg, md, trades)
+    cols = ['Description', 'BB Yellow Key', 'Exchange', 'Side', 'Amount', 'Limit', "refPrice", f'refTime', 'currentPos',
+            'targetPos', 'maxPos', 'maxTradeSize', 'liq', 'hOpt', 'notionalPerLot', 'contractChange']
+    out = []
+    for sym in trades:
+        desc = utility.findDescription(sym)
+        bbSym = utility.findTradedSym(sym)
+        qty = trades[sym]
+        side = findSide(qty)
+        limitPrice = limitPrices[sym]
+        lastPrice = md[f'{sym}_close']
+        lastTime = md[f'{sym}_lastTS']
+        initPos = initPositions[sym]
+        targetPos = initPositions[sym] + trades[sym]
+        exchange = utility.findExchange(sym)
+        maxPos = fitModels[sym].maxPosition
+        liquidityCap = fitModels[sym].liquidityCap
+        liquidity = int(fitModels[sym].target.liquidity)
+        hOpt = round(fitModels[sym].hOpt, 4)
+        notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
+        contractChange = fitModels[sym].target.contractChange
+        symTrade = [desc, bbSym, exchange, side, qty, limitPrice, lastPrice, lastTime, initPos, targetPos, maxPos,
+                    liquidityCap, liquidity, hOpt, notionalPerLot, contractChange]
+        out.append(symTrade)
+
+    return pd.DataFrame(out, columns=cols).set_index('Description')
 
 
 def detectRiskLimits(cfg):
@@ -146,6 +173,7 @@ def detectRiskLimits(cfg):
 
 
 def sendAFBITradeEmail(tradesPath, timeSig):
+    lg.info("Sending tradeFile")
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["matthew.ramanah@sydneyquantitative.com"]  # ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
     sendCC = []  # ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
@@ -154,8 +182,22 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     subject = "PAPER tradeFile"
     message = f"CBCT_{timeSig}"
     filename = f"CBCT_{timeSig}.csv"
-    gmail.sendTradeFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
 
+    gmail.sendFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
+
+    return
+
+
+def sendAFBISummaryEmail(sumPath, timeSig):
+    sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
+    sendTo = ["matthew.ramanah@sydneyquantitative.com"]
+    sendCC = []  # "christian.beulen@afbilp.com"
+    username = sendFrom
+    password = "SydQuantPos23"
+    subject = "CBCT Summary"
+    message = f"CBCT_{timeSig}"
+    filename = f"CBCT_{timeSig}.csv"
+    gmail.sendFile(sumPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
     return
 
 
@@ -163,17 +205,23 @@ def generateAFBITradeFile(cfg, fitModels, md, initPositions, send=True, saveLogs
     # Generate CSV & dict
     trades = utility.generateTrades(fitModels)
     tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions)
-    print(tradeCSV)
+    sumCSV = createSummaryCSV(cfg, fitModels, trades, md, initPositions)
+    print(sumCSV)
 
     # Save to Log & Email
     os.makedirs(f"{logRoot}trades/", exist_ok=True)
     tradesPath = f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
+    os.makedirs(f"{logRoot}summary/", exist_ok=True)
+    sumPath = f"{logRoot}summary/CBCT_{md['timeSig']}.csv"
     if saveLogs:
         tradeCSV.to_csv(tradesPath)
+        sumCSV.to_csv(sumPath)
 
     if send:
         if isDeskManned():
             sendAFBITradeEmail(tradesPath, md['timeSig'])
         else:
-            lg.info("Not sending email as desk is unmanned.")
+            lg.info("Not sending tradeFile as desk is unmanned.")
+        sendAFBISummaryEmail(sumPath, md['timeSig'])
+
     return trades
