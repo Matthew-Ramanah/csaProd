@@ -24,7 +24,7 @@ noDec = 8
 maxAssetDelta = 0.1
 pctSlipTol = 0.1
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
-priceMultipliers = {"HO0": 100}
+priceMultipliers = {"QHO#": 100}
 
 # Run-time options
 cfg_file = root + "models/AFBI/config/iqfRecon.json"
