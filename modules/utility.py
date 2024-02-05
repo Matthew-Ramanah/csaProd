@@ -132,8 +132,8 @@ def generateTrades(fitModels):
     return trades
 
 
-def createTimeSig():
-    timeSig = datetime.datetime.now().strftime('%Y_%m_%d_%H')
+def createTimeSig(timezone='US/Eastern'):
+    timeSig = datetime.datetime.now(pytz.timezone(timezone)).strftime('%Y_%m_%d_%H')
     return timeSig
 
 
@@ -240,6 +240,7 @@ def findTradedSym(sym):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['tradedSym'].values[0]
 
+
 def findDescription(sym):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['description'].values[0]
@@ -248,6 +249,7 @@ def findDescription(sym):
 def findExchange(sym):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['exchange'].values[0]
+
 
 def isAdjSym(sym):
     refData = loadRefData()
