@@ -151,7 +151,7 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         maxPos = fitModels[sym].maxPosition
         liquidityCap = fitModels[sym].liquidityCap
         liquidity = int(fitModels[sym].target.liquidity)
-        hOpt = round(fitModels[sym].hOpt, 4)
+        hOpt = round(fitModels[sym].hOpt, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
         contractChange = fitModels[sym].target.contractChange
         symTrade = [desc, bbSym, exchange, side, qty, limitPrice, lastPrice, lastTime, initPos, targetPos, maxPos,
