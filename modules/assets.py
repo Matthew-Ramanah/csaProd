@@ -5,6 +5,7 @@ from modules import utility
 class asset:
     def __init__(self, sym, target, cfg, seeds, prod):
         self.sym = sym
+        self.adjSym = utility.findAdjSym(sym)
         self.tickSize = utility.findTickSize(sym)
         self.effSpread = utility.findEffSpread(sym)
         self.volumeCutoff = cfg['fitParams'][target]['volumeCutoff'][sym]
@@ -13,6 +14,7 @@ class asset:
         self.lastClose = seeds[f'{sym}_close']
         self.lastTS = utility.formatStringToTs(seeds[f'{self.sym}_lastTS'])
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
+        self.prod = prod
         if prod:
             self.initialised = True
         else:
@@ -78,8 +80,15 @@ class asset:
         self.updateContractState(md)
         return
 
+    def calcAdjustment(self, md):
+        if utility.isAdjSym(self.sym):
+            self.adjustment = 0.0
+        else:
+            self.adjustment = round(md[f'{self.sym}_close'] - md[f'{self.adjSym}_close'], noDec)
+        return
+
     def modelUpdate(self, md):
-        # self.contractChange = self.isContractChange()
+        #self.contractChange = self.isContractChange()
         self.decayCalc()
         self.priceDeltaCalc()
         self.updateVolatility()

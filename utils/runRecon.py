@@ -1,7 +1,6 @@
 from pyConfig import *
 from modules import md, utility, recon
 
-cfg_file = root + "models/AFBI/config/iqfRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 

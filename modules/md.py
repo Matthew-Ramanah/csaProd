@@ -1,4 +1,5 @@
 from pyConfig import *
+from modules import utility
 
 
 def addPrefix(df, sym):
@@ -18,9 +19,18 @@ def loadRawData(sym):
     return addPrefix(raw, sym)
 
 
+def findReconSymbols(cfg):
+    reconSyms = []
+    print(len(reconSyms))
+    for sym in cfg['fitParams']['basket']['symbolsNeeded']:
+        reconSyms.append(utility.findAdjSym(sym))
+    return list(set(reconSyms + cfg['fitParams']['basket']['symbolsNeeded']))
+
+
 def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
     feed = pd.DataFrame()
-    for sym in cfg['fitParams']['basket']['symbolsNeeded']:
+    reconSyms = findReconSymbols(cfg)
+    for sym in reconSyms:
         raw = loadRawData(sym)
         if len(feed) != 0:
             feed = mergeOnEndTS(feed, raw)

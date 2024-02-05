@@ -120,6 +120,7 @@ class assetModel():
         else:
             self.tradeVolume = 0
             self.liquidityCap = 0
+            self.convertHOptToNormedHoldings()
             self.log.append([])
             self.alphasLog.append([])
 
@@ -143,18 +144,22 @@ class assetModel():
     def calcHOpt(self):
         self.calcVar()
         tCost = self.kappa * 0.5 * self.target.effSpread
-        buyBound = np.clip((self.cumAlpha - tCost) / (self.var * self.hScaler), -1, 1)
-        sellBound = np.clip((self.cumAlpha + tCost) / (self.var * self.hScaler), -1, 1)
+        buyBound = (self.cumAlpha - tCost) / self.var
+        sellBound = (self.cumAlpha + tCost) / self.var
 
         if self.hOpt < buyBound:
-            self.hOpt = np.clip(buyBound, self.hOpt, self.hOpt + maxAssetDelta)
+            self.hOpt = buyBound
         elif self.hOpt > sellBound:
-            self.hOpt = np.clip(sellBound, self.hOpt - maxAssetDelta, self.hOpt)
+            self.hOpt = sellBound
 
         return
 
     def calcLiquidityCap(self):
         self.liquidityCap = int(np.clip(self.pRate * self.target.liquidity, 1, self.riskLimits['maxTradeSize']))
+        return
+
+    def convertHOptToNormedHoldings(self):
+        self.normedHoldings = np.clip(self.hOpt / self.hScaler, -1, 1)
         return
 
     @staticmethod
@@ -163,17 +168,15 @@ class assetModel():
             return 0
         return np.clip(holdings / maxPosition, -1, 1) * hScaler
 
-    @staticmethod
-    def convertNormedToSizedHoldings(maxPosition, normedHoldings):
-        return int(maxPosition * normedHoldings)
 
     def calcTradeVolume(self):
-        uncappedDelta = int(self.maxPosition * self.hOpt) - self.initHoldings
-        self.tradeVolume = int(np.clip(uncappedDelta, -self.liquidityCap, self.liquidityCap))
+        sizedHoldings = int(self.maxPosition * self.normedHoldings)
+        self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.liquidityCap, self.liquidityCap))
         return
 
     def calcHoldings(self):
         self.calcHOpt()
+        self.convertHOptToNormedHoldings()
         self.calcLiquidityCap()
         self.calcTradeVolume()
         if not self.prod:
@@ -227,7 +230,7 @@ class assetModel():
     def constructLogs(self):
         self.constructAlphasLog()
         thisLog = [utility.formatTsToString(self.target.lastTS), self.target.contractChange, self.target.close,
-                   self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.hOpt,
+                   self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.normedHoldings,
                    self.initHoldings, self.tradeVolume, self.liquidityCap, self.target.liquidity, self.maxPosition,
                    self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)

@@ -135,7 +135,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
 def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
     limitPrices = findLimitPrices(cfg, md, trades)
     cols = ['Description', 'BB Yellow Key', 'Exchange', 'Side', 'Amount', 'Limit', "refPrice", f'refTime', 'currentPos',
-            'targetPos', 'maxPos', 'maxTradeSize', 'liq', 'hOpt', 'notionalPerLot', 'contractChange']
+            'targetPos', 'maxPos', 'maxTradeSize', 'liq', 'normedPos', 'notionalPerLot', 'contractChange']
     out = []
     for sym in trades:
         desc = utility.findDescription(sym)
@@ -151,11 +151,11 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         maxPos = fitModels[sym].maxPosition
         liquidityCap = fitModels[sym].liquidityCap
         liquidity = int(fitModels[sym].target.liquidity)
-        hOpt = round(fitModels[sym].hOpt, 3)
+        normedHoldings = round(fitModels[sym].normedHoldings, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
         contractChange = fitModels[sym].target.contractChange
         symTrade = [desc, bbSym, exchange, side, qty, limitPrice, lastPrice, lastTime, initPos, targetPos, maxPos,
-                    liquidityCap, liquidity, hOpt, notionalPerLot, contractChange]
+                    liquidityCap, liquidity, normedHoldings, notionalPerLot, contractChange]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Description')

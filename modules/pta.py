@@ -14,7 +14,7 @@ def formatRawLogs(rawLogs):
     for sym in rawLogs:
         fx = utility.findNotionalFx(sym)
         names = [f'lastTS', f'{sym}_contractChange', f'{sym}_close', f'{sym}_timeDelta', f'{sym}_Volatility',
-                 f'{sym}_priceDelta', f'{sym}_CumAlpha', 'hOpt', f'{sym}_InitHoldings', f'{sym}_Trades',
+                 f'{sym}_priceDelta', f'{sym}_CumAlpha', 'normedHoldings', f'{sym}_InitHoldings', f'{sym}_Trades',
                  f'{sym}_maxTradeSize', f'{sym}_Liquidity', f'{sym}_MaxPosition', f'{sym}_notionalPerLot',
                  f'{sym}_{fx}_DailyRate']
         logs[sym] = pd.DataFrame(rawLogs[sym], columns=names)
@@ -130,7 +130,7 @@ def plotLogs(cfg, logs, alphasLogs, symsToPlot):
         axs[0].plot(sells['execTime'], sells['tradePrice'] * tpScaler, "v", color='red', label='sell')
         """
         axs[0].legend(loc='upper left')
-        axs[1].step(log.index, log[f'hOpt'], label='hOpt', where='post', color='green')
+        axs[1].step(log.index, log[f'normedHoldings'], label='normedHoldings', where='post', color='green')
         axs[1].axhline(y=0, color='black', linestyle='--')
         axs[1].legend(loc='upper left')
         for name in cfg['fitParams'][sym]['alphaWeights']:
