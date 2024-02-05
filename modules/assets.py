@@ -13,10 +13,9 @@ class asset:
         self.vol = seeds[f'{sym}_Volatility']
         self.lastClose = seeds[f'{sym}_close']
         self.lastTS = utility.formatStringToTs(seeds[f'{self.sym}_lastTS'])
-        self.lastAdjustment = 0
+        self.lastAdjustment = seeds[f'{sym}_adjustment']
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
-        self.prod = prod
-        if self.prod:
+        if prod:
             self.initialised = True
         else:
             self.initialised = False
@@ -54,11 +53,14 @@ class asset:
         self.timeDelta = 0
         self.priceDelta = 0
         self.lastClose = md[f'{self.sym}_close']
-        self.lastAdjustment = 0
+        self.lastAdjustment = 0.0
         return
 
     def calcAdjustment(self, md):
-        self.adjustment = round(md[f'{self.sym}_close'] - md[f'{self.adjSym}_close'], noDec)
+        if utility.isAdjSym(self.sym):
+            self.adjustment = 0.0
+        else:
+            self.adjustment = round(md[f'{self.sym}_close'] - md[f'{self.adjSym}_close'], noDec)
         return
 
     def isContractChange(self):
@@ -94,7 +96,7 @@ class asset:
         return
 
     def modelUpdate(self, md):
-        self.contractChange = self.isContractChange()
+        # self.contractChange = self.isContractChange()
         self.decayCalc()
         self.priceDeltaCalc()
         self.updateVolatility()
@@ -107,7 +109,7 @@ class asset:
         return
 
     def updateLog(self):
-        thisLog = [utility.formatTsToString(self.lastTS), self.contractChange, self.close, self.vol]
+        thisLog = [utility.formatTsToString(self.lastTS), self.adjustment, self.close, self.vol]
         self.log.append(thisLog)
         return
 

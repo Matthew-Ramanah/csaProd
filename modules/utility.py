@@ -78,6 +78,7 @@ def constructResearchSeeds(resFeed, cfg, location=0):
             seeds[target][f'{sym}_close'] = resFeed[target][f'{sym}_close'].iloc[location]
             seeds[target][f'{sym}_Volatility'] = resFeed[target][f'{sym}_Volatility'].iloc[location]
             seeds[target][f'{sym}_lastTS'] = resFeed[target][f'{sym}_lastTS'].iloc[location].strftime('%Y_%m_%d_%H')
+            seeds[target][f'{sym}_adjustment'] = float(resFeed[target][f'{sym}_adjustment'].iloc[location])
 
         for ft in cfg['fitParams'][target]['feats']:
             name = ft.replace('feat_', '')
@@ -248,3 +249,10 @@ def findDescription(sym):
 def findExchange(sym):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['exchange'].values[0]
+
+def isAdjSym(sym):
+    refData = loadRefData()
+    adjSyms = list(refData['iqfAdjusted'].values)
+    if sym in adjSyms:
+        return True
+    return False

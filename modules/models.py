@@ -44,6 +44,7 @@ class assetModel():
         self.maxPosition = self.calcMaxPosition()
         return
 
+
     def calcFxRate(self):
         fx = utility.findNotionalFx(self.target.sym)
         if fx == 'USD':
@@ -236,6 +237,7 @@ class assetModel():
     def updateSeeds(self):
         self.seedDump = {f"{self.target.sym}_close": self.target.close,
                          f"{self.target.sym}_Volatility": self.target.vol,
+                         f"{self.target.sym}_adjustment": self.target.adjustment,
                          f"{self.target.sym}_lastTS": self.target.lastTS.strftime('%Y_%m_%d_%H'),
                          f"{self.target.sym}_Liquidity": self.target.liquidity}
 
@@ -243,6 +245,7 @@ class assetModel():
             self.seedDump[f'{pred}_close'] = self.predictors[pred].close
             self.seedDump[f'{pred}_Volatility'] = self.predictors[pred].vol
             self.seedDump[f'{pred}_lastTS'] = self.predictors[pred].lastTS.strftime('%Y_%m_%d_%H')
+            self.seedDump[f"{pred}_adjustment"] = self.predictors[pred].adjustment
 
         for name in self.alphaDict:
             self.seedDump[f'{name}_smoothSeed'] = self.alphaDict[name].smoothVal

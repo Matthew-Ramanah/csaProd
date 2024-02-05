@@ -80,7 +80,7 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot):
     for sym in symsToPlot:
         fts = cfg['fitParams'][sym]['feats']
         preds = list(fitModels[sym].predictors.keys())
-        reconCols = [f'{sym}_Volatility', f'{sym}_Holdings', f'{sym}_BasketHoldings', f'{sym}_notionalPerLot']
+        reconCols = [f'{sym}_Volatility', f'{sym}_Holdings', f'{sym}_BasketHoldings', f'{sym}_contractChange']
         prod = prodLogs[sym]['model']
         res = researchFeeds[sym]
         recon = researchFeeds['recon']

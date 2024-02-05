@@ -14,6 +14,7 @@ class feed():
     def __init__(self, cfg):
         self.aggregation = str(cfg['inputParams']['aggFreq'])
         self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded']
+        self.symbolsNeeded.sort()
 
         return
 
