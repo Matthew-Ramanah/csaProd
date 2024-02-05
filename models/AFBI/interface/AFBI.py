@@ -175,11 +175,11 @@ def detectRiskLimits(cfg):
 def sendAFBITradeEmail(tradesPath, timeSig):
     lg.info("Sending tradeFile")
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["matthew.ramanah@sydneyquantitative.com"]  # ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
-    sendCC = []  # ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
+    sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
+    sendCC = ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
     username = sendFrom
     password = "SydQuantPos23"
-    subject = "PAPER tradeFile"
+    subject = "CBCT tradeFile"
     message = f"CBCT_{timeSig}"
     filename = f"CBCT_{timeSig}.csv"
 
