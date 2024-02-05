@@ -5,7 +5,6 @@ from modules import utility
 class asset:
     def __init__(self, sym, target, cfg, seeds, prod):
         self.sym = sym
-        self.adjSym = utility.findAdjSym(sym)
         self.tickSize = utility.findTickSize(sym)
         self.effSpread = utility.findEffSpread(sym)
         self.volumeCutoff = cfg['fitParams'][target]['volumeCutoff'][sym]
@@ -13,7 +12,6 @@ class asset:
         self.vol = seeds[f'{sym}_Volatility']
         self.lastClose = seeds[f'{sym}_close']
         self.lastTS = utility.formatStringToTs(seeds[f'{self.sym}_lastTS'])
-        self.lastAdjustment = seeds[f'{sym}_adjustment']
         self.volInvTau = np.float64(1 / (cfg['inputParams']['volHL'] * logTwo))
         if prod:
             self.initialised = True
@@ -36,12 +34,10 @@ class asset:
     def updateContractState(self, md):
         self.close = md[f'{self.sym}_close']
         self.lastTS = md[f'{self.sym}_lastTS']
-        self.calcAdjustment(md)
         return
 
     def maintainContractState(self):
         self.close = self.lastClose
-        self.adjustment = self.lastAdjustment
         self.contractChange = False
         self.timeDelta = 0
         self.priceDelta = 0
@@ -53,22 +49,9 @@ class asset:
         self.timeDelta = 0
         self.priceDelta = 0
         self.lastClose = md[f'{self.sym}_close']
-        self.lastAdjustment = 0.0
-        return
-
-    def calcAdjustment(self, md):
-        if utility.isAdjSym(self.sym):
-            self.adjustment = 0.0
-        else:
-            self.adjustment = round(md[f'{self.sym}_close'] - md[f'{self.adjSym}_close'], noDec)
         return
 
     def isContractChange(self):
-        if self.sym == self.adjSym:
-            return False
-        if self.lastAdjustment != self.adjustment:
-            self.lastAdjustment = self.adjustment
-            return True
         return False
 
     def decayCalc(self):
@@ -109,7 +92,7 @@ class asset:
         return
 
     def updateLog(self):
-        thisLog = [utility.formatTsToString(self.lastTS), self.adjustment, self.close, self.vol]
+        thisLog = [utility.formatTsToString(self.lastTS), self.contractChange, self.close, self.vol]
         self.log.append(thisLog)
         return
 
