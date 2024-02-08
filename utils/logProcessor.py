@@ -8,6 +8,6 @@ logDir = logRoot  # paperLogRoot  #
 logs = pta.loadLogs(cfg, logDir)
 alphasLogs = pta.loadAlphasLogs(cfg, logDir)
 
-symsToPlot = ["@FV#"]  # cfg['targets']
+symsToPlot = ["@C#", "@S#"]  # cfg['targets']
 pta.plotLogs(cfg, logs, alphasLogs, symsToPlot)
 lg.info("Completed.")

@@ -22,7 +22,7 @@ class feed():
         """
         Request futures symbol chain from IQF and pick up the current back month symbol
         """
-        message = f"CFU,{baseSym},FGHJKMNQUVZ,0123456789,2"
+        message = f"CFU,{baseSym},,0123456789,2"
         self.sendSocketMessage(message)
         symList = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
         return symList[n]
