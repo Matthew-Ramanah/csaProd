@@ -240,6 +240,11 @@ def findTradedSym(sym):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['tradedSym'].values[0]
 
+def findIqfTradedSym(unadjustedSym):
+    expiry = tradedSyms[unadjustedSym]
+    rootSym = unadjustedSym.replace("#", '')
+    return f'{rootSym}{expiry}'
+
 
 def findDescription(sym):
     refData = loadRefData()

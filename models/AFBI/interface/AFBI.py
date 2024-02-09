@@ -87,7 +87,8 @@ def findLimitPrices(cfg, md, trades):
             sign = np.sign(trades[sym])
             tCost = sign * 0.5 * utility.findEffSpread(sym)
             slippage = sign * findTickSlipTol(cfg, sym) * utility.findTickSize(sym)
-            limitPrices[sym] = round(md[f'{sym}_close'] + tCost + slippage, noDec)
+            tradedSym = utility.findIqfTradedSym(sym)
+            limitPrices[sym] = round(md[f'{tradedSym}_close'] + tCost + slippage, noDec)
 
             if sym in list(priceMultipliers.keys()):
                 limitPrices[sym] = round(priceMultipliers[sym] * limitPrices[sym], noDec)
@@ -98,6 +99,13 @@ def findLimitPrices(cfg, md, trades):
 def createCancelTime(md):
     cancelAfter = pd.Timedelta(minutes=30)
     return pd.Timestamp(datetime.datetime.strptime(md['timeSig'], '%Y_%m_%d_%H')) + cancelAfter
+
+
+def findRefPrice(md, sym):
+    tradedSym = utility.findIqfTradedSym(sym)
+    if sym in list(priceMultipliers.keys()):
+        return round(priceMultipliers[sym] * md[f'{tradedSym}_close'], noDec)
+    return md[f'{tradedSym}_close']
 
 
 def createTradeCSV(cfg, fitModels, trades, md, initPositions):
@@ -117,7 +125,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
         qty = trades[sym]
         side = findSide(qty)
         limitPrice = limitPrices[sym]
-        lastPrice = md[f'{sym}_close']
+        refPrice = findRefPrice(md, sym)
         lastTime = md[f'{sym}_lastTS']
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
@@ -125,17 +133,25 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
         liquidityCap = fitModels[sym].liquidityCap
-        symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, lastPrice, lastTime,
+        symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, refPrice, lastTime,
                     cancelTime, initPos, targetPos, desc, exchange, maxPos, liquidityCap]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
+def findNotionalExposure(fitModels, sym, targetPos):
+    raw = fitModels[sym].notionalPerLot * targetPos
+    if np.sign(raw) < 0:
+        return '-${:,}'.format(abs(raw))
+    return '${:,}'.format(raw)
+
+
 def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
     limitPrices = findLimitPrices(cfg, md, trades)
-    cols = ['Description', 'BB Yellow Key', 'Exchange', 'Side', 'Amount', 'Limit', "refPrice", f'refTime', 'currentPos',
-            'targetPos', 'maxPos', 'maxTradeSize', 'liq', 'normedPos', 'notionalPerLot', 'contractChange']
+    cols = ['Description', 'notionalExposure', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
+            'notionalPerLot', 'tradeSide', 'tradeQty', 'limitPrice', "refPrice", f'refTime', 'BB Yellow Key',
+            'Exchange', 'contractChange']
     out = []
     for sym in trades:
         desc = utility.findDescription(sym)
@@ -153,9 +169,10 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         liquidity = int(fitModels[sym].target.liquidity)
         normedHoldings = round(fitModels[sym].normedHoldings, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
+        notionalExposure = findNotionalExposure(fitModels, sym, targetPos)
         contractChange = fitModels[sym].target.contractChange
-        symTrade = [desc, bbSym, exchange, side, qty, limitPrice, lastPrice, lastTime, initPos, targetPos, maxPos,
-                    liquidityCap, liquidity, normedHoldings, notionalPerLot, contractChange]
+        symTrade = [desc, notionalExposure, normedHoldings, liquidity, initPos, targetPos, maxPos, liquidityCap,
+                    notionalPerLot, side, qty, limitPrice, lastPrice, lastTime, bbSym, exchange, contractChange]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Description')
