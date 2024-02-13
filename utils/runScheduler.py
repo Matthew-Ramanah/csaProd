@@ -33,7 +33,7 @@ def dummyJob():
 
 
 schedule.every().sunday.at("08:55").do(startWeeklyJobs)
-schedule.every().saturday.at("08:01").do(clearWeeklyJobs)
+schedule.every().saturday.at("08:05").do(clearWeeklyJobs)
 lg.info("Starting scheduler...")
 while True:
     schedule.run_pending()
