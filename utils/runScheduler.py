@@ -15,14 +15,25 @@ def callRunLive():
     return
 
 
-def callRunPaper():
-    lg.info("Calling runPaper...")
-    exec(open('runPaper.py').read())
+def startWeeklyJobs():
+    lg.info("Starting Weekly Jobs...")
+    schedule.every().hour.at(":00").do(callRunLive).tag('weekly')
     return
 
 
-schedule.every().hour.at(":00").do(callRunLive)
+def clearWeeklyJobs():
+    lg.info("Clearing Weekly Jobs...")
+    schedule.clear('weekly')
+    return
 
+
+def dummyJob():
+    lg.info("Running dummyJob")
+    return
+
+
+schedule.every().sunday.at("08:55").do(startWeeklyJobs)
+schedule.every().saturday.at("08:01").do(clearWeeklyJobs)
 lg.info("Starting scheduler...")
 while True:
     schedule.run_pending()
