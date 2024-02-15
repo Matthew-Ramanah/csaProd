@@ -1,9 +1,9 @@
 description,assetClass,exchange,iqfAdjusted,iqfUnadjusted,tradeable,tradedSym,notionalMultiplier,notionalCurrency,effSpread,tickSize,tickCurrency,tickValue,oldSymbol
 Soybean Oil,Commodity,CME,@BO#C,@BO#,Y,BOF4 Comdty,600,USD,0.02,0.01,USD,6,ZL0
-Corn,Commodity,CME,@C#C,@C#,Y,C H4 Comdty,50,USD,0.5,0.25,USD,12.5,ZC0
-SOYBEANS,Commodity,CME,@S#C,@S#,Y,S H4 Comdty,50,USD,0.5,0.25,USD,12.5,ZS0
+Corn,Commodity,CME,@C#C,@C#,Y,C K4 Comdty,50,USD,0.5,0.25,USD,12.5,ZC0
+SOYBEANS,Commodity,CME,@S#C,@S#,Y,S K4 Comdty,50,USD,0.5,0.25,USD,12.5,ZS0
 SOY MEAL,Commodity,CME,@SM#C,@SM#,Y,SMK4 Comdty,100,USD,0.2,0.1,USD,10,ZM0
-WHEAT SRW,Commodity,CME,@W#C,@W#,Y,W H4 Comdty,50,USD,0.5,0.25,USD,12.5,ZW0
+WHEAT SRW,Commodity,CME,@W#C,@W#,Y,W K4 Comdty,50,USD,0.5,0.25,USD,12.5,ZW0
 WHEAT HRW,Commodity,CME,@KW#C,@KW#,Y,KWK4 Comdty,50,USD,0.5,0.25,USD,12.5,KE0
 LIVE CATTLE,Commodity,CME,@LE#C,@LE#,Y,LCJ4 Comdty,400,USD,0.05,0.025,USD,10,LE0
 Feeder Cattle,Commodity,CME,@GF#C,@GF#,Y,GFH4 Comdty,500,USD,0.1,0.025,USD,12.5,GF0
@@ -14,7 +14,7 @@ Silver,Commodity,CME,QSI#C,QSI#,N,,,,,,,,SI0
 Palladium,Commodity,CME,QPA#C,QPA#,Y,,100,USD,2,0.5,USD,50,PA0
 Platinum,Commodity,CME,QPL#C,QPL#,Y,,50,USD,0.4,0.1,USD,5,PL0
 RBOB Gasoline,Commodity,CME,QRB#C,QRB#,Y,RBH4 Comdty,42000,USD,0.0008,0.0001,USD,4.2,RB0
-LIGHT CRUDE,Commodity,CME,QCL#C,QCL#,Y,CLH4 Comdty,1000,USD,0.02,0.01,USD,10,CL0
+LIGHT CRUDE,Commodity,CME,QCL#C,QCL#,Y,CLJ4 Comdty,1000,USD,0.02,0.01,USD,10,CL0
 NY H ULSD,Commodity,CME,QHO#C,QHO#,Y,HOJ4 Comdty,42000,USD,0.0008,0.0001,USD,4.20,HO0
 Henry Hub Natural Gas,Commodity,CME,QNG#C,QNG#,Y,NGH4 Comdty,10000,USD,0.002,0.001,USD,10,NG0
 ICE CANOLA,Commodity,ICE,@RS#C,@RS#,Y,RSK4 Comdty,20,CAD,0.8,0.1,CAD,2,RS0
