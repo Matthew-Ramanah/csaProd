@@ -36,6 +36,6 @@ schedule.every().monday.at("08:55").do(startWeeklyJobs)
 schedule.every().saturday.at("08:05").do(clearWeeklyJobs)
 
 lg.info("Starting scheduler...")
+startWeeklyJobs()
 while True:
-    startWeeklyJobs()
     schedule.run_pending()
