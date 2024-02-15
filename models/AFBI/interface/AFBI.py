@@ -34,7 +34,7 @@ def detectAFBIPositions(cfg):
     notDetected = []
     positions = {}
     for sym in cfg['targets']:
-        tradedSym = utility.findTradedSym(sym)
+        tradedSym = utility.findBBTradedSym(sym)
         if tradedSym in dfPositions['BB Yellow Key'].values:
             row = np.where(dfPositions['BB Yellow Key'] == tradedSym)[0][0]
             positions[sym] = int(dfPositions.iloc[row]['Notional Quantity'])
@@ -121,7 +121,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
             'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
-        bbSym = utility.findTradedSym(sym)
+        bbSym = utility.findBBTradedSym(sym)
         qty = trades[sym]
         side = findSide(qty)
         limitPrice = limitPrices[sym]
@@ -155,7 +155,7 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
     out = []
     for sym in trades:
         desc = utility.findDescription(sym)
-        bbSym = utility.findTradedSym(sym)
+        bbSym = utility.findBBTradedSym(sym)
         qty = trades[sym]
         side = findSide(qty)
         limitPrice = limitPrices[sym]
@@ -182,7 +182,7 @@ def detectRiskLimits(cfg):
     dfLimits = pd.read_csv(riskPath)
     riskLimits = {}
     for sym in cfg['targets']:
-        tradedSym = utility.findTradedSym(sym)
+        tradedSym = utility.findBBTradedSym(sym)
         row = np.where(dfLimits['Bloom Ticker'] == tradedSym)[0][0]
         riskLimits[sym] = {"maxPosition": int(dfLimits.iloc[row]['maxPosition']),
                            "maxTradeSize": int(dfLimits.iloc[row]['maxTradeSize'])}

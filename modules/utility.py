@@ -236,14 +236,14 @@ def findAdjSym(sym):
     return refData.loc[refData['iqfUnadjusted'] == sym]['iqfAdjusted'].values[0]
 
 
-def findTradedSym(sym):
+def findBBTradedSym(sym):
     refData = loadRefData()
-    return refData.loc[refData['iqfUnadjusted'] == sym]['tradedSym'].values[0]
+    return refData.loc[refData['iqfUnadjusted'] == sym]['bbTradedSym'].values[0]
 
-def findIqfTradedSym(unadjustedSym):
-    expiry = tradedSyms[unadjustedSym]
-    rootSym = unadjustedSym.replace("#", '')
-    return f'{rootSym}{expiry}'
+
+def findIqfTradedSym(sym):
+    refData = loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['iqfTradedSym'].values[0]
 
 
 def findDescription(sym):

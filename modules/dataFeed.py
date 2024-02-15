@@ -13,14 +13,14 @@ class feed():
 
     def __init__(self, cfg):
         self.aggregation = str(cfg['inputParams']['aggFreq'])
-        self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded'] + self.findIqfTradedSyms()
+        self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded'] + self.findIqfTradedSyms(cfg)
         self.symbolsNeeded.sort()
 
         return
 
-    def findIqfTradedSyms(self):
+    def findIqfTradedSyms(self, cfg):
         iqfTradedSyms = []
-        for sym in tradedSyms:
+        for sym in cfg['targets']:
             iqfTradedSyms.append(utility.findIqfTradedSym(sym))
         return iqfTradedSyms
 
