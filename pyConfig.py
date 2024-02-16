@@ -27,7 +27,7 @@ dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Fr
 priceMultipliers = {"QHO#": 100}
 
 # Run-time options
-cfg_file = root + "models/AFBI/config/iqfRecon.json"
+cfg_file = root + "models/AFBI/config/expandedRecon.json"
 interfaceRoot = root + "models/AFBI/interface/"
 
 # Global Packages
@@ -78,25 +78,3 @@ pd.options.mode.chained_assignment = None
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 locale.setlocale(locale.LC_ALL, '')
-
-tradedSyms = {
-    "@TY#": "H24",
-    "@FV#": "H24",
-    "BTP#": "H24",
-    "SPI#": "H24",
-    "@ES#": "H24",
-    "SW#": "H24",
-    "ALJ#": "H24",
-    "@C#": "H24",
-    "@S#": "H24",
-    "@SM#": "K24",
-    "@W#": "H24",
-    "@KW#": "K24",
-    "@LE#": "J24",
-    "QCL#": "H24",
-    "QHO#": "J24",
-    "@RS#": "K24",
-    "QW#": "K24",
-    "@CT#": "K24",
-    "@KC#": "K24"
-}

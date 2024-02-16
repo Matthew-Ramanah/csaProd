@@ -4,7 +4,7 @@ from modules import md, utility, recon
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-symsToPlot = cfg['targets']
+symsToPlot = cfg['targets'][0:2]
 cfg['targets'] = symsToPlot
 plot = True
 
