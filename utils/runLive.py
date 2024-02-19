@@ -19,7 +19,7 @@ initPositions = common.detectPositions(cfg)
 fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, prod=True)
 
 # Pull Market Data
-md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=1)
+md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=0)
 
 # Update Models
 fitModels = utility.updateModels(fitModels, md)
