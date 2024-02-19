@@ -6,7 +6,7 @@ with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 send = False
-saveModel = False
+saveModel = True
 saveLogs = False
 
 # Load Seeds
@@ -19,7 +19,7 @@ initPositions = common.detectPositions(cfg)
 fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, prod=True)
 
 # Pull Market Data
-md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=0)
+md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=1)
 
 # Update Models
 fitModels = utility.updateModels(fitModels, md)
@@ -28,6 +28,6 @@ fitModels = utility.updateModels(fitModels, md)
 trades = common.generateTradeFile(cfg, fitModels, md, initPositions, send=send, saveLogs=saveLogs)
 
 if saveModel:
-    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
+    modelState = utility.saveModelState(cfg, initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
 
 lg.info("Completed.")

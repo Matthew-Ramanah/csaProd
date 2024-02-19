@@ -82,10 +82,12 @@ class feed():
             if self.recvDataIsSane(self.dataMap[sym]):
                 md[f'{sym}_lastTS'] = pd.Timestamp(self.dataMap[sym][0]) + datetime.timedelta(hours=syntheticIncrement)
                 md[f'{sym}_close'] = float(self.dataMap[sym][4])
+                md[f'{sym}_cumDailyVolume'] = int(self.dataMap[sym][5])
                 md[f'{sym}_intervalVolume'] = int(self.dataMap[sym][6])
             else:
                 md[f'{sym}_lastTS'] = np.nan
                 md[f'{sym}_close'] = np.nan
+                md[f'{sym}_cumDailyVolume'] = np.nan
                 md[f'{sym}_intervalVolume'] = 0
         md['timeSig'] = utility.createTimeSig()
         lg.info(f"MD Constructed for timeSig: {md['timeSig']}")

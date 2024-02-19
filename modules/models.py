@@ -241,7 +241,8 @@ class assetModel():
         self.seedDump = {f"{self.target.sym}_close": self.target.close,
                          f"{self.target.sym}_Volatility": self.target.vol,
                          f"{self.target.sym}_lastTS": self.target.lastTS.strftime('%Y_%m_%d_%H'),
-                         f"{self.target.sym}_Liquidity": self.target.liquidity}
+                         f"{self.target.sym}_Liquidity": self.target.liquidity,
+                         f"{self.target.sym}_cumDailyVolume" : self.lastCumVol}
 
         for pred in self.predictors:
             self.seedDump[f'{pred}_close'] = self.predictors[pred].close

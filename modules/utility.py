@@ -89,7 +89,7 @@ def constructResearchSeeds(resFeed, cfg, location=0):
     return seeds
 
 
-def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
+def saveModelState(cfg, initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
     modelState = {
         "initSeeds": initSeeds,
         "initPositions": initPositions,
@@ -104,7 +104,7 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
         modelState['logs'][sym] = fitModels[sym].log[-1]
         modelState['alphasLog'][sym] = fitModels[sym].alphasLog
 
-    with open(f'{interfaceRoot}modelState.json', 'w') as f:
+    with open(f"{interfaceRoot}{cfg['investor']}/modelState.json", 'w') as f:
         json.dump(modelState, f)
     lg.info("Saved Model State.")
 
@@ -154,12 +154,19 @@ def formatTsToString(ts):
     return ts.strftime('%Y_%m_%d_%H')
 
 
+def modelStatePath(cfg):
+    if cfg["investor"] == "AFBI":
+        return
+    else:
+        raise ValueError("Unknown Investor")
+
+
 def loadInitSeeds(cfg):
     """
     Load Seed Dump if it exists, else seed with research seeds
     """
     try:
-        with open(f'{interfaceRoot}modelState.json', 'r') as f:
+        with open(f"{interfaceRoot}{cfg['investor']}/modelState.json", 'r') as f:
             oldModelState = json.load(f)
         return oldModelState['seedDump']
     except:
@@ -193,16 +200,6 @@ def updateModels(fitModels, md):
     dataFeed.monitorMdhSanity(fitModels, md)
     # dataFeed.monitorContractChanges(fitModels)
     return fitModels
-
-
-def findLogDirFileName(paper):
-    if not paper:
-        logDir = logRoot
-        filename = 'modelState'
-    else:
-        logDir = paperLogRoot
-        filename = 'paperState'
-    return logDir, filename
 
 
 def findTickSize(target):

@@ -55,8 +55,8 @@ def findEmailTime(filename):
 
 
 def pullAFBIPositions():
-    afbiCredentials = interfaceRoot + "credentials.json"
-    afbiToken = interfaceRoot + "token.json"
+    afbiCredentials = f"{interfaceRoot}AFBI/credentials.json"
+    afbiToken = f"{interfaceRoot}AFBI/token.json"
     afbiEmailRegex = "CBCT EOD POSITIONS"
 
     service = gmail.get_gmail_service(afbiCredentials, afbiToken)
@@ -108,9 +108,9 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
         desc = utility.findDescription(sym)
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
-        liquidityCap = fitModels[sym].liquidityCap
+        maxTradeSize = fitModels[sym].maxTradeSize
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, refPrice, lastTime,
-                    cancelTime, initPos, targetPos, desc, exchange, maxPos, liquidityCap]
+                    cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
@@ -120,7 +120,7 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
     limitPrices = findLimitPrices(cfg, md, trades)
     cols = ['Description', 'notionalExposure', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
             'notionalPerLot', 'tradeSide', 'tradeQty', 'limitPrice', "refPrice", f'refTime', 'BB Yellow Key',
-            'Exchange', 'contractChange']
+            'Exchange']
     out = []
     for sym in trades:
         desc = utility.findDescription(sym)
@@ -134,14 +134,13 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         targetPos = initPositions[sym] + trades[sym]
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
-        liquidityCap = fitModels[sym].liquidityCap
+        maxTradeSize = fitModels[sym].maxTradeSize
         liquidity = int(fitModels[sym].target.liquidity)
         normedHoldings = round(fitModels[sym].normedHoldings, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
         notionalExposure = common.findNotionalExposure(fitModels, sym, targetPos)
-        contractChange = fitModels[sym].target.contractChange
-        symTrade = [desc, notionalExposure, normedHoldings, liquidity, initPos, targetPos, maxPos, liquidityCap,
-                    notionalPerLot, side, qty, limitPrice, lastPrice, lastTime, bbSym, exchange, contractChange]
+        symTrade = [desc, notionalExposure, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
+                    notionalPerLot, side, qty, limitPrice, lastPrice, lastTime, bbSym, exchange]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Description')
