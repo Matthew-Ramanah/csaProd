@@ -22,13 +22,13 @@ scoreFactor = 8
 dollarFmt = '${x:,.0f}'
 noDec = 8
 maxAssetDelta = 0.1
-pctSlipTol = 0.1
+pctSlipTol = 0
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
 priceMultipliers = {"QHO#": 100}
 
 # Run-time options
-cfg_file = root + "models/AFBI/config/expandedRecon.json"
-interfaceRoot = root + "models/AFBI/interface/"
+cfg_file = root + "config/expandedRecon.json"
+interfaceRoot = root + "interfaces/"
 
 # Global Packages
 import pandas as pd
@@ -69,6 +69,7 @@ from email.utils import formatdate
 from email import encoders
 from dateutil import parser
 import locale
+from functools import lru_cache
 
 # Environment Variables
 lg.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=lg.INFO, datefmt='%H:%M:%S')

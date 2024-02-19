@@ -9,7 +9,6 @@ class assetModel():
         self.alphasLog = []
 
         self.staleAssets = []
-        self.contractChanges = []
         self.prod = prod
         if self.prod:
             self.seeding = False
@@ -25,13 +24,14 @@ class assetModel():
         self.notionalMultiplier = utility.findNotionalMultiplier(targetSym)
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
         self.riskLimits = riskLimits[targetSym]
+        self.closeTime = cfg['fitParams'][targetSym]['closeTime']
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, seeds)
         self.initialiseAlphas(cfg, params, seeds)
 
         # Initialisations
-        self.tradingDate = utility.findTsSeedDate(seeds[targetSym][f'{targetSym}_lastTS'])
+        self.lastCumVol = seeds[targetSym][f'{targetSym}_cumDailyVolume']
         self.updateNotionals()
         self.initHoldings = initHoldings
         self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxPosition, self.hScaler)
@@ -70,12 +70,14 @@ class assetModel():
             self.alphaDict[name].firstSaneUpdate()
         return
 
-    def checkDateChange(self, md):
-        thisDate = pd.Timestamp(md[f'{self.target.sym}_lastTS']).date()
-        if thisDate != self.tradingDate:
-            self.tradingDate = thisDate
-            return True
-        return False
+    def checkSessionChange(self, md):
+        thisCumVol = md[f'{self.target.sym}_cumDailyVolume']
+        if thisCumVol < self.lastCumVol:
+            seshChange = True
+        else:
+            seshChange = False
+        self.lastCumVol = thisCumVol
+        return seshChange
 
     def checkStaleAssets(self):
         self.staleAssets = []
@@ -84,15 +86,6 @@ class assetModel():
         for pred in self.predictors:
             if self.predictors[pred].stale:
                 self.staleAssets.append(self.predictors[pred].sym)
-        return
-
-    def checkContractChanges(self):
-        self.contractChanges = []
-        if self.target.contractChange:
-            self.contractChanges.append(self.target.sym)
-        for pred in self.predictors:
-            if self.predictors[pred].contractChange:
-                self.contractChanges.append(self.predictors[pred].sym)
         return
 
     def mdUpdate(self, md):
@@ -111,21 +104,20 @@ class assetModel():
 
             self.updateAlphas()
 
-            if self.checkDateChange(md):
+            if self.checkSessionChange(md):
                 self.updateNotionals()
 
-            self.calcHoldings()
+            self.calcHoldings(md)
             self.constructLogs()
 
         else:
             self.tradeVolume = 0
-            self.liquidityCap = 0
+            self.maxTradeSize = 0
             self.convertHOptToNormedHoldings()
             self.log.append([])
             self.alphasLog.append([])
 
         self.checkStaleAssets()
-        self.checkContractChanges()
         self.updateSeeds()
 
         return
@@ -143,7 +135,7 @@ class assetModel():
 
     def calcHOpt(self):
         self.calcVar()
-        tCost = self.kappa * 0.5 * self.target.effSpread
+        tCost = self.kappa * self.target.effSpread
         buyBound = (self.cumAlpha - tCost) / self.var
         sellBound = (self.cumAlpha + tCost) / self.var
 
@@ -154,8 +146,17 @@ class assetModel():
 
         return
 
-    def calcLiquidityCap(self):
-        self.liquidityCap = int(np.clip(self.pRate * self.target.liquidity, 1, self.riskLimits['maxTradeSize']))
+    def justClosed(self, md):
+        if int(md['timeSig'][-2:]) == self.closeTime:
+            closed = True
+            self.maxTradeSize = 0
+            self.tradeVolume = 0
+        else:
+            closed = False
+        return closed
+
+    def calcMaxTradeSize(self):
+        self.maxTradeSize = int(np.clip(self.pRate * self.target.liquidity, 1, self.riskLimits['maxTradeSize']))
         return
 
     def convertHOptToNormedHoldings(self):
@@ -168,17 +169,17 @@ class assetModel():
             return 0
         return np.clip(holdings / maxPosition, -1, 1) * hScaler
 
-
     def calcTradeVolume(self):
         sizedHoldings = int(self.maxPosition * self.normedHoldings)
-        self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.liquidityCap, self.liquidityCap))
+        self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))
         return
 
-    def calcHoldings(self):
+    def calcHoldings(self, md):
         self.calcHOpt()
         self.convertHOptToNormedHoldings()
-        self.calcLiquidityCap()
-        self.calcTradeVolume()
+        if not self.justClosed(md):
+            self.calcMaxTradeSize()
+            self.calcTradeVolume()
         if not self.prod:
             self.updateReconPosition()
         return
@@ -229,9 +230,9 @@ class assetModel():
 
     def constructLogs(self):
         self.constructAlphasLog()
-        thisLog = [utility.formatTsToString(self.target.lastTS), self.target.contractChange, self.target.close,
+        thisLog = [utility.formatTsToString(self.target.lastTS), self.lastCumVol, self.target.close,
                    self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.normedHoldings,
-                   self.initHoldings, self.tradeVolume, self.liquidityCap, self.target.liquidity, self.maxPosition,
+                   self.initHoldings, self.tradeVolume, self.maxTradeSize, self.target.liquidity, self.maxPosition,
                    self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
         return

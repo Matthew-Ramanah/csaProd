@@ -5,7 +5,6 @@ from modules import utility
 class asset:
     def __init__(self, sym, target, cfg, seeds, prod):
         self.sym = sym
-        self.adjSym = utility.findAdjSym(sym)
         self.tickSize = utility.findTickSize(sym)
         self.effSpread = utility.findEffSpread(sym)
         self.volumeCutoff = cfg['fitParams'][target]['volumeCutoff'][sym]
@@ -20,14 +19,12 @@ class asset:
         else:
             self.initialised = False
         self.stale = False
-        self.contractChange = False
 
     def mdhSane(self, md):
         """
         DataFilters
         """
-        if md[f'{self.sym}_lastTS'] <= self.lastTS or math.isnan(md[f'{self.sym}_close']) or md[
-            f'{self.sym}_intervalVolume'] < self.volumeCutoff:
+        if md[f'{self.sym}_lastTS'] == self.lastTS or md[f'{self.sym}_intervalVolume'] < self.volumeCutoff:
             self.stale = True
             return False
         self.stale = False
@@ -40,34 +37,23 @@ class asset:
 
     def maintainContractState(self):
         self.close = self.lastClose
-        self.contractChange = False
         self.timeDelta = 0
         self.priceDelta = 0
         return
 
     def firstSaneUpdate(self, md):
         self.initialised = True
-        self.contractChange = True
         self.timeDelta = 0
         self.priceDelta = 0
         self.lastClose = md[f'{self.sym}_close']
         return
 
-    def isContractChange(self):
-        return False
-
     def decayCalc(self):
-        if self.contractChange:
-            self.timeDelta = 0
-        else:
-            self.timeDelta = 1
+        self.timeDelta = 1
         return
 
     def priceDeltaCalc(self):
-        if self.contractChange:
-            self.priceDelta = 0
-        else:
-            self.priceDelta = self.close - self.lastClose
+        self.priceDelta = self.close - self.lastClose
         self.lastClose = self.close
         return
 
@@ -80,15 +66,8 @@ class asset:
         self.updateContractState(md)
         return
 
-    def calcAdjustment(self, md):
-        if utility.isAdjSym(self.sym):
-            self.adjustment = 0.0
-        else:
-            self.adjustment = round(md[f'{self.sym}_close'] - md[f'{self.adjSym}_close'], noDec)
-        return
 
     def modelUpdate(self, md):
-        #self.contractChange = self.isContractChange()
         self.decayCalc()
         self.priceDeltaCalc()
         self.updateVolatility()
@@ -101,7 +80,7 @@ class asset:
         return
 
     def updateLog(self):
-        thisLog = [utility.formatTsToString(self.lastTS), self.contractChange, self.close, self.vol]
+        thisLog = [utility.formatTsToString(self.lastTS), self.stale, self.close, self.vol]
         self.log.append(thisLog)
         return
 

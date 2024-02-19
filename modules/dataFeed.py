@@ -109,12 +109,3 @@ def monitorMdhSanity(fitModels, md):
         lg.info(f"{i} MD Update Not Sane. Last Updated: {md[f'{i}_lastTS']}")
     return
 
-
-def monitorContractChanges(fitModels):
-    contractChanges = []
-    for sym in fitModels:
-        contractChanges += fitModels[sym].contractChanges
-    contractChanges = list(set(contractChanges))
-    for i in contractChanges:
-        lg.info(f"{i} contractChange Detected!")
-    return

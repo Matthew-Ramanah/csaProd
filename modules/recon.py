@@ -13,7 +13,7 @@ def processLogs(fitModels):
         logs[sym] = {}
         fx = utility.findNotionalFx(sym)
         logs[sym]['model'] = pd.DataFrame(fitModels[sym].log,
-                                          columns=[f'lastTS', f'{sym}_contractChange', f'{sym}_close',
+                                          columns=[f'lastTS', f'{sym}_cumDailyVolume', f'{sym}_close',
                                                    f'{sym}_timeDelta', f'{sym}_Volatility', f'{sym}_priceDelta',
                                                    f'{sym}_CumAlpha', f'{sym}_Holdings', f'{sym}_InitHoldings',
                                                    f'{sym}_Trades', f'{sym}_LiquidityCaps', f'{sym}_Liquidity',
@@ -30,7 +30,7 @@ def processLogs(fitModels):
 
         for pred in fitModels[sym].predictors:
             logs[sym][pred] = pd.DataFrame(fitModels[sym].predictors[pred].log,
-                                           columns=[f'{pred}_lastTS', f'{pred}_contractChange', f'{pred}_close',
+                                           columns=[f'{pred}_lastTS', f'{pred}_stale', f'{pred}_close',
                                                     f'{pred}_Volatility']).dropna()
             logs[sym][pred] = setLogIndex(logs[sym][pred], col=f'{pred}_lastTS')
 
@@ -76,46 +76,56 @@ def reconcile(prodLogs, researchFeeds, fitModels):
     return
 
 
-def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot):
+def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot, model=False, alphas=False, preds=False):
     for sym in symsToPlot:
-        fts = cfg['fitParams'][sym]['feats']
-        preds = list(fitModels[sym].predictors.keys())
-        reconCols = [f'{sym}_Volatility', f'{sym}_Holdings', f'{sym}_BasketHoldings', f'{sym}_contractChange']
         prod = prodLogs[sym]['model']
         res = researchFeeds[sym]
-        recon = researchFeeds['recon']
 
-        fig, axs = plt.subplots(len(reconCols) + 1, sharex='all')
-        fig.suptitle(f"{sym} Reconciliation")
-        axs[0].step(res.index, res[f'{sym}_close'], label=f'Research: {sym}_close', where='post')
-        axs[0].step(prod.index, prod[f'{sym}_close'], label=f'Prod: {sym}_close', where='post')
-        axs[0].legend(loc='upper right')
+        if model:
+            recon = researchFeeds['recon']
+            reconCols = [f'{sym}_Volatility', f'{sym}_CumAlpha', f'{sym}_Holdings', f'{sym}_BasketHoldings']
+            fig, axs = plt.subplots(1 + len(reconCols), sharex='all')
+            fig.suptitle(f"{sym} Model Recon")
+            axs[0].step(res.index, res[f'{sym}_close'], label=f'Research: {sym}_close', where='post')
+            axs[0].step(prod.index, prod[f'{sym}_close'], label=f'Prod: {sym}_close', where='post')
+            axs[0].legend(loc='upper right')
+            for i, col in enumerate(reconCols):
+                axs[i + 1].step(recon.index, recon[col], label=f'Research: {col}', where='post')
+                axs[i + 1].step(prod.index, prod[col], label=f'Prod: {col}', where='post')
+                axs[i + 1].legend(loc='upper right')
+            fig.show()
 
-        # Plot Model
-        for i, col in enumerate(reconCols):
-            axs[i + 1].step(recon.index, recon[col], label=f'Research: {col}', where='post')
-            axs[i + 1].step(prod.index, prod[col], label=f'Prod: {col}', where='post')
-            axs[i + 1].legend(loc='upper right')
-
-        if False:
-            # Plot Alphas
+        if alphas:
+            fts = cfg['fitParams'][sym]['feats']
+            fig, axs = plt.subplots(1 + len(fts), sharex='all')
+            fig.suptitle(f"{sym} Alphas Recon")
+            axs[0].step(res.index, res[f'{sym}_close'], label=f'Research: {sym}_close', where='post')
+            axs[0].step(prod.index, prod[f'{sym}_close'], label=f'Prod: {sym}_close', where='post')
+            axs[0].legend(loc='upper right')
             for j, ft in enumerate(fts):
                 name = ft.replace('feat_', '')
-                axs[i + j + 2].step(res.index, res[ft], label=f'Research: {ft}', where='post')
-                axs[i + j + 2].step(prodLogs[sym][name].index, prodLogs[sym][name][ft], label=f'Prod: {ft}',
-                                    where='post')
-                axs[i + j + 2].axhline(y=0, color='black', linestyle='--')
-                axs[i + j + 2].legend(loc='upper right')
+                axs[j + 1].step(res.index, res[ft], label=f'Research: {ft}', where='post')
+                axs[j + 1].step(prodLogs[sym][name].index, prodLogs[sym][name][ft], label=f'Prod: {ft}',
+                                where='post')
+                axs[j + 1].axhline(y=0, color='black', linestyle='--')
+                axs[j + 1].legend(loc='upper right')
+            fig.show()
 
-        if False:
-            for k, pred in enumerate(preds):
-                axs[i + k + 2].step(res.index, res[f'{pred}_close'], label=f'Research: {pred}_close', where='post')
-                axs[i + k + 2].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_close'],
-                                    label=f'Prod: {pred}_close', where='post')
-                axs[i + k + 2].axhline(y=0, color='black', linestyle='--')
-                axs[i + k + 2].legend(loc='upper right')
+        if preds:
+            predSyms = list(fitModels[sym].predictors.keys())
+            fig, axs = plt.subplots(1 + len(predSyms), sharex='all')
+            fig.suptitle(f"{sym} Preds Recon")
+            axs[0].step(res.index, res[f'{sym}_close'], label=f'Research: {sym}_close', where='post')
+            axs[0].step(prod.index, prod[f'{sym}_close'], label=f'Prod: {sym}_close', where='post')
+            axs[0].legend(loc='upper right')
+            for k, pred in enumerate(predSyms):
+                axs[k + 1].step(res.index, res[f'{pred}_close'], label=f'Research: {pred}_close', where='post')
+                axs[k + 1].step(prodLogs[sym][pred].index, prodLogs[sym][pred][f'{pred}_close'],
+                                label=f'Prod: {pred}_close', where='post')
+                axs[k + 1].axhline(y=0, color='black', linestyle='--')
+                axs[k + 1].legend(loc='upper right')
+            fig.show()
 
-        fig.show()
     return
 
 

@@ -19,18 +19,9 @@ def loadRawData(sym):
     return addPrefix(raw, sym)
 
 
-def findReconSymbols(cfg):
-    reconSyms = []
-    print(len(reconSyms))
-    for sym in cfg['fitParams']['basket']['symbolsNeeded']:
-        reconSyms.append(utility.findAdjSym(sym))
-    return list(set(reconSyms + cfg['fitParams']['basket']['symbolsNeeded']))
-
-
 def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
     feed = pd.DataFrame()
-    reconSyms = findReconSymbols(cfg)
-    for sym in reconSyms:
+    for sym in cfg['fitParams']['basket']['symbolsNeeded']:
         raw = loadRawData(sym)
         if len(feed) != 0:
             feed = mergeOnEndTS(feed, raw)
@@ -38,7 +29,13 @@ def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
             feed = raw
 
     feed = sampleFeed(feed, researchFeeds, maxUpdates=maxUpdates)
+    feed = syntheticTimeSig(feed)
     lg.info(f"Synthetic Market Data Feed Loaded")
+    return feed
+
+
+def syntheticTimeSig(feed):
+    feed['timeSig'] = feed.index.strftime('%Y_%m_%d_%H')
     return feed
 
 

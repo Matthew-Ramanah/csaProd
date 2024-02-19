@@ -57,7 +57,7 @@ class alpha:
         return
 
     def updateVolatility(self):
-        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, (self.zVal) ** 2, self.decay, self.volInvTau))
+        self.vol = np.sqrt(utility.emaUpdate(self.vol ** 2, self.zVal ** 2, self.decay, self.volInvTau))
         return
 
     def updateFeatVal(self):
