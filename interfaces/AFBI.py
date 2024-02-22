@@ -5,11 +5,11 @@ from interfaces import common
 timezone = 'US/Eastern'
 
 unmannedHours = {
-    "Monday": ("04:00", "08:00"),
-    "Tuesday": ("04:00", "08:00"),
-    "Wednesday": ("04:00", "08:00"),
-    "Thursday": ("04:00", "08:00"),
-    "Friday": ("04:00", "08:00"),
+    "Monday": ("03:55", "07:55"),
+    "Tuesday": ("03:55", "07:55"),
+    "Wednesday": ("03:55", "07:55"),
+    "Thursday": ("03:55", "07:55"),
+    "Friday": ("03:55", "07:55"),
     "Saturday": ("00:00", "23:59"),
     "Sunday": ("00:00", "17:55")
 }
