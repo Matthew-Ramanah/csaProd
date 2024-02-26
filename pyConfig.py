@@ -80,8 +80,8 @@ lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 locale.setlocale(locale.LC_ALL, '')
 
 tradedSyms = {
-    "@TY#": "H24",
-    "@FV#": "H24",
+    "@TY#": "M24",
+    "@FV#": "M24",
     "BTP#": "H24",
     "SPI#": "H24",
     "@ES#": "H24",
