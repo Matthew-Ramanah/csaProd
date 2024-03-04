@@ -91,7 +91,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
     cancelTime = common.createCancelTime(md)
     stopPrice = ""
     tif = "DAY"
-    broker = "GSFT"
+    broker = "SGXE"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
             "refPrice", f'refTime', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
             'Exchange', 'maxPosition', 'maxTradeSize']
