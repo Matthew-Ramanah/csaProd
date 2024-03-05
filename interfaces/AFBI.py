@@ -118,7 +118,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
 
 def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
     limitPrices = findLimitPrices(cfg, md, trades)
-    cols = ['Description', 'notionalExposure', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
+    cols = ['Description', 'targetNotional', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
             'notionalPerLot', 'tradeSide', 'tradeQty', 'limitPrice', "refPrice", f'refTime', 'BB Yellow Key',
             'Exchange']
     out = []
@@ -138,8 +138,8 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         liquidity = int(fitModels[sym].target.liquidity)
         normedHoldings = round(fitModels[sym].normedHoldings, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
-        notionalExposure = common.findNotionalExposure(fitModels, sym, targetPos)
-        symTrade = [desc, notionalExposure, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
+        targetNotional = common.findTargetExposure(fitModels, sym, targetPos)
+        symTrade = [desc, targetNotional, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
                     notionalPerLot, side, qty, limitPrice, lastPrice, lastTime, bbSym, exchange]
         out.append(symTrade)
 

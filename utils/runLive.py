@@ -7,7 +7,7 @@ with open(cfg_file, 'r') as f:
 
 send = False
 saveModel = True
-saveLogs = False
+saveLogs = True
 
 # Load Seeds
 initSeeds = utility.loadInitSeeds(cfg)

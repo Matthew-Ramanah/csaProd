@@ -25,7 +25,7 @@ def generateTradeFile(cfg, fitModels, md, initPositions, send, saveLogs):
         raise ValueError("Unknown Investor")
     return trades
 
-def findNotionalExposure(fitModels, sym, targetPos):
+def findTargetExposure(fitModels, sym, targetPos):
     raw = fitModels[sym].notionalPerLot * targetPos
     if np.sign(raw) < 0:
         return '-${:,}'.format(abs(raw))
