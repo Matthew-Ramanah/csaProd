@@ -4,13 +4,9 @@ root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
 logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/"
 # logRoot = "C:/Users/Owner/Desktop/CBCT/logs/"
 
-rawDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/recon/"
-proDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/processed/"
-refDataPath = f'{root}csaRefData.csv'
-riskPath = f"{root}models/AFBI/config/riskLimits.csv"
-paperLogRoot = f"{logRoot}Paper/"
-liveLogRoot = f"{logRoot}Live/"
-tradeBlotterRoot = f"{logRoot}tradeBlotter/"
+dataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/"
+proDataRoot = f"{dataRoot}processed/"
+rawDataRoot = f"{dataRoot}raw/"
 
 # Constants
 signalCap = 3
@@ -22,13 +18,13 @@ scoreFactor = 8
 dollarFmt = '${x:,.0f}'
 noDec = 8
 maxAssetDelta = 0.1
-pctSlipTol = 0.1
+pctSlipTol = 0
 dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
 priceMultipliers = {"QHO#": 100}
 
 # Run-time options
-cfg_file = root + "models/AFBI/config/iqfRecon.json"
-interfaceRoot = root + "models/AFBI/interface/"
+cfg_file = root + "config/expandedRecon.json"
+interfaceRoot = root + "interfaces/"
 
 # Global Packages
 import pandas as pd
@@ -69,6 +65,7 @@ from email.utils import formatdate
 from email import encoders
 from dateutil import parser
 import locale
+from functools import lru_cache
 
 # Environment Variables
 lg.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=lg.INFO, datefmt='%H:%M:%S')
@@ -78,25 +75,3 @@ pd.options.mode.chained_assignment = None
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 lg.getLogger('googleapicliet.discovery_cache').setLevel(lg.ERROR)
 locale.setlocale(locale.LC_ALL, '')
-
-tradedSyms = {
-    "@TY#": "M24",
-    "@FV#": "M24",
-    "BTP#": "H24",
-    "SPI#": "H24",
-    "@ES#": "H24",
-    "SW#": "H24",
-    "ALJ#": "H24",
-    "@C#": "K24",
-    "@S#": "K24",
-    "@SM#": "K24",
-    "@W#": "K24",
-    "@KW#": "K24",
-    "@LE#": "J24",
-    "QCL#": "J24",
-    "QHO#": "J24",
-    "@RS#": "K24",
-    "QW#": "K24",
-    "@CT#": "K24",
-    "@KC#": "K24"
-}

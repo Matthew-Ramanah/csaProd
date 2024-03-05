@@ -1,14 +1,15 @@
 from pyConfig import *
 from modules import utility, gmail
+from interfaces import common
 
 timezone = 'US/Eastern'
 
 unmannedHours = {
-    "Monday": ("04:00", "08:00"),
-    "Tuesday": ("04:00", "08:00"),
-    "Wednesday": ("04:00", "08:00"),
-    "Thursday": ("04:00", "08:00"),
-    "Friday": ("04:00", "08:00"),
+    "Monday": ("03:55", "07:55"),
+    "Tuesday": ("03:55", "07:55"),
+    "Wednesday": ("03:55", "07:55"),
+    "Thursday": ("03:55", "07:55"),
+    "Friday": ("03:55", "07:55"),
     "Saturday": ("00:00", "23:59"),
     "Sunday": ("00:00", "17:55")
 }
@@ -34,7 +35,7 @@ def detectAFBIPositions(cfg):
     notDetected = []
     positions = {}
     for sym in cfg['targets']:
-        tradedSym = utility.findTradedSym(sym)
+        tradedSym = utility.findBBTradedSym(sym)
         if tradedSym in dfPositions['BB Yellow Key'].values:
             row = np.where(dfPositions['BB Yellow Key'] == tradedSym)[0][0]
             positions[sym] = int(dfPositions.iloc[row]['Notional Quantity'])
@@ -54,8 +55,8 @@ def findEmailTime(filename):
 
 
 def pullAFBIPositions():
-    afbiCredentials = interfaceRoot + "credentials.json"
-    afbiToken = interfaceRoot + "token.json"
+    afbiCredentials = f"{interfaceRoot}AFBI/credentials.json"
+    afbiToken = f"{interfaceRoot}AFBI/token.json"
     afbiEmailRegex = "CBCT EOD POSITIONS"
 
     service = gmail.get_gmail_service(afbiCredentials, afbiToken)
@@ -65,19 +66,6 @@ def pullAFBIPositions():
     return latestEmail['data']
 
 
-def findSide(qty):
-    if qty < 0:
-        return "S"
-    elif qty > 0:
-        return "B"
-    else:
-        return ""
-
-
-def findTickSlipTol(cfg, sym):
-    return int(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym])
-
-
 def findLimitPrices(cfg, md, trades):
     limitPrices = {}
     for sym in trades:
@@ -85,8 +73,8 @@ def findLimitPrices(cfg, md, trades):
             limitPrices[sym] = ""
         else:
             sign = np.sign(trades[sym])
-            tCost = sign * 0.5 * utility.findEffSpread(sym)
-            slippage = sign * findTickSlipTol(cfg, sym) * utility.findTickSize(sym)
+            tCost = sign * utility.findEffSpread(sym)
+            slippage = sign * common.findTickSlipTol(cfg, sym) * utility.findTickSize(sym)
             tradedSym = utility.findIqfTradedSym(sym)
             limitPrices[sym] = round(md[f'{tradedSym}_close'] + tCost + slippage, noDec)
 
@@ -96,23 +84,11 @@ def findLimitPrices(cfg, md, trades):
     return limitPrices
 
 
-def createCancelTime(md):
-    cancelAfter = pd.Timedelta(minutes=30)
-    return pd.Timestamp(datetime.datetime.strptime(md['timeSig'], '%Y_%m_%d_%H')) + cancelAfter
-
-
-def findRefPrice(md, sym):
-    tradedSym = utility.findIqfTradedSym(sym)
-    if sym in list(priceMultipliers.keys()):
-        return round(priceMultipliers[sym] * md[f'{tradedSym}_close'], noDec)
-    return md[f'{tradedSym}_close']
-
-
 def createTradeCSV(cfg, fitModels, trades, md, initPositions):
     afbiAccount = "CBCTBULK"
     orderType = "LMT"
     limitPrices = findLimitPrices(cfg, md, trades)
-    cancelTime = createCancelTime(md)
+    cancelTime = common.createCancelTime(md)
     stopPrice = ""
     tif = "DAY"
     broker = "SGXE"
@@ -121,43 +97,36 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
             'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
-        bbSym = utility.findTradedSym(sym)
+        bbSym = utility.findBBTradedSym(sym)
         qty = trades[sym]
-        side = findSide(qty)
+        side = common.findSide(qty)
         limitPrice = limitPrices[sym]
-        refPrice = findRefPrice(md, sym)
+        refPrice = common.findRefPrice(md, sym)
         lastTime = md[f'{sym}_lastTS']
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
         desc = utility.findDescription(sym)
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
-        liquidityCap = fitModels[sym].liquidityCap
+        maxTradeSize = fitModels[sym].maxTradeSize
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, refPrice, lastTime,
-                    cancelTime, initPos, targetPos, desc, exchange, maxPos, liquidityCap]
+                    cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
-def findNotionalExposure(fitModels, sym, targetPos):
-    raw = fitModels[sym].notionalPerLot * targetPos
-    if np.sign(raw) < 0:
-        return '-${:,}'.format(abs(raw))
-    return '${:,}'.format(raw)
-
-
 def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
     limitPrices = findLimitPrices(cfg, md, trades)
-    cols = ['Description', 'notionalExposure', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
+    cols = ['Description', 'targetNotional', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
             'notionalPerLot', 'tradeSide', 'tradeQty', 'limitPrice', "refPrice", f'refTime', 'BB Yellow Key',
-            'Exchange', 'contractChange']
+            'Exchange']
     out = []
     for sym in trades:
         desc = utility.findDescription(sym)
-        bbSym = utility.findTradedSym(sym)
+        bbSym = utility.findBBTradedSym(sym)
         qty = trades[sym]
-        side = findSide(qty)
+        side = common.findSide(qty)
         limitPrice = limitPrices[sym]
         lastPrice = md[f'{sym}_close']
         lastTime = md[f'{sym}_lastTS']
@@ -165,28 +134,16 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         targetPos = initPositions[sym] + trades[sym]
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
-        liquidityCap = fitModels[sym].liquidityCap
+        maxTradeSize = fitModels[sym].maxTradeSize
         liquidity = int(fitModels[sym].target.liquidity)
         normedHoldings = round(fitModels[sym].normedHoldings, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
-        notionalExposure = findNotionalExposure(fitModels, sym, targetPos)
-        contractChange = fitModels[sym].target.contractChange
-        symTrade = [desc, notionalExposure, normedHoldings, liquidity, initPos, targetPos, maxPos, liquidityCap,
-                    notionalPerLot, side, qty, limitPrice, lastPrice, lastTime, bbSym, exchange, contractChange]
+        targetNotional = common.findTargetExposure(fitModels, sym, targetPos)
+        symTrade = [desc, targetNotional, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
+                    notionalPerLot, side, qty, limitPrice, lastPrice, lastTime, bbSym, exchange]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Description')
-
-
-def detectRiskLimits(cfg):
-    dfLimits = pd.read_csv(riskPath)
-    riskLimits = {}
-    for sym in cfg['targets']:
-        tradedSym = utility.findTradedSym(sym)
-        row = np.where(dfLimits['Bloom Ticker'] == tradedSym)[0][0]
-        riskLimits[sym] = {"maxPosition": int(dfLimits.iloc[row]['maxPosition']),
-                           "maxTradeSize": int(dfLimits.iloc[row]['maxTradeSize'])}
-    return riskLimits
 
 
 def sendAFBITradeEmail(tradesPath, timeSig):

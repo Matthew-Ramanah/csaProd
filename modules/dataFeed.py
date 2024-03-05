@@ -13,14 +13,14 @@ class feed():
 
     def __init__(self, cfg):
         self.aggregation = str(cfg['inputParams']['aggFreq'])
-        self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded'] + self.findIqfTradedSyms()
+        self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded'] + self.findIqfTradedSyms(cfg)
         self.symbolsNeeded.sort()
 
         return
 
-    def findIqfTradedSyms(self):
+    def findIqfTradedSyms(self, cfg):
         iqfTradedSyms = []
-        for sym in tradedSyms:
+        for sym in cfg['targets']:
             iqfTradedSyms.append(utility.findIqfTradedSym(sym))
         return iqfTradedSyms
 
@@ -82,10 +82,12 @@ class feed():
             if self.recvDataIsSane(self.dataMap[sym]):
                 md[f'{sym}_lastTS'] = pd.Timestamp(self.dataMap[sym][0]) + datetime.timedelta(hours=syntheticIncrement)
                 md[f'{sym}_close'] = float(self.dataMap[sym][4])
+                md[f'{sym}_cumDailyVolume'] = int(self.dataMap[sym][5])
                 md[f'{sym}_intervalVolume'] = int(self.dataMap[sym][6])
             else:
                 md[f'{sym}_lastTS'] = np.nan
                 md[f'{sym}_close'] = np.nan
+                md[f'{sym}_cumDailyVolume'] = np.nan
                 md[f'{sym}_intervalVolume'] = 0
         md['timeSig'] = utility.createTimeSig()
         lg.info(f"MD Constructed for timeSig: {md['timeSig']}")
@@ -109,12 +111,3 @@ def monitorMdhSanity(fitModels, md):
         lg.info(f"{i} MD Update Not Sane. Last Updated: {md[f'{i}_lastTS']}")
     return
 
-
-def monitorContractChanges(fitModels):
-    contractChanges = []
-    for sym in fitModels:
-        contractChanges += fitModels[sym].contractChanges
-    contractChanges = list(set(contractChanges))
-    for i in contractChanges:
-        lg.info(f"{i} contractChange Detected!")
-    return

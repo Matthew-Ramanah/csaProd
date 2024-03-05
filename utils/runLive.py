@@ -1,23 +1,22 @@
 from pyConfig import *
 from modules import dataFeed, utility
-from models.AFBI.interface import AFBI
+from interfaces import common
 
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 send = False
-saveModel = False
-saveLogs = False
+saveModel = True
+saveLogs = True
 
 # Load Seeds
 initSeeds = utility.loadInitSeeds(cfg)
 
 # Load Positions & Limits
-initPositions = AFBI.detectAFBIPositions(cfg)
-riskLimits = AFBI.detectRiskLimits(cfg)
+initPositions = common.detectPositions(cfg)
 
 # Initialise models
-fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, riskLimits=riskLimits, prod=True)
+fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, prod=True)
 
 # Pull Market Data
 md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=0)
@@ -26,9 +25,9 @@ md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=0)
 fitModels = utility.updateModels(fitModels, md)
 
 # Generate tradeFile
-trades = AFBI.generateAFBITradeFile(cfg, fitModels, md, initPositions, send=send, saveLogs=saveLogs)
+trades = common.generateTradeFile(cfg, fitModels, md, initPositions, send=send, saveLogs=saveLogs)
 
 if saveModel:
-    modelState = utility.saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
+    modelState = utility.saveModelState(cfg, initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
 
 lg.info("Completed.")

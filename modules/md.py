@@ -13,32 +13,29 @@ def mergeOnEndTS(feed, raw):
     return pd.merge_asof(feed, raw, on='lastTS', direction='backward').dropna()
 
 
-def loadRawData(sym):
-    raw = pd.read_hdf(f"{rawDataRoot}/{sym}.h5", key=sym)
+def loadRawData(sym, cfg):
+    raw = pd.read_hdf(f"{rawDataRoot}{cfg['dataTag']}/{sym}.h5", key=sym)
     raw = raw[~raw.index.duplicated(keep='first')]
     return addPrefix(raw, sym)
 
 
-def findReconSymbols(cfg):
-    reconSyms = []
-    print(len(reconSyms))
-    for sym in cfg['fitParams']['basket']['symbolsNeeded']:
-        reconSyms.append(utility.findAdjSym(sym))
-    return list(set(reconSyms + cfg['fitParams']['basket']['symbolsNeeded']))
-
-
 def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
     feed = pd.DataFrame()
-    reconSyms = findReconSymbols(cfg)
-    for sym in reconSyms:
-        raw = loadRawData(sym)
+    for sym in cfg['fitParams']['basket']['symbolsNeeded']:
+        raw = loadRawData(sym, cfg)
         if len(feed) != 0:
             feed = mergeOnEndTS(feed, raw)
         else:
             feed = raw
 
     feed = sampleFeed(feed, researchFeeds, maxUpdates=maxUpdates)
+    feed = syntheticTimeSig(feed)
     lg.info(f"Synthetic Market Data Feed Loaded")
+    return feed
+
+
+def syntheticTimeSig(feed):
+    feed['timeSig'] = feed.index.strftime('%Y_%m_%d_%H')
     return feed
 
 

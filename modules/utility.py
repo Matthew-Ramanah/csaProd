@@ -2,6 +2,7 @@ from pyConfig import *
 from modules import models, dataFeed
 
 
+@lru_cache(maxsize=16)
 def findSmoothFactor(invTau, decay):
     return np.exp(-invTau * decay)
 
@@ -25,11 +26,12 @@ def loadResearchFeeds(cfg):
     return researchFeeds
 
 
-def initialiseModels(cfg, seeds, positions, riskLimits, prod=False):
+def initialiseModels(cfg, seeds, positions, prod=False):
     fitModels = {}
     for sym in cfg['targets']:
         fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], seeds=seeds,
-                                           initHoldings=positions[sym], riskLimits=riskLimits, prod=prod)
+                                           initHoldings=positions[sym],
+                                           riskLimits=cfg['fitParams']['basket']['riskLimits'], prod=prod)
     lg.info("Models Initialised.")
     return fitModels
 
@@ -42,10 +44,6 @@ def findNotionalFx(target):
 def findFxSym(fx):
     refData = loadRefData()
     return refData.loc[refData['description'] == f'{fx}=']['iqfUnadjusted'].values[0]
-
-
-def findBasisFrontSym(backSym):
-    return backSym.replace('1', '0')
 
 
 def findFtSyms(target, ft):
@@ -72,7 +70,10 @@ def constructResearchSeeds(resFeed, cfg, location=0):
     """
     seeds = {}
     for target in cfg['targets']:
-        seeds[target] = {f"{target}_Liquidity": resFeed['recon'][f'{target}_Liquidity'].iloc[location]}
+        seeds[target] = {
+            f"{target}_Liquidity": resFeed['recon'][f'{target}_Liquidity'].iloc[location],
+            f"{target}_cumDailyVolume": resFeed['recon'][f'{target}_cumDailyVolume'].iloc[location]
+        }
         symsNeeded = findSymsNeeded(cfg, target)
         for sym in symsNeeded:
             seeds[target][f'{sym}_close'] = resFeed[target][f'{sym}_close'].iloc[location]
@@ -88,7 +89,7 @@ def constructResearchSeeds(resFeed, cfg, location=0):
     return seeds
 
 
-def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
+def saveModelState(cfg, initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
     modelState = {
         "initSeeds": initSeeds,
         "initPositions": initPositions,
@@ -103,7 +104,7 @@ def saveModelState(initSeeds, initPositions, md, trades, fitModels, saveLogs=Tru
         modelState['logs'][sym] = fitModels[sym].log[-1]
         modelState['alphasLog'][sym] = fitModels[sym].alphasLog
 
-    with open(f'{interfaceRoot}modelState.json', 'w') as f:
+    with open(f"{interfaceRoot}{cfg['investor']}/modelState.json", 'w') as f:
         json.dump(modelState, f)
     lg.info("Saved Model State.")
 
@@ -153,14 +154,19 @@ def formatTsToString(ts):
     return ts.strftime('%Y_%m_%d_%H')
 
 
-def loadInitSeeds(cfg, paper=False):
+def modelStatePath(cfg):
+    if cfg["investor"] == "AFBI":
+        return
+    else:
+        raise ValueError("Unknown Investor")
+
+
+def loadInitSeeds(cfg):
     """
     Load Seed Dump if it exists, else seed with research seeds
     """
     try:
-        _, filename = findLogDirFileName(paper)
-
-        with open(f'{interfaceRoot}{filename}.json', 'r') as f:
+        with open(f"{interfaceRoot}{cfg['investor']}/modelState.json", 'r') as f:
             oldModelState = json.load(f)
         return oldModelState['seedDump']
     except:
@@ -192,18 +198,8 @@ def updateModels(fitModels, md):
         fitModels[sym].mdUpdate(md)
 
     dataFeed.monitorMdhSanity(fitModels, md)
-    dataFeed.monitorContractChanges(fitModels)
+    # dataFeed.monitorContractChanges(fitModels)
     return fitModels
-
-
-def findLogDirFileName(paper):
-    if not paper:
-        logDir = logRoot
-        filename = 'modelState'
-    else:
-        logDir = paperLogRoot
-        filename = 'paperState'
-    return logDir, filename
 
 
 def findTickSize(target):
@@ -236,14 +232,14 @@ def findAdjSym(sym):
     return refData.loc[refData['iqfUnadjusted'] == sym]['iqfAdjusted'].values[0]
 
 
-def findTradedSym(sym):
+def findBBTradedSym(sym):
     refData = loadRefData()
-    return refData.loc[refData['iqfUnadjusted'] == sym]['tradedSym'].values[0]
+    return refData.loc[refData['iqfUnadjusted'] == sym]['bbTradedSym'].values[0]
 
-def findIqfTradedSym(unadjustedSym):
-    expiry = tradedSyms[unadjustedSym]
-    rootSym = unadjustedSym.replace("#", '')
-    return f'{rootSym}{expiry}'
+
+def findIqfTradedSym(sym):
+    refData = loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['iqfTradedSym'].values[0]
 
 
 def findDescription(sym):
