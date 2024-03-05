@@ -4,13 +4,9 @@ root = "C:/Users/matth/PycharmProjects/SydneyQuantitative/csaProd/"
 logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/"
 # logRoot = "C:/Users/Owner/Desktop/CBCT/logs/"
 
-rawDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/recon/"
-proDataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/processed/"
-refDataPath = f'{root}csaRefData.csv'
-riskPath = f"{root}models/AFBI/config/riskLimits.csv"
-paperLogRoot = f"{logRoot}Paper/"
-liveLogRoot = f"{logRoot}Live/"
-tradeBlotterRoot = f"{logRoot}tradeBlotter/"
+dataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/"
+proDataRoot = f"{dataRoot}processed/"
+rawDataRoot = f"{dataRoot}raw/"
 
 # Constants
 signalCap = 3

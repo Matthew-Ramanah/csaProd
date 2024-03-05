@@ -13,8 +13,8 @@ def mergeOnEndTS(feed, raw):
     return pd.merge_asof(feed, raw, on='lastTS', direction='backward').dropna()
 
 
-def loadRawData(sym):
-    raw = pd.read_hdf(f"{rawDataRoot}/{sym}.h5", key=sym)
+def loadRawData(sym, cfg):
+    raw = pd.read_hdf(f"{rawDataRoot}{cfg['dataTag']}/{sym}.h5", key=sym)
     raw = raw[~raw.index.duplicated(keep='first')]
     return addPrefix(raw, sym)
 
@@ -22,7 +22,7 @@ def loadRawData(sym):
 def loadSyntheticMD(cfg, researchFeeds, maxUpdates):
     feed = pd.DataFrame()
     for sym in cfg['fitParams']['basket']['symbolsNeeded']:
-        raw = loadRawData(sym)
+        raw = loadRawData(sym, cfg)
         if len(feed) != 0:
             feed = mergeOnEndTS(feed, raw)
         else:

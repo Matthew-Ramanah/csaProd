@@ -10,17 +10,6 @@ def findRefPrice(md, sym):
     return md[f'{tradedSym}_close']
 
 
-def detectRiskLimits(cfg):
-    dfLimits = pd.read_csv(riskPath)
-    riskLimits = {}
-    for sym in cfg['targets']:
-        tradedSym = utility.findBBTradedSym(sym)
-        row = np.where(dfLimits['Bloom Ticker'] == tradedSym)[0][0]
-        riskLimits[sym] = {"maxPosition": int(dfLimits.iloc[row]['maxPosition']),
-                           "maxTradeSize": int(dfLimits.iloc[row]['maxTradeSize'])}
-    return riskLimits
-
-
 def detectPositions(cfg):
     if cfg["investor"] == "AFBI":
         initPositions = AFBI.detectAFBIPositions(cfg)

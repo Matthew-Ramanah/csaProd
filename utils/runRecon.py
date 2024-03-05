@@ -4,7 +4,7 @@ from modules import md, utility, recon
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-symsToPlot = cfg['targets'][0:20]
+symsToPlot = cfg['targets'][0:2]
 cfg['targets'] = symsToPlot
 plot = True
 
@@ -15,7 +15,7 @@ initPositions = recon.initialisePositions(cfg)
 fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=initPositions, prod=False)
 
 # Market Data
-prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=5000)
+prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=50000)
 
 # Models
 fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
