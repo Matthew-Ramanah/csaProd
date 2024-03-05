@@ -150,7 +150,7 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     lg.info("Sending tradeFile")
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
-    sendCC = ["bill.passias@afbillc.com", "christian.beulen@afbilp.com", "matthew.ramanah@sydneyquantitative.com"]
+    sendCC = ["matthew.ramanah@sydneyquantitative.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com"]
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"
@@ -165,7 +165,7 @@ def sendAFBITradeEmail(tradesPath, timeSig):
 def sendAFBISummaryEmail(sumPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["matthew.ramanah@sydneyquantitative.com"]
-    sendCC = []  # "christian.beulen@afbilp.com"
+    sendCC = []
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT Summary"
@@ -191,11 +191,11 @@ def generateAFBITradeFile(cfg, fitModels, md, initPositions, send=True, saveLogs
         tradeCSV.to_csv(tradesPath)
         sumCSV.to_csv(sumPath)
 
-    if send:
-        if isDeskManned():
-            sendAFBITradeEmail(tradesPath, md['timeSig'])
-        else:
-            lg.info("Not sending tradeFile as desk is unmanned.")
-        sendAFBISummaryEmail(sumPath, md['timeSig'])
+        if send:
+            if isDeskManned():
+                sendAFBITradeEmail(tradesPath, md['timeSig'])
+            else:
+                lg.info("Not sending tradeFile as desk is unmanned.")
+            sendAFBISummaryEmail(sumPath, md['timeSig'])
 
     return trades
