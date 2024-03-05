@@ -23,7 +23,11 @@ dayOfWeekMap = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Fr
 priceMultipliers = {
     "QHO#": 100,
     "QRB#": 100,
-    "QHG#": 100
+    "QHG#": 100,
+    "@AD#": 100,
+    "@BP#": 100,
+    "@EU#": 100,
+    "@JY#": 10000
 }
 
 # Run-time options

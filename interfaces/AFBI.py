@@ -128,7 +128,7 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         qty = trades[sym]
         side = common.findSide(qty)
         limitPrice = limitPrices[sym]
-        lastPrice = md[f'{sym}_close']
+        refPrice = common.findRefPrice(md, sym)
         lastTime = md[f'{sym}_lastTS']
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
@@ -140,7 +140,7 @@ def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
         targetNotional = common.findTargetExposure(fitModels, sym, targetPos)
         symTrade = [desc, targetNotional, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
-                    notionalPerLot, side, qty, limitPrice, lastPrice, lastTime, bbSym, exchange]
+                    notionalPerLot, side, qty, limitPrice, refPrice, lastTime, bbSym, exchange]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Description')
