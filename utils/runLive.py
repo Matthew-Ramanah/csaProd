@@ -6,8 +6,8 @@ with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
 send = False
-saveModel = True
-saveLogs = True
+saveModel = False
+saveLogs = False
 
 # Load Seeds
 initSeeds = utility.loadInitSeeds(cfg)
