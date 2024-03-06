@@ -26,12 +26,11 @@ priceMultipliers = {
     "QHG#": 100,
     "@AD#": 100,
     "@BP#": 100,
-    "@EU#": 100,
     "@JY#": 10000
 }
 
 # Run-time options
-cfg_file = root + "config/expandedRecon.json"
+cfg_file = root + "config/qubeRecon.json"
 interfaceRoot = root + "interfaces/"
 
 # Global Packages
