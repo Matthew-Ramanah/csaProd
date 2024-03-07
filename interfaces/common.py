@@ -96,6 +96,7 @@ def updateModels(fitModels, md):
 
 
 def generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save):
+    lg.info("Generating output files...")
     # Identify Trades
     trades, execSyms = utility.detectTrades(fitModels)
 
@@ -105,7 +106,7 @@ def generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, s
     # Send tradeFiles & summary
     if send:
         sendTradeFiles(cfgs, initPositions, fitModels, execMD)
-        sendSummaryEmail()
+        # sendSummaryEmail()
 
     # Save Models
     if save:

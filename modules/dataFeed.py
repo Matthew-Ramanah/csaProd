@@ -38,12 +38,12 @@ class feed():
         self.clientSocket.sendall(bytes(message + "\r\n", "utf-8"))
         return
 
-    def openConnection(self):
+    def openConnection(self, sleepTime=5):
         lg.info("Opening IQF Connection...")
         subprocess.Popen(
             ["IQConnect.exe",
              f"‑product {self.productID} ‑version {self.version} ‑login {self.login} ‑password {self.password} ‑autoconnect"])
-        time.sleep(10)
+        time.sleep(sleepTime)
         return
 
     def createClientSocket(self):

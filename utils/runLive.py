@@ -1,13 +1,12 @@
 from pyConfig import *
-from modules import dataFeed, utility
+from modules import dataFeed
 from interfaces import common
 
 # Run-time options
 cfgFiles = ['qubeRecon', 'expandedRecon']
 
 send = False
-saveModels = False
-saveLogs = False
+save = False
 
 cfgs = common.detectConfigs(cfgFiles)
 
@@ -22,6 +21,6 @@ md = mdPipe.pullLatestMD(syntheticIncrement=0)
 fitModels = common.updateModels(fitModels, md)
 
 # Generate Output Files
-#common.generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save)
+common.generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save)
 
 lg.info("Completed.")

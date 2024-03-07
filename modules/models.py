@@ -35,7 +35,6 @@ class assetModel():
         self.updateNotionals()
         self.initHoldings = self.assertLotSizeHoldings(cfg, initHoldings)
         self.h0 = self.convertHoldingsToHOpt(self.initHoldings, self.maxPosition)
-        print(targetSym, self.initHoldings)
 
         return
 

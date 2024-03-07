@@ -153,7 +153,7 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     filename = f"CBCT_{timeSig}.csv"
 
     gmail.sendFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
-
+    lg.info("Sent AFBI TradeFile")
     return
 
 
