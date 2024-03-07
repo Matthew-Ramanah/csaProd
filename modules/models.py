@@ -33,10 +33,19 @@ class assetModel():
         # Initialisations
         self.lastCumVol = seeds[targetSym][f'{targetSym}_cumDailyVolume']
         self.updateNotionals()
-        self.initHoldings = initHoldings
-        self.h0 = self.convertHoldingsToHOpt(initHoldings, self.maxPosition)
+        self.initHoldings = self.assertLotSizeHoldings(cfg, initHoldings)
+        self.h0 = self.convertHoldingsToHOpt(self.initHoldings, self.maxPosition)
+        print(targetSym, self.initHoldings)
 
         return
+
+    def assertLotSizeHoldings(self, cfg, initHoldings):
+        if cfg['investor'] == 'AFBI':
+            return initHoldings
+        elif cfg['investor'] == 'Qube':
+            return round(initHoldings / self.notionalPerLot)
+        else:
+            raise ValueError(f"No {cfg['investor']} Holdings Logic Implemented")
 
     def updateNotionals(self):
         self.fxRate = self.calcFxRate()

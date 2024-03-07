@@ -1,5 +1,4 @@
 from pyConfig import *
-from modules import models, dataFeed
 
 
 @lru_cache(maxsize=16)
@@ -23,15 +22,6 @@ def loadResearchFeeds(cfg):
         researchFeeds[sym] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/{sym}/featsSelected.h5", key='featsSelected',
                                          mode='r')
     return researchFeeds
-
-
-def initialiseModels(cfg, seeds, positions, prod=False):
-    fitModels = {}
-    for sym in cfg['targets']:
-        fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], seeds=seeds,
-                                           initHoldings=positions[sym],
-                                           riskLimits=cfg['fitParams']['basket']['riskLimits'], prod=prod)
-    return fitModels
 
 
 def findNotionalFx(target):
@@ -87,48 +77,18 @@ def constructResearchSeeds(resFeed, cfg, location=0):
     return seeds
 
 
-def saveModelState(cfg, initSeeds, initPositions, md, trades, fitModels, saveLogs=True):
-    modelState = {
-        "initSeeds": initSeeds,
-        "initPositions": initPositions,
-        "trades": trades,
-        "seedDump": {},
-        "logs": {},
-        "alphasLog": {}
-    }
-
-    for sym in fitModels:
-        modelState['seedDump'][sym] = fitModels[sym].seedDump
-        modelState['logs'][sym] = fitModels[sym].log[-1]
-        modelState['alphasLog'][sym] = fitModels[sym].alphasLog
-
-    with open(f"{interfaceRoot}{cfg['investor']}/modelState.json", 'w') as f:
-        json.dump(modelState, f)
-    lg.info("Saved Model State.")
-
-    if saveLogs:
-        os.makedirs(f"{logRoot}models/", exist_ok=True)
-        with open(f"{logRoot}models/CBCT_{md['timeSig']}.json", 'w') as f:
-            json.dump(modelState["logs"], f)
-
-        os.makedirs(f"{logRoot}alphas/", exist_ok=True)
-        with open(f"{logRoot}alphas/CBCT_{md['timeSig']}.json", 'w') as f:
-            json.dump(modelState["alphasLog"], f)
-        lg.info("Saved Logs.")
-
-        os.makedirs(f"{logRoot}seeds/", exist_ok=True)
-        with open(f"{logRoot}seeds/CBCT_{md['timeSig']}.json", 'w') as f:
-            json.dump(modelState["seedDump"], f)
-
-    return modelState
-
-
-def generateTrades(fitModels):
+def detectTrades(fitModels):
     trades = {}
-    for sym in fitModels:
-        trades[sym] = int(fitModels[sym].tradeVolume)
+    execSyms = []
+    for investor in fitModels:
+        trades[investor] = {}
+        for sym in fitModels[investor]:
+            trades[sym] = int(fitModels[sym].tradeVolume)
 
-    return trades
+            if (trades[sym] != 0) and (sym not in execSyms):
+                execSyms.append(sym)
+
+    return trades, execSyms
 
 
 def createTimeSig(timezone='US/Eastern'):
@@ -184,18 +144,11 @@ def findDaysHoursMinutes(positionDelay):
     return days, hours, minutes
 
 
-def logPositionDelay(lastPosTime, timezone):
+def logPositionDelay(lastPosTime, timezone, investor):
     positionDelay = findPositionDelay(lastPosTime, timezone)
     days, hours, minutes = findDaysHoursMinutes(positionDelay)
-    lg.info(f"AFBI Position File Updated {int(days)} Days, {int(hours)} Hours, {int(minutes)} Minutes Ago.")
+    lg.info(f"{investor} Position File Updated {int(days)} Days, {int(hours)} Hours, {int(minutes)} Minutes Ago.")
     return
-
-
-def updateModels(fitModels, md):
-    for investor in fitModels:
-        for sym in fitModels[investor]:
-            fitModels[investor][sym].mdUpdate(md)
-    return fitModels
 
 
 def findTickSize(target):
@@ -226,11 +179,6 @@ def findNotionalMultiplier(target):
 def findAdjSym(sym):
     refData = loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['iqfAdjusted'].values[0]
-
-
-def findBBTradedSym(sym):
-    refData = loadRefData()
-    return refData.loc[refData['iqfUnadjusted'] == sym]['bbTradedSym'].values[0]
 
 
 def findIqfTradedSym(sym):

@@ -1,5 +1,5 @@
 from pyConfig import *
-from modules import utility, gmail
+from modules import utility, gmail, models
 from interfaces import AFBI, Qube
 
 
@@ -17,8 +17,8 @@ def initialiseSystems(cfgs):
     for investor in cfgs:
         initSeeds[investor] = utility.loadInitSeeds(cfgs[investor])
         initPositions[investor] = detectPositions(cfgs[investor])
-        fitModels[investor] = utility.initialiseModels(cfgs[investor], seeds=initSeeds[investor],
-                                                       positions=initPositions[investor], prod=True)
+        fitModels[investor] = initialiseModels(cfgs[investor], seeds=initSeeds[investor],
+                                               positions=initPositions[investor], prod=True)
         lg.info(f"{investor} System Initialised.")
 
     return initSeeds, initPositions, fitModels
@@ -45,12 +45,13 @@ def findRefPrice(md, sym):
     return md[f'{tradedSym}_close']
 
 
-def generateTradeFile(cfg, fitModels, md, initPositions, send, saveLogs):
-    if cfg["investor"] == "AFBI":
-        trades = AFBI.generateAFBITradeFile(cfg, fitModels, md, initPositions, send=send, saveLogs=saveLogs)
-    else:
-        raise ValueError("Unknown Investor")
-    return trades
+def sendTradeFiles(cfgs, initPositions, fitModels, execMD):
+    for investor in cfgs:
+        if investor == "AFBI":
+            AFBI.sendAFBITradeFile(cfgs[investor], fitModels, execMD['timeSig'], initPositions)
+        else:
+            raise ValueError("Unknown Investor")
+    return
 
 
 def findTargetExposure(fitModels, sym, targetPos):
@@ -76,3 +77,88 @@ def findSide(qty):
 
 def findTickSlipTol(cfg, sym):
     return int(pctSlipTol * cfg['fitParams']['basket']['aveTicksProfit'][sym])
+
+
+def initialiseModels(cfg, seeds, positions, prod=False):
+    fitModels = {}
+    for sym in cfg['targets']:
+        fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], seeds=seeds,
+                                           initHoldings=positions[sym],
+                                           riskLimits=cfg['fitParams']['basket']['riskLimits'], prod=prod)
+    return fitModels
+
+
+def updateModels(fitModels, md):
+    for investor in fitModels:
+        for sym in fitModels[investor]:
+            fitModels[investor][sym].mdUpdate(md)
+    return fitModels
+
+
+def generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save):
+    # Identify Trades
+    trades, execSyms = utility.detectTrades(fitModels)
+
+    # Pull market data for execSyms
+    execMD = mdPipe.pullExecMD(execSyms)
+
+    # Send tradeFiles & summary
+    if send:
+        sendTradeFiles(cfgs, initPositions, fitModels, execMD)
+        sendSummaryEmail()
+
+    # Save Models
+    if save:
+        saveStates(cfgs, initSeeds, initPositions, md, trades, fitModels)
+
+    return
+
+
+def saveStates(cfgs, initSeeds, initPositions, md, trades, fitModels):
+    for investor in cfgs:
+        modelState = {
+            "initSeeds": initSeeds[investor],
+            "initPositions": initPositions[investor],
+            "trades": trades[investor],
+            "seedDump": {},
+            "logs": {},
+            "alphasLog": {}
+        }
+
+        for sym in fitModels[investor]:
+            modelState['seedDump'][sym] = fitModels[investor][sym].seedDump
+            modelState['logs'][sym] = fitModels[investor][sym].log[-1]
+            modelState['alphasLog'][sym] = fitModels[investor][sym].alphasLog
+
+        with open(f"{interfaceRoot}{investor}/modelState.json", 'w') as f:
+            json.dump(modelState, f)
+        lg.info("Saved Model State.")
+
+        os.makedirs(f"{logRoot}models/", exist_ok=True)
+        with open(f"{logRoot}models/{investor}/{md['timeSig']}.json", 'w') as f:
+            json.dump(modelState["logs"], f)
+
+        os.makedirs(f"{logRoot}alphas/", exist_ok=True)
+        with open(f"{logRoot}alphas/{investor}/{md['timeSig']}.json", 'w') as f:
+            json.dump(modelState["alphasLog"], f)
+        lg.info("Saved Logs.")
+
+        os.makedirs(f"{logRoot}seeds/", exist_ok=True)
+        with open(f"{logRoot}seeds/{investor}/{md['timeSig']}.json", 'w') as f:
+            json.dump(modelState["seedDump"], f)
+
+    return
+
+
+def sendSummaryEmail(sumPaths, timeSig):
+    sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
+    sendTo = ["matthew.ramanah@sydneyquantitative.com"]
+    sendCC = []
+    username = sendFrom
+    password = "SydQuantPos23"
+    subject = "CBCT Summary"
+    message = f"CBCT_{timeSig}"
+    filename = f"CBCT_{timeSig}.csv"
+    # TODO - Parse multiple sumPaths in here
+    gmail.sendFile(sumPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
+    return

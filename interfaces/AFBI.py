@@ -4,30 +4,24 @@ from interfaces import common
 
 timezone = 'US/Eastern'
 
-unmannedHours = {
-    "Monday": ("03:55", "07:55"),
-    "Tuesday": ("03:55", "07:55"),
-    "Wednesday": ("03:55", "07:55"),
-    "Thursday": ("03:55", "07:55"),
-    "Friday": ("03:55", "07:55"),
-    "Saturday": ("00:00", "23:59"),
-    "Sunday": ("00:00", "17:55")
+mannedHours = {
+    "Monday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Tuesday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Wednesday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Thursday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Friday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    "Saturday": [],
+    "Sunday": [18, 19, 20, 21, 22, 23]
 }
 
 
 def isDeskManned():
-    """
-    Note the dictionary specifies the times the desk is UNMANNED
-    """
     localDT = datetime.datetime.now(pytz.timezone(timezone))
     localDay = dayOfWeekMap[localDT.weekday()]
-    localTime = localDT.time()
-    startTime = datetime.datetime.strptime(unmannedHours[localDay][0], '%H:%M').time()
-    endTime = datetime.datetime.strptime(unmannedHours[localDay][1], '%H:%M').time()
-    if localTime > startTime and localTime < endTime:
-        return False
-    else:
+    if localDT.hour in mannedHours[localDay]:
         return True
+    else:
+        return False
 
 
 def detectAFBIPositions(cfg, gmailService):
@@ -35,7 +29,7 @@ def detectAFBIPositions(cfg, gmailService):
     notDetected = []
     positions = {}
     for sym in cfg['targets']:
-        tradedSym = utility.findBBTradedSym(sym)
+        tradedSym = findAFBITradedSym(sym)
         if tradedSym in dfPositions['BB Yellow Key'].values:
             row = np.where(dfPositions['BB Yellow Key'] == tradedSym)[0][0]
             positions[sym] = int(dfPositions.iloc[row]['Notional Quantity'])
@@ -55,9 +49,10 @@ def findEmailTime(filename):
 
 
 def pullAFBIPositions(gmailService):
-    latestEmail = gmail.pullLatestPosFile(gmailService, searchQuery="CBCT EOD POSITIONS")
+    latestEmail = gmail.pullLatestPosFile(gmailService, searchQuery="CBCT EOD POSITIONS",
+                                          fileQuery="CBCT EOD POSITIONS")
     lastPosTime = findEmailTime(latestEmail['filename'])
-    utility.logPositionDelay(lastPosTime, timezone)
+    utility.logPositionDelay(lastPosTime, timezone, investor='AFBI')
     return latestEmail['data']
 
 
@@ -79,11 +74,16 @@ def findLimitPrices(cfg, md, trades):
     return limitPrices
 
 
-def createTradeCSV(cfg, fitModels, trades, md, initPositions):
+def findAFBITradedSym(sym):
+    refData = utility.loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['afbiTradedSym'].values[0]
+
+
+def createTradeCSV(cfg, fitModels, trades, execMd, initPositions):
     afbiAccount = "CBCTBULK"
     orderType = "LMT"
-    limitPrices = findLimitPrices(cfg, md, trades)
-    cancelTime = common.createCancelTime(md)
+    limitPrices = findLimitPrices(cfg, execMd, trades)
+    cancelTime = common.createCancelTime(execMd)
     stopPrice = ""
     tif = "DAY"
     broker = "SGXE"
@@ -92,12 +92,12 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
             'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
-        bbSym = utility.findBBTradedSym(sym)
+        bbSym = findAFBITradedSym(sym)
         qty = trades[sym]
         side = common.findSide(qty)
         limitPrice = limitPrices[sym]
-        refPrice = common.findRefPrice(md, sym)
-        lastTime = md[f'{sym}_lastTS']
+        refPrice = common.findRefPrice(execMd, sym)
+        lastTime = execMd[f'{sym}_lastTS']
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
         desc = utility.findDescription(sym)
@@ -157,40 +157,29 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     return
 
 
-def sendAFBISummaryEmail(sumPath, timeSig):
-    sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["matthew.ramanah@sydneyquantitative.com"]
-    sendCC = []
-    username = sendFrom
-    password = "SydQuantPos23"
-    subject = "CBCT Summary"
-    message = f"CBCT_{timeSig}"
-    filename = f"CBCT_{timeSig}.csv"
-    gmail.sendFile(sumPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
-    return
-
-
-def generateAFBITradeFile(cfg, fitModels, md, initPositions, send=True, saveLogs=True):
+def sendAFBITradeFile(cfg, trades, fitModels, execMd, initPositions):
     # Generate CSV & dict
-    trades = utility.generateTrades(fitModels)
-    tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions)
-    sumCSV = createSummaryCSV(cfg, fitModels, trades, md, initPositions)
-    print(sumCSV)
+    tradeCSV = createTradeCSV(cfg, fitModels, trades, execMd, initPositions)
 
     # Save to Log & Email
-    os.makedirs(f"{logRoot}trades/", exist_ok=True)
-    tradesPath = f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
-    os.makedirs(f"{logRoot}summary/", exist_ok=True)
-    sumPath = f"{logRoot}summary/CBCT_{md['timeSig']}.csv"
-    if saveLogs:
-        tradeCSV.to_csv(tradesPath)
-        sumCSV.to_csv(sumPath)
-
-        if send:
-            if isDeskManned():
-                sendAFBITradeEmail(tradesPath, md['timeSig'])
-            else:
-                lg.info("Not sending tradeFile as desk is unmanned.")
-            sendAFBISummaryEmail(sumPath, md['timeSig'])
+    tradesPath = saveAFBILogs(tradeCSV, execMd['timeSig'])
+    if isDeskManned():
+        sendAFBITradeEmail(tradesPath, execMd['timeSig'])
+    else:
+        lg.info("Not sending tradeFile as desk is unmanned.")
 
     return trades
+
+
+def saveAFBILogs(tradeCSV, timeSig):
+    os.makedirs(f"{logRoot}trades/", exist_ok=True)
+    tradesPath = f"{logRoot}trades/CBCT_{timeSig}.csv"
+    tradeCSV.to_csv(tradesPath)
+    return tradesPath
+
+
+def saveAFBISummary(summaryCSV, timeSig):
+    os.makedirs(f"{logRoot}summary/", exist_ok=True)
+    sumPath = f"{logRoot}summary/CBCT_{timeSig}.csv"
+    summaryCSV.to_csv(sumPath)
+    return sumPath

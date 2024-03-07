@@ -6,25 +6,22 @@ from interfaces import common
 cfgFiles = ['qubeRecon', 'expandedRecon']
 
 send = False
-saveModel = False
+saveModels = False
 saveLogs = False
 
-# Initialise
 cfgs = common.detectConfigs(cfgFiles)
+
+# Initialise
 initSeeds, initPositions, fitModels = common.initialiseSystems(cfgs)
 
 # Pull Market Data
-md = dataFeed.feed(cfgs).pullLatestMD(syntheticIncrement=0)
+mdPipe = dataFeed.feed(cfgs)
+md = mdPipe.pullLatestMD(syntheticIncrement=0)
 
 # Update Models
-fitModels = utility.updateModels(fitModels, md)
+fitModels = common.updateModels(fitModels, md)
 
-if False:
-    # Generate Output Files
-    # Pull data for execution symbols
-    trades = common.generateTradeFile(cfg, fitModels, md, initPositions, send=send, saveLogs=saveLogs)
-
-    if saveModel:
-        modelState = utility.saveModelState(cfg, initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
+# Generate Output Files
+#common.generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save)
 
 lg.info("Completed.")

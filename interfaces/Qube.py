@@ -25,7 +25,35 @@ def isDeskManned():
 
 
 def detectQubePositions(cfg, gmailService):
+    dfPositions = pullQubePositions(gmailService)
+    notDetected = []
     positions = {}
     for sym in cfg['targets']:
-        positions[sym] = 0
+        qubeSym = findQubeTradedSym(sym)
+        if qubeSym in dfPositions['BBG'].values:
+            row = np.where(dfPositions['BBG'] == qubeSym)[0][0]
+            positions[sym] = int(dfPositions.iloc[row]['Position EOD USD'])
+        else:
+            notDetected.append(sym)
+            positions[sym] = 0
+
+    if len(notDetected) != 0:
+        lg.info(f"No Qube Positions Detected For {notDetected}, Initialising At 0.")
     return positions
+
+
+def pullQubePositions(gmailService):
+    latestEmail = gmail.pullLatestPosFile(gmailService, searchQuery="Qube", fileQuery="QQSec_Detailed_CB")
+    lastPosTime = findEmailTime(latestEmail['filename'])
+    utility.logPositionDelay(lastPosTime, timezone, investor='Qube')
+    return latestEmail['data']
+
+
+def findEmailTime(filename):
+    for s in ['QQSec_Detailed_CB_', '.xlsx']:
+        filename = filename.replace(s, '')
+    return pd.Timestamp(filename)
+
+def findQubeTradedSym(sym):
+    refData = utility.loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['qubeTradedSym'].values[0]

@@ -3,13 +3,13 @@ from pyConfig import *
 __version__ = "0.0.2"
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 CSV_MIME_TYPE = 'text/csv'
-XLSX_MIME_TYPE = 'application/vnd.ms-excel'
+XLSX_MIME_TYPES = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
 
 
 def mime_type_to_dtype(s):
     if s == CSV_MIME_TYPE:
         return 'csv'
-    if s == XLSX_MIME_TYPE:
+    if s in XLSX_MIME_TYPES:
         return 'xlsx'
     raise AssertionError("mime type not accepted")
 
@@ -64,14 +64,14 @@ def _convert_attachment_data_to_dataframe(data, data_type):
     return df
 
 
-def _findAttPart(msg_parts, searchQuery):
+def _findAttPart(msg_parts, fileQuery):
     for p in msg_parts:
-        if searchQuery in p['filename']:
+        if fileQuery in p['filename']:
             return p
     return None
 
 
-def pullLatestPosFile(service, searchQuery):
+def pullLatestPosFile(service, searchQuery, fileQuery):
     message_ids = query_for_message_ids(service, searchQuery)
     for messageId in message_ids:
         msg = service.messages().get(userId='me', id=messageId).execute()
@@ -80,7 +80,7 @@ def pullLatestPosFile(service, searchQuery):
         subject = [h['value'] for h in headers if h['name'] == 'Subject'][0]
         if not msg_parts:
             continue
-        attPart = _findAttPart(msg_parts, searchQuery)
+        attPart = _findAttPart(msg_parts, fileQuery)
         if attPart is None:
             continue
         attType = mime_type_to_dtype(attPart['mimeType'])

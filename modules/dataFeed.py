@@ -92,16 +92,46 @@ class feed():
                 md[f'{sym}_cumDailyVolume'] = np.nan
                 md[f'{sym}_intervalVolume'] = 0
         md['timeSig'] = utility.createTimeSig()
-        lg.info(f"MD Constructed for timeSig: {md['timeSig']}")
-
         return pd.Series(md)
 
     def pullLatestMD(self, syntheticIncrement=0):
         self.openConnection()
         self.createClientSocket()
         self.updateDataMap()
-        self.closeSocket()
         return self.constructMD(syntheticIncrement)
+
+    def pullExecMD(self, execSyms):
+        self.updateExecMap(execSyms)
+        self.closeSocket()
+        return self.constructExecMD()
+
+    def updateExecMap(self, execSyms):
+        lg.info(f"Pulling Data For {len(execSyms)} Execution Symbols...")
+        self.execMap = {}
+        for sym in execSyms:
+            message = f'HIX,{sym},{aggFreq},1'
+            self.sendSocketMessage(message)
+            self.execMap[sym] = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
+            # lg.info(f'{sym} {self.dataMap[sym]}')
+
+            if self.recvDataIsSane(self.dataMap[sym]):
+                # Flush the socket of the !ENDMSG! before requesting next symbol
+                self.clientSocket.recv(self.receiveSize)
+            else:
+                lg.info(f"{sym} Received bad data. Check contract in config.")
+        return
+
+    def constructExecMD(self):
+        execMD = {}
+        for sym in self.execMap:
+            if self.recvDataIsSane(self.execMap[sym]):
+                execMD[f'{sym}_lastTS'] = pd.Timestamp(self.execMap[sym][0])
+                execMD[f'{sym}_close'] = float(self.execMap[sym][4])
+            else:
+                execMD[f'{sym}_lastTS'] = np.nan
+                execMD[f'{sym}_close'] = np.nan
+        execMD['timeSig'] = utility.createTimeSig()
+        return pd.Series(execMD)
 
 
 def monitorMdhSanity(fitModels, md):
