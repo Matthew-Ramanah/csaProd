@@ -92,6 +92,9 @@ def plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot, model=Fal
             for i, col in enumerate(reconCols):
                 axs[i + 1].step(recon.index, recon[col], label=f'Research: {col}', where='post')
                 axs[i + 1].step(prod.index, prod[col], label=f'Prod: {col}', where='post')
+                if col == f'{sym}_BasketHoldings':
+                    axs[i + 1].step(prod.index, prod[f'{sym}_maxLots'], color='black', linestyle='--')
+                    axs[i + 1].step(prod.index, -prod[f'{sym}_maxLots'], color='black', linestyle='--')
                 axs[i + 1].legend(loc='upper right')
             fig.show()
 

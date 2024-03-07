@@ -5,9 +5,9 @@
   "verbose": false,
   "investor": "Qube",
   "inputParams": {
-    "trainStart": "2023-01-01",
-    "testStart": "2024-01-01",
-    "testEnd": "2024-03-06",
+    "trainStart": "2015-12-31",
+    "testStart": "2023-01-01",
+    "testEnd": "2024-02-16",
     "aggFreq": 3600,
     "volHL": 360,
     "horizons": [
@@ -5943,229 +5943,229 @@
       },
       "riskLimits": {
         "@BO#": {
-          "maxPosition": 124,
-          "maxTradeSize": 13
+          "maxPosition": 180,
+          "maxTradeSize": 18
         },
         "@C#": {
-          "maxPosition": 22,
-          "maxTradeSize": 3
+          "maxPosition": 40,
+          "maxTradeSize": 4
         },
         "@SM#": {
-          "maxPosition": 61,
-          "maxTradeSize": 7
+          "maxPosition": 114,
+          "maxTradeSize": 12
         },
         "@W#": {
-          "maxPosition": 55,
-          "maxTradeSize": 6
+          "maxPosition": 93,
+          "maxTradeSize": 10
         },
         "@KW#": {
-          "maxPosition": 10,
-          "maxTradeSize": 1
+          "maxPosition": 16,
+          "maxTradeSize": 2
         },
         "@LE#": {
-          "maxPosition": 6,
-          "maxTradeSize": 1
-        },
-        "@HE#": {
-          "maxPosition": 65,
-          "maxTradeSize": 7
-        },
-        "QHG#": {
-          "maxPosition": 38,
-          "maxTradeSize": 4
-        },
-        "QGC#": {
-          "maxPosition": 16,
-          "maxTradeSize": 2
-        },
-        "QPA#": {
-          "maxPosition": 16,
-          "maxTradeSize": 2
-        },
-        "QPL#": {
-          "maxPosition": 32,
-          "maxTradeSize": 4
-        },
-        "QRB#": {
-          "maxPosition": 8,
-          "maxTradeSize": 1
-        },
-        "QCL#": {
-          "maxPosition": 4,
-          "maxTradeSize": 1
-        },
-        "QHO#": {
-          "maxPosition": 14,
-          "maxTradeSize": 2
-        },
-        "QNG#": {
-          "maxPosition": 66,
-          "maxTradeSize": 7
-        },
-        "@RS#": {
-          "maxPosition": 269,
-          "maxTradeSize": 27
-        },
-        "@CT#": {
-          "maxPosition": 51,
-          "maxTradeSize": 6
-        },
-        "QBZ#": {
           "maxPosition": 7,
           "maxTradeSize": 1
         },
-        "@CC#": {
-          "maxPosition": 37,
-          "maxTradeSize": 4
+        "@HE#": {
+          "maxPosition": 96,
+          "maxTradeSize": 10
         },
-        "@TY#": {
-          "maxPosition": 20,
-          "maxTradeSize": 2
+        "QHG#": {
+          "maxPosition": 50,
+          "maxTradeSize": 5
         },
-        "@FV#": {
-          "maxPosition": 20,
-          "maxTradeSize": 2
+        "QGC#": {
+          "maxPosition": 22,
+          "maxTradeSize": 3
         },
-        "@TU#": {
-          "maxPosition": 5,
-          "maxTradeSize": 1
+        "QPA#": {
+          "maxPosition": 23,
+          "maxTradeSize": 3
         },
-        "BD#": {
-          "maxPosition": 3,
-          "maxTradeSize": 1
+        "QPL#": {
+          "maxPosition": 67,
+          "maxTradeSize": 7
         },
-        "BL#": {
-          "maxPosition": 9,
-          "maxTradeSize": 1
-        },
-        "EZ#": {
+        "QRB#": {
           "maxPosition": 10,
           "maxTradeSize": 1
         },
-        "BX#": {
-          "maxPosition": 15,
+        "QCL#": {
+          "maxPosition": 5,
+          "maxTradeSize": 1
+        },
+        "QHO#": {
+          "maxPosition": 13,
           "maxTradeSize": 2
         },
-        "SPI#": {
-          "maxPosition": 20,
+        "QNG#": {
+          "maxPosition": 136,
+          "maxTradeSize": 14
+        },
+        "@RS#": {
+          "maxPosition": 478,
+          "maxTradeSize": 48
+        },
+        "@CT#": {
+          "maxPosition": 86,
+          "maxTradeSize": 9
+        },
+        "QBZ#": {
+          "maxPosition": 8,
+          "maxTradeSize": 1
+        },
+        "@CC#": {
+          "maxPosition": 36,
+          "maxTradeSize": 4
+        },
+        "@TY#": {
+          "maxPosition": 48,
+          "maxTradeSize": 5
+        },
+        "@FV#": {
+          "maxPosition": 48,
+          "maxTradeSize": 5
+        },
+        "@TU#": {
+          "maxPosition": 13,
           "maxTradeSize": 2
+        },
+        "BD#": {
+          "maxPosition": 7,
+          "maxTradeSize": 1
+        },
+        "BL#": {
+          "maxPosition": 21,
+          "maxTradeSize": 3
+        },
+        "EZ#": {
+          "maxPosition": 23,
+          "maxTradeSize": 3
+        },
+        "BX#": {
+          "maxPosition": 36,
+          "maxTradeSize": 4
+        },
+        "SPI#": {
+          "maxPosition": 37,
+          "maxTradeSize": 4
         },
         "@ES#": {
           "maxPosition": 21,
           "maxTradeSize": 3
         },
         "@NQ#": {
-          "maxPosition": 24,
-          "maxTradeSize": 3
+          "maxPosition": 15,
+          "maxTradeSize": 2
         },
         "@YM#": {
-          "maxPosition": 27,
+          "maxPosition": 30,
           "maxTradeSize": 3
         },
         "DXM#": {
-          "maxPosition": 3,
+          "maxPosition": 4,
           "maxTradeSize": 1
         },
         "SX#": {
-          "maxPosition": 351,
-          "maxTradeSize": 36
+          "maxPosition": 453,
+          "maxTradeSize": 46
         },
         "SW#": {
-          "maxPosition": 32,
-          "maxTradeSize": 4
+          "maxPosition": 48,
+          "maxTradeSize": 5
         },
         "LF#": {
-          "maxPosition": 33,
-          "maxTradeSize": 4
+          "maxPosition": 64,
+          "maxTradeSize": 7
         },
         "@AD#": {
-          "maxPosition": 23,
-          "maxTradeSize": 3
+          "maxPosition": 54,
+          "maxTradeSize": 6
         },
         "@BP#": {
-          "maxPosition": 20,
-          "maxTradeSize": 2
+          "maxPosition": 47,
+          "maxTradeSize": 5
         },
         "@JY#": {
-          "maxPosition": 16,
-          "maxTradeSize": 2
+          "maxPosition": 38,
+          "maxTradeSize": 4
         }
       },
       "symbolsNeeded": [
-        "INRUSD.COMP",
         "CHFUSD.COMP",
-        "@AD#",
-        "NZDUSD.COMP",
-        "QRB#",
-        "QBZ#",
-        "BX#",
-        "MXNUSD.COMP",
-        "GBPUSD.COMP",
-        "@TU#",
-        "@SB#",
-        "@YM#",
-        "SEKUSD.COMP",
-        "ZARUSD.COMP",
-        "SW#",
-        "QPL#",
-        "SPI#",
-        "@KW#",
-        "QC#",
-        "@TY#",
-        "BD#",
-        "TWDUSD.COMP",
-        "QCL#",
-        "BTP#",
-        "@BO#",
-        "LRC#",
-        "QPA#",
-        "PG#",
-        "@CC#",
-        "RUBUSD.COMP",
-        "EURUSD.COMP",
-        "NOKUSD.COMP",
-        "BRLUSD.COMP",
-        "@S#",
-        "ALJ#",
-        "@HE#",
-        "@RS#",
-        "LG#",
-        "@LE#",
-        "@W#",
-        "XT#",
-        "@BP#",
-        "SX#",
-        "THBUSD.COMP",
-        "@SM#",
-        "CNHUSD.COMP",
-        "AUDUSD.COMP",
-        "LF#",
         "EZ#",
-        "@VX#",
         "@GF#",
-        "@KC#",
-        "@NQ#",
-        "MT#",
-        "HKDUSD.COMP",
-        "QHO#",
-        "@JY#",
-        "QW#",
-        "SGDUSD.COMP",
-        "QHG#",
-        "BL#",
-        "@ES#",
-        "IND#",
-        "@EU#",
-        "JPYUSD.COMP",
-        "EX#",
-        "QSI#",
-        "CADUSD.COMP",
-        "@CT#",
+        "@TU#",
         "DXM#",
+        "QGC#",
+        "SPI#",
+        "BRLUSD.COMP",
+        "@ES#",
+        "@CC#",
+        "@EU#",
+        "@HE#",
+        "QPA#",
+        "@KW#",
+        "QCL#",
+        "@SB#",
+        "@VX#",
+        "BD#",
+        "PG#",
+        "QW#",
+        "THBUSD.COMP",
+        "SEKUSD.COMP",
+        "XT#",
+        "@CT#",
+        "EX#",
+        "CADUSD.COMP",
+        "EURUSD.COMP",
+        "@NQ#",
+        "HKDUSD.COMP",
+        "@AD#",
+        "ZARUSD.COMP",
+        "QC#",
+        "BTP#",
+        "QPL#",
+        "QSI#",
+        "RUBUSD.COMP",
+        "@SM#",
+        "QBZ#",
+        "LRC#",
+        "@LE#",
+        "BX#",
+        "ALJ#",
+        "LF#",
+        "@RS#",
+        "@W#",
+        "QHO#",
+        "@S#",
         "QNG#",
+        "GBPUSD.COMP",
+        "TWDUSD.COMP",
+        "@BO#",
+        "MT#",
         "@FV#",
-        "@C#",
-        "QGC#"
+        "@TY#",
+        "SW#",
+        "CNHUSD.COMP",
+        "INRUSD.COMP",
+        "SX#",
+        "@BP#",
+        "BL#",
+        "@KC#",
+        "@JY#",
+        "@YM#",
+        "NOKUSD.COMP",
+        "SGDUSD.COMP",
+        "JPYUSD.COMP",
+        "QHG#",
+        "MXNUSD.COMP",
+        "QRB#",
+        "NZDUSD.COMP",
+        "LG#",
+        "IND#",
+        "AUDUSD.COMP",
+        "@C#"
       ],
       "aveTicksProfit": {
         "@BO#": 48.9,
