@@ -20,7 +20,7 @@ def get_gmail_service(credentials_path, token_path):
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets(credentials_path, SCOPES)
         creds = tools.run_flow(flow, store)
-    service = build('gmail', 'v1', http=creds.authorize(Http()))
+    service = build('gmail', 'v1', http=creds.authorize(Http()), cache_discovery=False)
     return service.users()
 
 

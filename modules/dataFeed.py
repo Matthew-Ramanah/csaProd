@@ -11,18 +11,19 @@ class feed():
     port = 9100
     receiveSize = 1024
 
-    def __init__(self, cfg):
-        self.aggregation = str(cfg['inputParams']['aggFreq'])
-        self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded'] + self.findIqfTradedSyms(cfg)
-        self.symbolsNeeded.sort()
-
+    def __init__(self, cfgs):
+        self.symbolsNeeded = self.findSymbolsNeeded(cfgs)
         return
 
-    def findIqfTradedSyms(self, cfg):
-        iqfTradedSyms = []
-        for sym in cfg['targets']:
-            iqfTradedSyms.append(utility.findIqfTradedSym(sym))
-        return iqfTradedSyms
+    @staticmethod
+    def findSymbolsNeeded(cfgs):
+        symsNeeded = []
+        for investor in cfgs:
+            symsNeeded += cfgs[investor]['fitParams']['basket']['symbolsNeeded']
+
+        symsNeeded = list(set(symsNeeded))
+        symsNeeded.sort()
+        return symsNeeded
 
     def findNthSymbol(self, baseSym, n):
         """
@@ -57,12 +58,13 @@ class feed():
         return False
 
     def updateDataMap(self):
+        lg.info(f"Pulling Data For {len(self.symbolsNeeded)} Symbols...")
         self.dataMap = {}
         for sym in self.symbolsNeeded:
-            message = f'HIX,{sym},{self.aggregation},1'
+            message = f'HIX,{sym},{aggFreq},1'
             self.sendSocketMessage(message)
             self.dataMap[sym] = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
-            lg.info(f'{sym} {self.dataMap[sym]}')
+            # lg.info(f'{sym} {self.dataMap[sym]}')
 
             if self.recvDataIsSane(self.dataMap[sym]):
                 # Flush the socket of the !ENDMSG! before requesting next symbol
@@ -110,4 +112,3 @@ def monitorMdhSanity(fitModels, md):
     for i in staleAssets:
         lg.info(f"{i} MD Update Not Sane. Last Updated: {md[f'{i}_lastTS']}")
     return
-

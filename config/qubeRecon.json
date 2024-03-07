@@ -8,7 +8,6 @@
     "trainStart": "2015-12-31",
     "testStart": "2023-01-01",
     "testEnd": "2024-02-16",
-    "aggFreq": 3600,
     "volHL": 360,
     "horizons": [
       5,

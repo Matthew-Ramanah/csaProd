@@ -30,8 +30,8 @@ def isDeskManned():
         return True
 
 
-def detectAFBIPositions(cfg):
-    dfPositions = pullAFBIPositions()
+def detectAFBIPositions(cfg, gmailService):
+    dfPositions = pullAFBIPositions(gmailService)
     notDetected = []
     positions = {}
     for sym in cfg['targets']:
@@ -44,7 +44,7 @@ def detectAFBIPositions(cfg):
             positions[sym] = 0
 
     if len(notDetected) != 0:
-        lg.info(f"Can't find positions from AFBI for {notDetected}, initialising at 0 for now.")
+        lg.info(f"No AFBI Positions Detected For {notDetected}, Initialising At 0.")
     return positions
 
 
@@ -54,13 +54,8 @@ def findEmailTime(filename):
     return pd.Timestamp(datetime.datetime.strptime(filename, '%m_%d_%Y_%H_%M_%S'))
 
 
-def pullAFBIPositions():
-    afbiCredentials = f"{interfaceRoot}AFBI/credentials.json"
-    afbiToken = f"{interfaceRoot}AFBI/token.json"
-    afbiEmailRegex = "CBCT EOD POSITIONS"
-
-    service = gmail.get_gmail_service(afbiCredentials, afbiToken)
-    latestEmail = gmail.pullLatestPosFile(service, afbiEmailRegex)
+def pullAFBIPositions(gmailService):
+    latestEmail = gmail.pullLatestPosFile(gmailService, searchQuery="CBCT EOD POSITIONS")
     lastPosTime = findEmailTime(latestEmail['filename'])
     utility.logPositionDelay(lastPosTime, timezone)
     return latestEmail['data']

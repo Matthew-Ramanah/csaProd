@@ -7,8 +7,10 @@ logRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/logs/"
 dataRoot = "C:/Users/matth/PycharmProjects/SydneyQuantitative/data/"
 proDataRoot = f"{dataRoot}processed/"
 rawDataRoot = f"{dataRoot}raw/"
+interfaceRoot = root + "interfaces/"
 
 # Constants
+aggFreq = 3600
 signalCap = 3
 tradingDays = 252
 daysPerYear = 365
@@ -28,10 +30,6 @@ priceMultipliers = {
     "@BP#": 100,
     "@JY#": 10000
 }
-
-# Run-time options
-cfg_file = root + "config/qubeRecon.json"
-interfaceRoot = root + "interfaces/"
 
 # Global Packages
 import pandas as pd

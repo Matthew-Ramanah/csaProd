@@ -17,7 +17,6 @@ def loadRefData():
 
 
 def loadResearchFeeds(cfg):
-    lg.info("Loading Research Feeds...")
     researchFeeds = {}
     researchFeeds['recon'] = pd.read_hdf(f"{proDataRoot}{cfg['modelTag']}/recon.h5", key='recon', mode='r')
     for sym in cfg['targets']:
@@ -32,7 +31,6 @@ def initialiseModels(cfg, seeds, positions, prod=False):
         fitModels[sym] = models.assetModel(targetSym=sym, cfg=cfg, params=cfg['fitParams'][sym], seeds=seeds,
                                            initHoldings=positions[sym],
                                            riskLimits=cfg['fitParams']['basket']['riskLimits'], prod=prod)
-    lg.info("Models Initialised.")
     return fitModels
 
 
@@ -166,11 +164,11 @@ def loadInitSeeds(cfg):
     Load Seed Dump if it exists, else seed with research seeds
     """
     try:
-        with open(f"{interfaceRoot}{cfg['investor']}/modelState.json", 'r') as f:
+        with open(f"{interfaceRoot}states/{cfg['investor']}.json", 'r') as f:
             oldModelState = json.load(f)
         return oldModelState['seedDump']
     except:
-        lg.info("Can't find previous modelState, seeding with latest research data")
+        lg.info(f"Can't find {cfg['investor']} modelState, seeding with latest research data")
         researchFeeds = loadResearchFeeds(cfg)
         return constructResearchSeeds(researchFeeds, cfg)
 
@@ -189,16 +187,14 @@ def findDaysHoursMinutes(positionDelay):
 def logPositionDelay(lastPosTime, timezone):
     positionDelay = findPositionDelay(lastPosTime, timezone)
     days, hours, minutes = findDaysHoursMinutes(positionDelay)
-    lg.info(f"Position File Updated {int(days)} Days, {int(hours)} Hours, {int(minutes)} Minutes Ago.")
+    lg.info(f"AFBI Position File Updated {int(days)} Days, {int(hours)} Hours, {int(minutes)} Minutes Ago.")
     return
 
 
 def updateModels(fitModels, md):
-    for sym in fitModels:
-        fitModels[sym].mdUpdate(md)
-
-    dataFeed.monitorMdhSanity(fitModels, md)
-    # dataFeed.monitorContractChanges(fitModels)
+    for investor in fitModels:
+        for sym in fitModels[investor]:
+            fitModels[investor][sym].mdUpdate(md)
     return fitModels
 
 
