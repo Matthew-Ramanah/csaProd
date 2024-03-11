@@ -129,7 +129,7 @@ def sendSummaryFiles(paths, sendFrom, sendTo, sendCC, username, password, subjec
         with open(paths[investor], 'rb') as file:
             part.set_payload(file.read())
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename={investor}')
+            part.add_header('Content-Disposition', f'attachment; filename={investor}.csv')
             msg.attach(part)
 
     smtp = smtplib.SMTP(host="smtp.gmail.com", port=587)

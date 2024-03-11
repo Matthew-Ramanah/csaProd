@@ -59,7 +59,7 @@ class feed():
         return False
 
     def updateDataMap(self):
-        lg.info(f"Pulling Data For {len(self.symbolsNeeded)} Symbols...")
+        lg.info(f"Pulling Data For {len(self.symbolsNeeded)} Model Symbols...")
         self.dataMap = {}
         for sym in self.symbolsNeeded:
             message = f'HIX,{sym},{aggFreq},1'

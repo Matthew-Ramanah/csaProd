@@ -106,7 +106,7 @@ def generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, s
     # Send tradeFiles & summary
     if send:
         sendTradeFiles(cfgs, initPositions, trades, fitModels, execMD)
-        sendSummaryEmail()
+        sendSummaryEmail(cfgs, fitModels, trades, execMD)
 
     # Save Models
     if save:
@@ -131,9 +131,9 @@ def saveStates(cfgs, initSeeds, initPositions, md, trades, fitModels):
             modelState['logs'][sym] = fitModels[investor][sym].log[-1]
             modelState['alphasLog'][sym] = fitModels[investor][sym].alphasLog
 
-        with open(f"{interfaceRoot}{investor}/modelState.json", 'w') as f:
+        os.makedirs(f"{interfaceRoot}states/", exist_ok=True)
+        with open(f"{interfaceRoot}states/{investor}.json", 'w') as f:
             json.dump(modelState, f)
-        lg.info("Saved Model State.")
 
         os.makedirs(f"{logRoot}{investor}/models/", exist_ok=True)
         with open(f"{logRoot}{investor}/models/{md['timeSig']}.json", 'w') as f:
@@ -142,62 +142,66 @@ def saveStates(cfgs, initSeeds, initPositions, md, trades, fitModels):
         os.makedirs(f"{logRoot}{investor}/alphas/", exist_ok=True)
         with open(f"{logRoot}{investor}/alphas/{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["alphasLog"], f)
-        lg.info("Saved Logs.")
 
         os.makedirs(f"{logRoot}{investor}/seeds/", exist_ok=True)
         with open(f"{logRoot}{investor}/seeds/{md['timeSig']}.json", 'w') as f:
             json.dump(modelState["seedDump"], f)
-
+    lg.info("Saved States.")
     return
 
 
-def saveSummaryCSV(sumCSV, timeSig, investor):
-    os.makedirs(f"{logRoot}{investor}/summary/", exist_ok=True)
-    sumPath = f"{logRoot}{investor}/summary/{timeSig}.csv"
-    
-    sumCSV.to_csv(sumPath)
-    return sumPath
+def createSummaryCSVs(cfgs, fitModels, trades, execMD):
+    sumCSVs = {}
+    for investor in cfgs:
+        sumCSVs[investor] = createSummaryCSV(fitModels[investor], trades[investor], execMD)
+    return sumCSVs
 
-def createSummaryCSVs():
-    return
 
-def createSummaryCSV(cfgs, fitModels, trades, execMD, initPositions):
+def createSummaryCSV(fitModels, trades, execMD):
     cols = ['Description', 'usdTargetNotional', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
-            'notionalPerLot', "refPrice", f'refTime', 'exchange', 'iqfTradedSym']
+            'notionalPerLot', "refPrice", f'refTime', 'exchange', 'tradedSym']
     out = []
     for sym in trades:
         desc = utility.findDescription(sym)
-        qty = trades[sym]
         tradedSym = utility.findIqfTradedSym(sym)
-        refPrice = findRefPrice(execMD, tradedSym)
-        lastTime = execMD[f'{tradedSym}_lastTS']
-        initPos = initPositions[sym]
-        targetPos = initPositions[sym] + trades[sym]
+        refPrice = execMD[f'{tradedSym}_close']
+        refTime = execMD[f'{tradedSym}_lastTS']
+        currentPos = fitModels[sym].initHoldings
+        targetPos = fitModels[sym].initHoldings + trades[sym]
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
         maxTradeSize = fitModels[sym].maxTradeSize
-        liquidity = int(fitModels[sym].target.liquidity)
-        normedHoldings = round(fitModels[sym].normedHoldings, 3)
+        liq = int(fitModels[sym].target.liquidity)
+        normedPos = round(fitModels[sym].hOpt, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
-        targetNotional = common.findTargetExposure(fitModels, sym, targetPos)
-        symTrade = [desc, targetNotional, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
-                    notionalPerLot, side, qty, limitPrice, refPrice, lastTime, bbSym, exchange]
+        targetNotional = findTargetExposure(fitModels, sym, targetPos)
+        symTrade = [desc, targetNotional, normedPos, liq, currentPos, targetPos, maxPos, maxTradeSize,
+                    notionalPerLot, refPrice, refTime, exchange, tradedSym]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Description')
 
 
+def createSummaryPaths(sumCSVs, timeSig):
+    sumPaths = {}
+    for investor in sumCSVs:
+        os.makedirs(f"{logRoot}{investor}/summary/", exist_ok=True)
+        sumPaths[investor] = f"{logRoot}{investor}/summary/{timeSig}.csv"
+        sumCSVs[investor].to_csv(sumPaths[investor])
+    return sumPaths
 
-def sendSummaryEmail(sumPaths, timeSig):
 
+def sendSummaryEmail(cfgs, fitModels, trades, execMD):
+    timeSig = execMD['timeSig']
+    sumCSVs = createSummaryCSVs(cfgs, fitModels, trades, execMD)
+    sumPaths = createSummaryPaths(sumCSVs, timeSig)
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["matthew.ramanah@sydneyquantitative.com"]
     sendCC = []
     username = sendFrom
     password = "SydQuantPos23"
     subject = f"CSA Summary"
-    message = f"{timeSig}"
-    gmail.sendSummaryFiles(sumPaths, sendFrom, sendTo, sendCC, username, password, subject, message)
+    gmail.sendSummaryFiles(sumPaths, sendFrom, sendTo, sendCC, username, password, subject, timeSig)
     return
 
 

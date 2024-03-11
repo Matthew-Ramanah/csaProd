@@ -67,7 +67,7 @@ def findQubeInternal(sym):
 
 def sendQubeTradeFile(trades, fitModels, execMd, initPositions):
     if isDeskManned():
-        tradeCSV = createQubeTradeCSV(fitModels, trades, execMd, initPositions)
+        tradeCSV = createQubeTradeCSV(fitModels, trades, execMd)
         tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='Qube')
         sendQubeTradeEmail(tradesPath, execMd['timeSig'])
 
@@ -87,10 +87,12 @@ def findQubeTargetNotional(fitModels, sym, hysteresis=0.05):
     raw = fitModels[sym].nativeTargetNotional
     return round((1 + hysteresis) * raw, 2)
 
+
 def createValueTS(timezone='UTC'):
     return datetime.datetime.now(pytz.timezone(timezone)).strftime('%Y/%m/%d %H:%M')
 
-def createQubeTradeCSV(fitModels, trades, execMd, initPositions):
+
+def createQubeTradeCSV(fitModels, trades, execMd):
     id_specific = "CB"
     value_ts = createValueTS()
     strategy = 'S1'

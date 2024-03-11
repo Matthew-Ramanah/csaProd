@@ -74,12 +74,13 @@ def createAFBITradeCSV(cfg, fitModels, trades, execMd, initPositions):
             'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
+        tradedSym = utility.findIqfTradedSym(sym)
         bbSym = findAFBITradedSym(sym)
         qty = trades[sym]
         side = common.findSide(qty)
         limitPrice = limitPrices[sym]
         refPrice = common.findRefPrice(execMd, sym)
-        lastTime = execMd[f'{sym}_lastTS']
+        lastTime = execMd[f'{tradedSym}_lastTS']
         initPos = initPositions[sym]
         targetPos = initPositions[sym] + trades[sym]
         desc = utility.findDescription(sym)
@@ -95,8 +96,8 @@ def createAFBITradeCSV(cfg, fitModels, trades, execMd, initPositions):
 
 def sendAFBITradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
-    sendCC = ["matthew.ramanah@sydneyquantitative.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com"]
+    sendTo = ["matthew.ramanah@sydneyquantitative.com"]  # ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
+    sendCC = []  # ["matthew.ramanah@sydneyquantitative.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com"]
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"
@@ -115,4 +116,3 @@ def sendAFBITradeFile(cfg, trades, fitModels, execMd, initPositions):
         sendAFBITradeEmail(tradesPath, execMd['timeSig'])
 
     return
-

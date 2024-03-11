@@ -121,6 +121,7 @@ class assetModel():
         else:
             self.tradeVolume = 0
             self.maxTradeSize = 0
+            self.hOpt = self.h0
             self.log.append([])
             self.alphasLog.append([])
 
