@@ -2,7 +2,8 @@ from pyConfig import *
 from modules import utility, gmail, models
 from interfaces import AFBI, Qube
 
-summaryTimes=[1, 13]
+summaryTimes = [1, 13]
+
 
 def detectConfigs(cfgFiles):
     cfgs = {}
