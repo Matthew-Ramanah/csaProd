@@ -2,6 +2,7 @@ from pyConfig import *
 from modules import utility, gmail, models
 from interfaces import AFBI, Qube
 
+summaryTimes=[1, 13]
 
 def detectConfigs(cfgFiles):
     cfgs = {}
@@ -43,13 +44,12 @@ def findRefPrice(md, sym):
     return md[f'{tradedSym}_close']
 
 
-def sendTradeFiles(cfgs, initPositions, trades, fitModels, execMD):
+def sendTradeFiles(cfgs, trades, fitModels, execMD):
     for investor in cfgs:
         if investor == "AFBI":
-            AFBI.sendAFBITradeFile(cfgs[investor], trades[investor], fitModels[investor], execMD,
-                                   initPositions[investor])
+            AFBI.sendAFBITradeFile(cfgs[investor], trades[investor], fitModels[investor], execMD)
         elif investor == "Qube":
-            Qube.sendQubeTradeFile(trades[investor], fitModels[investor], execMD, initPositions[investor])
+            Qube.sendQubeTradeFile(trades[investor], fitModels[investor], execMD)
         else:
             raise ValueError("Unknown Investor")
     return
@@ -105,7 +105,7 @@ def generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, s
 
     # Send tradeFiles & summary
     if send:
-        sendTradeFiles(cfgs, initPositions, trades, fitModels, execMD)
+        sendTradeFiles(cfgs, trades, fitModels, execMD)
         sendSummaryEmail(cfgs, fitModels, trades, execMD)
 
     # Save Models
@@ -191,17 +191,26 @@ def createSummaryPaths(sumCSVs, timeSig):
     return sumPaths
 
 
+def isSummaryTime(timezone='US/Eastern'):
+    localDT = datetime.datetime.now(pytz.timezone(timezone))
+    if localDT.hour in summaryTimes:
+        return True
+    else:
+        return False
+
+
 def sendSummaryEmail(cfgs, fitModels, trades, execMD):
-    timeSig = execMD['timeSig']
-    sumCSVs = createSummaryCSVs(cfgs, fitModels, trades, execMD)
-    sumPaths = createSummaryPaths(sumCSVs, timeSig)
-    sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["matthew.ramanah@sydneyquantitative.com"]
-    sendCC = []
-    username = sendFrom
-    password = "SydQuantPos23"
-    subject = f"CSA Summary"
-    gmail.sendSummaryFiles(sumPaths, sendFrom, sendTo, sendCC, username, password, subject, timeSig)
+    if isSummaryTime():
+        timeSig = execMD['timeSig']
+        sumCSVs = createSummaryCSVs(cfgs, fitModels, trades, execMD)
+        sumPaths = createSummaryPaths(sumCSVs, timeSig)
+        sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
+        sendTo = ["matthew.ramanah@sydneyquantitative.com"]
+        sendCC = []
+        username = sendFrom
+        password = "SydQuantPos23"
+        subject = f"CSA Summary"
+        gmail.sendSummaryFiles(sumPaths, sendFrom, sendTo, sendCC, username, password, subject, timeSig)
     return
 
 

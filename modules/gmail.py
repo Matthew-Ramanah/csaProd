@@ -114,6 +114,7 @@ def sendFile(path, sendFrom, sendTo, sendCC, username, password, subject, messag
     smtp.quit()
     return
 
+
 def sendSummaryFiles(paths, sendFrom, sendTo, sendCC, username, password, subject, message):
     msg = MIMEMultipart()
     msg['From'] = sendFrom
@@ -124,13 +125,10 @@ def sendSummaryFiles(paths, sendFrom, sendTo, sendCC, username, password, subjec
 
     msg.attach(MIMEText(message))
 
-    part = MIMEBase('application', "octet-stream")
     for investor in paths:
-        with open(paths[investor], 'rb') as file:
-            part.set_payload(file.read())
-            encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename={investor}.csv')
-            msg.attach(part)
+        attachment = MIMEApplication(open(paths[investor], "rb").read(), _subtype="txt")
+        attachment.add_header('Content-Disposition', 'attachment', filename=f'{investor}.csv')
+        msg.attach(attachment)
 
     smtp = smtplib.SMTP(host="smtp.gmail.com", port=587)
     smtp.ehlo()
@@ -138,4 +136,5 @@ def sendSummaryFiles(paths, sendFrom, sendTo, sendCC, username, password, subjec
     smtp.login(username, password)
     smtp.sendmail(sendFrom, sendTo + sendCC, msg.as_string())
     smtp.quit()
+    lg.info("Sent Summary Email")
     return

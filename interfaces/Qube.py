@@ -5,7 +5,7 @@ from interfaces import common
 timezone = 'US/Eastern'
 
 mannedHours = {
-    "Monday": [8, 13],
+    "Monday": [13],
     "Tuesday": [13],
     "Wednesday": [13],
     "Thursday": [13],
@@ -65,7 +65,7 @@ def findQubeInternal(sym):
     return refData.loc[refData['iqfUnadjusted'] == sym]['QubeInternal'].values[0]
 
 
-def sendQubeTradeFile(trades, fitModels, execMd, initPositions):
+def sendQubeTradeFile(trades, fitModels, execMd):
     if isDeskManned():
         tradeCSV = createQubeTradeCSV(fitModels, trades, execMd)
         tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='Qube')

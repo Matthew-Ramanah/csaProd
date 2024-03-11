@@ -61,7 +61,7 @@ def findAFBITradedSym(sym):
     return refData.loc[refData['iqfUnadjusted'] == sym]['afbiTradedSym'].values[0]
 
 
-def createAFBITradeCSV(cfg, fitModels, trades, execMd, initPositions):
+def createAFBITradeCSV(cfg, fitModels, trades, execMd):
     afbiAccount = "CBCTBULK"
     orderType = "LMT"
     limitPrices = common.findLimitPrices(cfg, execMd, trades)
@@ -81,8 +81,8 @@ def createAFBITradeCSV(cfg, fitModels, trades, execMd, initPositions):
         limitPrice = limitPrices[sym]
         refPrice = common.findRefPrice(execMd, sym)
         lastTime = execMd[f'{tradedSym}_lastTS']
-        initPos = initPositions[sym]
-        targetPos = initPositions[sym] + trades[sym]
+        initPos = fitModels[sym].initHoldings
+        targetPos = fitModels[sym].initHoldings + trades[sym]
         desc = utility.findDescription(sym)
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
@@ -109,9 +109,9 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     return
 
 
-def sendAFBITradeFile(cfg, trades, fitModels, execMd, initPositions):
+def sendAFBITradeFile(cfg, trades, fitModels, execMd):
     if isDeskManned():
-        tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMd, initPositions)
+        tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMd)
         tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='AFBI')
         sendAFBITradeEmail(tradesPath, execMd['timeSig'])
 
