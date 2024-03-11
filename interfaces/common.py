@@ -156,7 +156,7 @@ def saveSummaryCSV(sumCSV, timeSig, investor):
     sumPath = f"{logRoot}{investor}/summary/{timeSig}.csv"
     
     sumCSV.to_csv(sumPath)
-    return sumPaths
+    return sumPath
 
 def createSummaryCSVs():
     return
