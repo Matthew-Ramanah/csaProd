@@ -24,7 +24,7 @@ class assetModel():
         self.notionalMultiplier = utility.findNotionalMultiplier(targetSym)
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
         self.riskLimits = riskLimits[targetSym]
-        self.noTradeHours = cfg['inputParams']['noTradeHours'] + [cfg['fitParams'][targetSym]['closeTime']]
+        self.noTradeHours = []  # cfg['inputParams']['noTradeHours'] + [cfg['fitParams'][targetSym]['closeTime']]
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, seeds)
@@ -124,6 +124,7 @@ class assetModel():
             self.log.append([])
             self.alphasLog.append([])
 
+        self.calcNativeTargetNotional()
         self.checkStaleAssets()
         self.updateSeeds()
 
@@ -185,6 +186,10 @@ class assetModel():
     def calcTradeVolume(self):
         sizedHoldings = int(self.maxPosition * self.hOpt)
         self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))
+        return
+
+    def calcNativeTargetNotional(self):
+        self.nativeTargetNotional = (self.initHoldings + self.tradeVolume) * self.notionalPerLot / self.fxRate
         return
 
     def calcHoldings(self, md):

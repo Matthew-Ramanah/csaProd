@@ -3,10 +3,10 @@ from modules import dataFeed
 from interfaces import common
 
 # Run-time options
-cfgFiles = ['qubeRecon', 'expandedRecon']
+cfgFiles = ['qubeRecon']
 
-send = False
-save = False
+send = True
+save = True
 
 cfgs = common.detectConfigs(cfgFiles)
 

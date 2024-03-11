@@ -13,6 +13,7 @@ class feed():
 
     def __init__(self, cfgs):
         self.symbolsNeeded = self.findSymbolsNeeded(cfgs)
+        self.execSyms = utility.findIqfTradedSyms()
         return
 
     @staticmethod
@@ -100,21 +101,21 @@ class feed():
         self.updateDataMap()
         return self.constructMD(syntheticIncrement)
 
-    def pullExecMD(self, execSyms):
-        self.updateExecMap(execSyms)
+    def pullExecMD(self):
+        self.updateExecMap()
         self.closeSocket()
         return self.constructExecMD()
 
-    def updateExecMap(self, execSyms):
-        lg.info(f"Pulling Data For {len(execSyms)} Execution Symbols...")
+    def updateExecMap(self):
+        lg.info(f"Pulling Data For {len(self.execSyms)} Execution Symbols...")
         self.execMap = {}
-        for sym in execSyms:
+        for sym in self.execSyms:
             message = f'HIX,{sym},{aggFreq},1'
             self.sendSocketMessage(message)
             self.execMap[sym] = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
             # lg.info(f'{sym} {self.dataMap[sym]}')
 
-            if self.recvDataIsSane(self.dataMap[sym]):
+            if self.recvDataIsSane(self.execMap[sym]):
                 # Flush the socket of the !ENDMSG! before requesting next symbol
                 self.clientSocket.recv(self.receiveSize)
             else:

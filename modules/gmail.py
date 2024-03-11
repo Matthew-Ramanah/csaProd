@@ -113,3 +113,29 @@ def sendFile(path, sendFrom, sendTo, sendCC, username, password, subject, messag
     smtp.sendmail(sendFrom, sendTo + sendCC, msg.as_string())
     smtp.quit()
     return
+
+def sendSummaryFiles(paths, sendFrom, sendTo, sendCC, username, password, subject, message):
+    msg = MIMEMultipart()
+    msg['From'] = sendFrom
+    msg['To'] = ", ".join(sendTo)
+    msg['Cc'] = ", ".join(sendCC)
+    msg['Date'] = formatdate(localtime=True)
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(message))
+
+    part = MIMEBase('application', "octet-stream")
+    for investor in paths:
+        with open(paths[investor], 'rb') as file:
+            part.set_payload(file.read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename={investor}')
+            msg.attach(part)
+
+    smtp = smtplib.SMTP(host="smtp.gmail.com", port=587)
+    smtp.ehlo()
+    smtp.starttls()
+    smtp.login(username, password)
+    smtp.sendmail(sendFrom, sendTo + sendCC, msg.as_string())
+    smtp.quit()
+    return

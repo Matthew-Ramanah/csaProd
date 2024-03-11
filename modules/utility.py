@@ -79,16 +79,12 @@ def constructResearchSeeds(resFeed, cfg, location=0):
 
 def detectTrades(fitModels):
     trades = {}
-    execSyms = []
     for investor in fitModels:
         trades[investor] = {}
         for sym in fitModels[investor]:
             trades[investor][sym] = int(fitModels[investor][sym].tradeVolume)
 
-            if (trades[investor][sym] != 0) and (sym not in execSyms):
-                execSyms.append(sym)
-
-    return trades, execSyms
+    return trades
 
 
 def createTimeSig(timezone='US/Eastern'):
@@ -202,3 +198,7 @@ def isAdjSym(sym):
     if sym in adjSyms:
         return True
     return False
+
+def findIqfTradedSyms():
+    refData = loadRefData()
+    return list(refData['iqfTradedSym'].dropna().values)

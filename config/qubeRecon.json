@@ -1,13 +1,14 @@
 {
   "modelTag": "qubeRecon",
-  "dataTag": "afbiRecon",
+  "dataTag": "qubeRecon",
   "recon": true,
   "verbose": false,
   "investor": "Qube",
   "inputParams": {
-    "trainStart": "2015-12-31",
-    "testStart": "2023-01-01",
-    "testEnd": "2024-02-16",
+    "trainStart": "2023-01-01",
+    "testStart": "2024-01-01",
+    "testEnd": "2024-03-12",
+    "aggFreq": 3600,
     "volHL": 360,
     "horizons": [
       5,

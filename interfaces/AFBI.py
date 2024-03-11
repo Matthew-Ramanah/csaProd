@@ -56,33 +56,15 @@ def pullAFBIPositions(gmailService):
     return latestEmail['data']
 
 
-def findLimitPrices(cfg, md, trades):
-    limitPrices = {}
-    for sym in trades:
-        if trades[sym] == 0:
-            limitPrices[sym] = ""
-        else:
-            sign = np.sign(trades[sym])
-            tCost = sign * utility.findEffSpread(sym)
-            slippage = sign * common.findTickSlipTol(cfg, sym) * utility.findTickSize(sym)
-            tradedSym = utility.findIqfTradedSym(sym)
-            limitPrices[sym] = round(md[f'{tradedSym}_close'] + tCost + slippage, noDec)
-
-            if sym in list(priceMultipliers.keys()):
-                limitPrices[sym] = round(priceMultipliers[sym] * limitPrices[sym], noDec)
-
-    return limitPrices
-
-
 def findAFBITradedSym(sym):
     refData = utility.loadRefData()
     return refData.loc[refData['iqfUnadjusted'] == sym]['afbiTradedSym'].values[0]
 
 
-def createTradeCSV(cfg, fitModels, trades, execMd, initPositions):
+def createAFBITradeCSV(cfg, fitModels, trades, execMd, initPositions):
     afbiAccount = "CBCTBULK"
     orderType = "LMT"
-    limitPrices = findLimitPrices(cfg, execMd, trades)
+    limitPrices = common.findLimitPrices(cfg, execMd, trades)
     cancelTime = common.createCancelTime(execMd)
     stopPrice = ""
     tif = "DAY"
@@ -111,38 +93,7 @@ def createTradeCSV(cfg, fitModels, trades, execMd, initPositions):
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
-def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
-    limitPrices = findLimitPrices(cfg, md, trades)
-    cols = ['Description', 'targetNotional', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
-            'notionalPerLot', 'tradeSide', 'tradeQty', 'limitPrice', "refPrice", f'refTime', 'BB Yellow Key',
-            'Exchange']
-    out = []
-    for sym in trades:
-        desc = utility.findDescription(sym)
-        bbSym = utility.findBBTradedSym(sym)
-        qty = trades[sym]
-        side = common.findSide(qty)
-        limitPrice = limitPrices[sym]
-        refPrice = common.findRefPrice(md, sym)
-        lastTime = md[f'{sym}_lastTS']
-        initPos = initPositions[sym]
-        targetPos = initPositions[sym] + trades[sym]
-        exchange = utility.findExchange(sym)
-        maxPos = fitModels[sym].maxPosition
-        maxTradeSize = fitModels[sym].maxTradeSize
-        liquidity = int(fitModels[sym].target.liquidity)
-        normedHoldings = round(fitModels[sym].normedHoldings, 3)
-        notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
-        targetNotional = common.findTargetExposure(fitModels, sym, targetPos)
-        symTrade = [desc, targetNotional, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
-                    notionalPerLot, side, qty, limitPrice, refPrice, lastTime, bbSym, exchange]
-        out.append(symTrade)
-
-    return pd.DataFrame(out, columns=cols).set_index('Description')
-
-
 def sendAFBITradeEmail(tradesPath, timeSig):
-    lg.info("Sending tradeFile")
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
     sendCC = ["matthew.ramanah@sydneyquantitative.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com"]
@@ -158,28 +109,10 @@ def sendAFBITradeEmail(tradesPath, timeSig):
 
 
 def sendAFBITradeFile(cfg, trades, fitModels, execMd, initPositions):
-    # Generate CSV & dict
-    tradeCSV = createTradeCSV(cfg, fitModels, trades, execMd, initPositions)
-
-    # Save to Log & Email
-    tradesPath = saveAFBILogs(tradeCSV, execMd['timeSig'])
     if isDeskManned():
+        tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMd, initPositions)
+        tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='AFBI')
         sendAFBITradeEmail(tradesPath, execMd['timeSig'])
-    else:
-        lg.info("Not sending tradeFile as desk is unmanned.")
 
-    return trades
+    return
 
-
-def saveAFBILogs(tradeCSV, timeSig):
-    os.makedirs(f"{logRoot}trades/", exist_ok=True)
-    tradesPath = f"{logRoot}trades/CBCT_{timeSig}.csv"
-    tradeCSV.to_csv(tradesPath)
-    return tradesPath
-
-
-def saveAFBISummary(summaryCSV, timeSig):
-    os.makedirs(f"{logRoot}summary/", exist_ok=True)
-    sumPath = f"{logRoot}summary/CBCT_{timeSig}.csv"
-    summaryCSV.to_csv(sumPath)
-    return sumPath
