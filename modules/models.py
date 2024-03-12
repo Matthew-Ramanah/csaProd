@@ -24,7 +24,7 @@ class assetModel():
         self.notionalMultiplier = utility.findNotionalMultiplier(targetSym)
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
         self.riskLimits = riskLimits[targetSym]
-        self.closeTime = cfg['fitParams'][targetSym]['closeTime']
+        self.noTradeHours = []  # cfg['inputParams']['noTradeHours'] + [cfg['fitParams'][targetSym]['closeTime']]
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, seeds)
@@ -33,10 +33,18 @@ class assetModel():
         # Initialisations
         self.lastCumVol = seeds[targetSym][f'{targetSym}_cumDailyVolume']
         self.updateNotionals()
-        self.initHoldings = initHoldings
-        self.hOpt = self.convertHoldingsToHOpt(initHoldings, self.maxPosition, self.hScaler)
+        self.initHoldings = self.assertLotSizeHoldings(cfg, initHoldings)
+        self.h0 = self.convertHoldingsToHOpt(self.initHoldings, self.maxPosition)
 
         return
+
+    def assertLotSizeHoldings(self, cfg, initHoldings):
+        if cfg['investor'] == 'AFBI':
+            return initHoldings
+        elif cfg['investor'] == 'Qube':
+            return round(initHoldings / self.notionalPerLot)
+        else:
+            raise ValueError(f"No {cfg['investor']} Holdings Logic Implemented")
 
     def updateNotionals(self):
         self.fxRate = self.calcFxRate()
@@ -113,10 +121,11 @@ class assetModel():
         else:
             self.tradeVolume = 0
             self.maxTradeSize = 0
-            self.convertHOptToNormedHoldings()
+            self.hOpt = self.h0
             self.log.append([])
             self.alphasLog.append([])
 
+        self.calcNativeTargetNotional()
         self.checkStaleAssets()
         self.updateSeeds()
 
@@ -133,51 +142,61 @@ class assetModel():
         self.var = self.target.vol ** 2
         return
 
-    def calcHOpt(self):
-        self.calcVar()
-        tCost = self.kappa * self.target.effSpread
-        buyBound = (self.cumAlpha - tCost) / self.var
-        sellBound = (self.cumAlpha + tCost) / self.var
-
-        if self.hOpt < buyBound:
-            self.hOpt = buyBound
-        elif self.hOpt > sellBound:
-            self.hOpt = sellBound
-
-        return
-
-    def justClosed(self, md):
-        if int(md['timeSig'][-2:]) == self.closeTime:
-            closed = True
+    def checkNoTradeZone(self, md):
+        if int(md['timeSig'][-2:]) in self.noTradeHours:
+            self.noTradeZone = True
             self.maxTradeSize = 0
             self.tradeVolume = 0
         else:
-            closed = False
-        return closed
+            self.noTradeZone = False
+        return
+
+    def calcMaxDeltaT(self):
+        if self.noTradeZone:
+            self.maxDeltaT = 0
+        else:
+            self.maxDeltaT = maxAssetDelta
+        return
+
+    def calcHOpt(self):
+        self.calcVar()
+        self.calcMaxDeltaT()
+        tCost = self.kappa * self.target.effSpread
+        buyBound = np.clip((self.cumAlpha - tCost) / (self.var * self.hScaler), -1, 1)
+        sellBound = np.clip((self.cumAlpha + tCost) / (self.var * self.hScaler), -1, 1)
+
+        if self.h0 < buyBound:
+            self.hOpt = np.clip(buyBound, self.h0, self.h0 + self.maxDeltaT)
+        elif self.h0 > sellBound:
+            self.hOpt = np.clip(sellBound, self.h0 - self.maxDeltaT, self.h0)
+        else:
+            self.hOpt = self.h0
+
+        return
 
     def calcMaxTradeSize(self):
         self.maxTradeSize = int(np.clip(self.pRate * self.target.liquidity, 1, self.riskLimits['maxTradeSize']))
         return
 
-    def convertHOptToNormedHoldings(self):
-        self.normedHoldings = np.clip(self.hOpt / self.hScaler, -1, 1)
-        return
-
     @staticmethod
-    def convertHoldingsToHOpt(holdings, maxPosition, hScaler):
+    def convertHoldingsToHOpt(holdings, maxPosition):
         if maxPosition == 0:
             return 0
-        return np.clip(holdings / maxPosition, -1, 1) * hScaler
+        return np.clip(holdings / maxPosition, -1, 1)
 
     def calcTradeVolume(self):
-        sizedHoldings = int(self.maxPosition * self.normedHoldings)
+        sizedHoldings = int(self.maxPosition * self.hOpt)
         self.tradeVolume = int(np.clip(sizedHoldings - self.initHoldings, -self.maxTradeSize, self.maxTradeSize))
         return
 
+    def calcNativeTargetNotional(self):
+        self.nativeTargetNotional = (self.initHoldings + self.tradeVolume) * self.notionalPerLot / self.fxRate
+        return
+
     def calcHoldings(self, md):
+        self.checkNoTradeZone(md)
         self.calcHOpt()
-        self.convertHOptToNormedHoldings()
-        if not self.justClosed(md):
+        if not self.noTradeZone:
             self.calcMaxTradeSize()
             self.calcTradeVolume()
         if not self.prod:
@@ -218,6 +237,7 @@ class assetModel():
 
     def updateReconPosition(self):
         self.initHoldings += self.tradeVolume
+        self.h0 = self.hOpt
         return
 
     def constructAlphasLog(self):
@@ -231,7 +251,7 @@ class assetModel():
     def constructLogs(self):
         self.constructAlphasLog()
         thisLog = [utility.formatTsToString(self.target.lastTS), self.lastCumVol, self.target.close,
-                   self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.normedHoldings,
+                   self.target.timeDelta, self.target.vol, self.target.priceDelta, self.cumAlpha, self.hOpt,
                    self.initHoldings, self.tradeVolume, self.maxTradeSize, self.target.liquidity, self.maxPosition,
                    self.notionalPerLot, self.fxRate]
         self.log.append(thisLog)
@@ -242,7 +262,7 @@ class assetModel():
                          f"{self.target.sym}_Volatility": self.target.vol,
                          f"{self.target.sym}_lastTS": self.target.lastTS.strftime('%Y_%m_%d_%H'),
                          f"{self.target.sym}_Liquidity": self.target.liquidity,
-                         f"{self.target.sym}_cumDailyVolume" : self.lastCumVol}
+                         f"{self.target.sym}_cumDailyVolume": self.lastCumVol}
 
         for pred in self.predictors:
             self.seedDump[f'{pred}_close'] = self.predictors[pred].close

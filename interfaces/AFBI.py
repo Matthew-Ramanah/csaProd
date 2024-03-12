@@ -4,38 +4,32 @@ from interfaces import common
 
 timezone = 'US/Eastern'
 
-unmannedHours = {
-    "Monday": ("03:55", "07:55"),
-    "Tuesday": ("03:55", "07:55"),
-    "Wednesday": ("03:55", "07:55"),
-    "Thursday": ("03:55", "07:55"),
-    "Friday": ("03:55", "07:55"),
-    "Saturday": ("00:00", "23:59"),
-    "Sunday": ("00:00", "17:55")
+mannedHours = {
+    "Monday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Tuesday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Wednesday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Thursday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+    "Friday": [0, 1, 2, 3, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+    "Saturday": [],
+    "Sunday": [18, 19, 20, 21, 22, 23]
 }
 
 
 def isDeskManned():
-    """
-    Note the dictionary specifies the times the desk is UNMANNED
-    """
     localDT = datetime.datetime.now(pytz.timezone(timezone))
     localDay = dayOfWeekMap[localDT.weekday()]
-    localTime = localDT.time()
-    startTime = datetime.datetime.strptime(unmannedHours[localDay][0], '%H:%M').time()
-    endTime = datetime.datetime.strptime(unmannedHours[localDay][1], '%H:%M').time()
-    if localTime > startTime and localTime < endTime:
-        return False
-    else:
+    if localDT.hour in mannedHours[localDay]:
         return True
+    else:
+        return False
 
 
-def detectAFBIPositions(cfg):
-    dfPositions = pullAFBIPositions()
+def detectAFBIPositions(cfg, gmailService):
+    dfPositions = pullAFBIPositions(gmailService)
     notDetected = []
     positions = {}
     for sym in cfg['targets']:
-        tradedSym = utility.findBBTradedSym(sym)
+        tradedSym = findAFBITradedSym(sym)
         if tradedSym in dfPositions['BB Yellow Key'].values:
             row = np.where(dfPositions['BB Yellow Key'] == tradedSym)[0][0]
             positions[sym] = int(dfPositions.iloc[row]['Notional Quantity'])
@@ -44,7 +38,7 @@ def detectAFBIPositions(cfg):
             positions[sym] = 0
 
     if len(notDetected) != 0:
-        lg.info(f"Can't find positions from AFBI for {notDetected}, initialising at 0 for now.")
+        lg.info(f"No AFBI Positions Detected For {notDetected}, Initialising At 0.")
     return positions
 
 
@@ -54,57 +48,41 @@ def findEmailTime(filename):
     return pd.Timestamp(datetime.datetime.strptime(filename, '%m_%d_%Y_%H_%M_%S'))
 
 
-def pullAFBIPositions():
-    afbiCredentials = f"{interfaceRoot}AFBI/credentials.json"
-    afbiToken = f"{interfaceRoot}AFBI/token.json"
-    afbiEmailRegex = "CBCT EOD POSITIONS"
-
-    service = gmail.get_gmail_service(afbiCredentials, afbiToken)
-    latestEmail = gmail.pullLatestPosFile(service, afbiEmailRegex)
+def pullAFBIPositions(gmailService):
+    latestEmail = gmail.pullLatestPosFile(gmailService, searchQuery="CBCT EOD POSITIONS",
+                                          fileQuery="CBCT EOD POSITIONS")
     lastPosTime = findEmailTime(latestEmail['filename'])
-    utility.logPositionDelay(lastPosTime, timezone)
+    utility.logPositionDelay(lastPosTime, timezone, investor='AFBI')
     return latestEmail['data']
 
 
-def findLimitPrices(cfg, md, trades):
-    limitPrices = {}
-    for sym in trades:
-        if trades[sym] == 0:
-            limitPrices[sym] = ""
-        else:
-            sign = np.sign(trades[sym])
-            tCost = sign * utility.findEffSpread(sym)
-            slippage = sign * common.findTickSlipTol(cfg, sym) * utility.findTickSize(sym)
-            tradedSym = utility.findIqfTradedSym(sym)
-            limitPrices[sym] = round(md[f'{tradedSym}_close'] + tCost + slippage, noDec)
-
-            if sym in list(priceMultipliers.keys()):
-                limitPrices[sym] = round(priceMultipliers[sym] * limitPrices[sym], noDec)
-
-    return limitPrices
+def findAFBITradedSym(sym):
+    refData = utility.loadRefData()
+    return refData.loc[refData['iqfUnadjusted'] == sym]['afbiTradedSym'].values[0]
 
 
-def createTradeCSV(cfg, fitModels, trades, md, initPositions):
+def createAFBITradeCSV(cfg, fitModels, trades, execMd):
     afbiAccount = "CBCTBULK"
     orderType = "LMT"
-    limitPrices = findLimitPrices(cfg, md, trades)
-    cancelTime = common.createCancelTime(md)
+    limitPrices = common.findLimitPrices(cfg, execMd, trades)
+    cancelTime = common.createCancelTime(execMd)
     stopPrice = ""
     tif = "DAY"
-    broker = "SGXE"
+    broker = "MSET"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
             "refPrice", f'refTime', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
             'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
     for sym in trades:
-        bbSym = utility.findBBTradedSym(sym)
+        tradedSym = utility.findIqfTradedSym(sym)
+        bbSym = findAFBITradedSym(sym)
         qty = trades[sym]
         side = common.findSide(qty)
         limitPrice = limitPrices[sym]
-        refPrice = common.findRefPrice(md, sym)
-        lastTime = md[f'{sym}_lastTS']
-        initPos = initPositions[sym]
-        targetPos = initPositions[sym] + trades[sym]
+        refPrice = common.findRefPrice(execMd, sym)
+        lastTime = execMd[f'{tradedSym}_lastTS']
+        initPos = fitModels[sym].initHoldings
+        targetPos = fitModels[sym].initHoldings + trades[sym]
         desc = utility.findDescription(sym)
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
@@ -116,38 +94,7 @@ def createTradeCSV(cfg, fitModels, trades, md, initPositions):
     return pd.DataFrame(out, columns=cols).set_index('Account')
 
 
-def createSummaryCSV(cfg, fitModels, trades, md, initPositions):
-    limitPrices = findLimitPrices(cfg, md, trades)
-    cols = ['Description', 'targetNotional', 'normedPos', 'liq', 'currentPos', 'targetPos', 'maxPos', 'maxTradeSize',
-            'notionalPerLot', 'tradeSide', 'tradeQty', 'limitPrice', "refPrice", f'refTime', 'BB Yellow Key',
-            'Exchange']
-    out = []
-    for sym in trades:
-        desc = utility.findDescription(sym)
-        bbSym = utility.findBBTradedSym(sym)
-        qty = trades[sym]
-        side = common.findSide(qty)
-        limitPrice = limitPrices[sym]
-        refPrice = common.findRefPrice(md, sym)
-        lastTime = md[f'{sym}_lastTS']
-        initPos = initPositions[sym]
-        targetPos = initPositions[sym] + trades[sym]
-        exchange = utility.findExchange(sym)
-        maxPos = fitModels[sym].maxPosition
-        maxTradeSize = fitModels[sym].maxTradeSize
-        liquidity = int(fitModels[sym].target.liquidity)
-        normedHoldings = round(fitModels[sym].normedHoldings, 3)
-        notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
-        targetNotional = common.findTargetExposure(fitModels, sym, targetPos)
-        symTrade = [desc, targetNotional, normedHoldings, liquidity, initPos, targetPos, maxPos, maxTradeSize,
-                    notionalPerLot, side, qty, limitPrice, refPrice, lastTime, bbSym, exchange]
-        out.append(symTrade)
-
-    return pd.DataFrame(out, columns=cols).set_index('Description')
-
-
 def sendAFBITradeEmail(tradesPath, timeSig):
-    lg.info("Sending tradeFile")
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
     sendCC = ["matthew.ramanah@sydneyquantitative.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com"]
@@ -158,44 +105,14 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     filename = f"CBCT_{timeSig}.csv"
 
     gmail.sendFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
-
+    lg.info("Sent AFBI TradeFile")
     return
 
 
-def sendAFBISummaryEmail(sumPath, timeSig):
-    sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["matthew.ramanah@sydneyquantitative.com"]
-    sendCC = []
-    username = sendFrom
-    password = "SydQuantPos23"
-    subject = "CBCT Summary"
-    message = f"CBCT_{timeSig}"
-    filename = f"CBCT_{timeSig}.csv"
-    gmail.sendFile(sumPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
+def sendAFBITradeFile(cfg, trades, fitModels, execMd):
+    if isDeskManned():
+        tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMd)
+        tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='AFBI')
+        sendAFBITradeEmail(tradesPath, execMd['timeSig'])
+
     return
-
-
-def generateAFBITradeFile(cfg, fitModels, md, initPositions, send=True, saveLogs=True):
-    # Generate CSV & dict
-    trades = utility.generateTrades(fitModels)
-    tradeCSV = createTradeCSV(cfg, fitModels, trades, md, initPositions)
-    sumCSV = createSummaryCSV(cfg, fitModels, trades, md, initPositions)
-    print(sumCSV)
-
-    # Save to Log & Email
-    os.makedirs(f"{logRoot}trades/", exist_ok=True)
-    tradesPath = f"{logRoot}trades/CBCT_{md['timeSig']}.csv"
-    os.makedirs(f"{logRoot}summary/", exist_ok=True)
-    sumPath = f"{logRoot}summary/CBCT_{md['timeSig']}.csv"
-    if saveLogs:
-        tradeCSV.to_csv(tradesPath)
-        sumCSV.to_csv(sumPath)
-
-        if send:
-            if isDeskManned():
-                sendAFBITradeEmail(tradesPath, md['timeSig'])
-            else:
-                lg.info("Not sending tradeFile as desk is unmanned.")
-            sendAFBISummaryEmail(sumPath, md['timeSig'])
-
-    return trades

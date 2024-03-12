@@ -11,18 +11,20 @@ class feed():
     port = 9100
     receiveSize = 1024
 
-    def __init__(self, cfg):
-        self.aggregation = str(cfg['inputParams']['aggFreq'])
-        self.symbolsNeeded = cfg['fitParams']['basket']['symbolsNeeded'] + self.findIqfTradedSyms(cfg)
-        self.symbolsNeeded.sort()
-
+    def __init__(self, cfgs):
+        self.symbolsNeeded = self.findSymbolsNeeded(cfgs)
+        self.execSyms = utility.findIqfTradedSyms()
         return
 
-    def findIqfTradedSyms(self, cfg):
-        iqfTradedSyms = []
-        for sym in cfg['targets']:
-            iqfTradedSyms.append(utility.findIqfTradedSym(sym))
-        return iqfTradedSyms
+    @staticmethod
+    def findSymbolsNeeded(cfgs):
+        symsNeeded = []
+        for investor in cfgs:
+            symsNeeded += cfgs[investor]['fitParams']['basket']['symbolsNeeded']
+
+        symsNeeded = list(set(symsNeeded))
+        symsNeeded.sort()
+        return symsNeeded
 
     def findNthSymbol(self, baseSym, n):
         """
@@ -37,12 +39,12 @@ class feed():
         self.clientSocket.sendall(bytes(message + "\r\n", "utf-8"))
         return
 
-    def openConnection(self):
+    def openConnection(self, sleepTime=5):
         lg.info("Opening IQF Connection...")
         subprocess.Popen(
             ["IQConnect.exe",
              f"‑product {self.productID} ‑version {self.version} ‑login {self.login} ‑password {self.password} ‑autoconnect"])
-        time.sleep(10)
+        time.sleep(sleepTime)
         return
 
     def createClientSocket(self):
@@ -57,12 +59,13 @@ class feed():
         return False
 
     def updateDataMap(self):
+        lg.info(f"Pulling Data For {len(self.symbolsNeeded)} Model Symbols...")
         self.dataMap = {}
         for sym in self.symbolsNeeded:
-            message = f'HIX,{sym},{self.aggregation},1'
+            message = f'HIX,{sym},{aggFreq},1'
             self.sendSocketMessage(message)
             self.dataMap[sym] = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
-            lg.info(f'{sym} {self.dataMap[sym]}')
+            # lg.info(f'{sym} {self.dataMap[sym]}')
 
             if self.recvDataIsSane(self.dataMap[sym]):
                 # Flush the socket of the !ENDMSG! before requesting next symbol
@@ -90,16 +93,46 @@ class feed():
                 md[f'{sym}_cumDailyVolume'] = np.nan
                 md[f'{sym}_intervalVolume'] = 0
         md['timeSig'] = utility.createTimeSig()
-        lg.info(f"MD Constructed for timeSig: {md['timeSig']}")
-
         return pd.Series(md)
 
     def pullLatestMD(self, syntheticIncrement=0):
         self.openConnection()
         self.createClientSocket()
         self.updateDataMap()
-        self.closeSocket()
         return self.constructMD(syntheticIncrement)
+
+    def pullExecMD(self):
+        self.updateExecMap()
+        self.closeSocket()
+        return self.constructExecMD()
+
+    def updateExecMap(self):
+        lg.info(f"Pulling Data For {len(self.execSyms)} Execution Symbols...")
+        self.execMap = {}
+        for sym in self.execSyms:
+            message = f'HIX,{sym},{aggFreq},1'
+            self.sendSocketMessage(message)
+            self.execMap[sym] = self.clientSocket.recv(self.receiveSize).decode('utf-8').split('\n')[0].split(',')
+            # lg.info(f'{sym} {self.dataMap[sym]}')
+
+            if self.recvDataIsSane(self.execMap[sym]):
+                # Flush the socket of the !ENDMSG! before requesting next symbol
+                self.clientSocket.recv(self.receiveSize)
+            else:
+                lg.info(f"{sym} Received bad data. Check contract in config.")
+        return
+
+    def constructExecMD(self):
+        execMD = {}
+        for sym in self.execMap:
+            if self.recvDataIsSane(self.execMap[sym]):
+                execMD[f'{sym}_lastTS'] = pd.Timestamp(self.execMap[sym][0])
+                execMD[f'{sym}_close'] = float(self.execMap[sym][4])
+            else:
+                execMD[f'{sym}_lastTS'] = np.nan
+                execMD[f'{sym}_close'] = np.nan
+        execMD['timeSig'] = utility.createTimeSig()
+        return pd.Series(execMD)
 
 
 def monitorMdhSanity(fitModels, md):
@@ -110,4 +143,3 @@ def monitorMdhSanity(fitModels, md):
     for i in staleAssets:
         lg.info(f"{i} MD Update Not Sane. Last Updated: {md[f'{i}_lastTS']}")
     return
-

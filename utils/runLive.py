@@ -1,33 +1,26 @@
 from pyConfig import *
-from modules import dataFeed, utility
+from modules import dataFeed
 from interfaces import common
 
-with open(cfg_file, 'r') as f:
-    cfg = json.load(f)
+# Run-time options
+cfgFiles = ["qubeRecon", "afbiRecon"]
 
-send = False
-saveModel = False
-saveLogs = False
+send = True
+save = True
 
-# Load Seeds
-initSeeds = utility.loadInitSeeds(cfg)
+cfgs = common.detectConfigs(cfgFiles)
 
-# Load Positions & Limits
-initPositions = common.detectPositions(cfg)
-
-# Initialise models
-fitModels = utility.initialiseModels(cfg, seeds=initSeeds, positions=initPositions, prod=True)
+# Initialise
+initSeeds, initPositions, fitModels = common.initialiseSystems(cfgs)
 
 # Pull Market Data
-md = dataFeed.feed(cfg).pullLatestMD(syntheticIncrement=0)
+mdPipe = dataFeed.feed(cfgs)
+md = mdPipe.pullLatestMD(syntheticIncrement=0)
 
 # Update Models
-fitModels = utility.updateModels(fitModels, md)
+fitModels = common.updateModels(fitModels, md)
 
-# Generate tradeFile
-trades = common.generateTradeFile(cfg, fitModels, md, initPositions, send=send, saveLogs=saveLogs)
-
-if saveModel:
-    modelState = utility.saveModelState(cfg, initSeeds, initPositions, md, trades, fitModels, saveLogs=saveLogs)
+# Generate Output Files
+trades, execMD = common.generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save)
 
 lg.info("Completed.")
