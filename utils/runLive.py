@@ -3,7 +3,7 @@ from modules import dataFeed
 from interfaces import common
 
 # Run-time options
-cfgFiles = ["qubeRecon", "afbiRecon"]
+cfgFiles = ["afbiRecon", "qubeRecon"]
 
 send = True
 save = True

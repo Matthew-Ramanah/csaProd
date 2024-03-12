@@ -24,7 +24,7 @@ class assetModel():
         self.notionalMultiplier = utility.findNotionalMultiplier(targetSym)
         self.totalCapital = cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
         self.riskLimits = riskLimits[targetSym]
-        self.noTradeHours = []  # cfg['inputParams']['noTradeHours'] + [cfg['fitParams'][targetSym]['closeTime']]
+        self.noTradeHours = cfg['inputParams']['noTradeHours'] + [cfg['fitParams'][targetSym]['closeTime']]
 
         # Construct Predictors & Alpha Objects
         self.initialisePreds(cfg, seeds)
