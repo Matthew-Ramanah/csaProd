@@ -122,7 +122,7 @@ def createQubeTradeCSV(fitModels, trades, execMd):
 
 def sendQubeTradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = []  # ["christian.beulen@sydneyquantitative.com"]
+    sendTo = ["christian.beulen@sydneyquantitative.com"]
     sendCC = ["matthew.ramanah@sydneyquantitative.com"]
     username = sendFrom
     password = "SydQuantPos23"

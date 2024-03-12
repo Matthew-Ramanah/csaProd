@@ -2,7 +2,7 @@ from pyConfig import *
 from modules import utility, gmail, models
 from interfaces import AFBI, Qube
 
-summaryTimes = [1, 13]
+summaryTimes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
 
 def detectConfigs(cfgFiles):
@@ -56,13 +56,6 @@ def sendTradeFiles(cfgs, trades, fitModels, execMD):
     return
 
 
-def findTargetExposure(fitModels, sym, targetPos):
-    raw = fitModels[sym].notionalPerLot * targetPos
-    if np.sign(raw) < 0:
-        return '-${:,}'.format(abs(raw))
-    return '${:,}'.format(raw)
-
-
 def createCancelTime(md, cancelMinutes=30):
     cancelAfter = pd.Timedelta(minutes=cancelMinutes)
     return pd.Timestamp(datetime.datetime.strptime(md['timeSig'], '%Y_%m_%d_%H')) + cancelAfter
@@ -113,7 +106,7 @@ def generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, s
     if save:
         saveStates(cfgs, initSeeds, initPositions, md, trades, fitModels)
 
-    return
+    return trades, execMD
 
 
 def saveStates(cfgs, initSeeds, initPositions, md, trades, fitModels):
@@ -175,12 +168,18 @@ def createSummaryCSV(fitModels, trades, execMD):
         liq = int(fitModels[sym].target.liquidity)
         normedPos = round(fitModels[sym].hOpt, 3)
         notionalPerLot = '${:,}'.format(fitModels[sym].notionalPerLot)
-        targetNotional = findTargetExposure(fitModels, sym, targetPos)
+        targetNotional = fitModels[sym].notionalPerLot * targetPos  # findTargetExposure(fitModels, sym, targetPos)
         symTrade = [desc, targetNotional, normedPos, liq, currentPos, targetPos, maxPos, maxTradeSize,
                     notionalPerLot, refPrice, refTime, exchange, tradedSym]
         out.append(symTrade)
+    out = pd.DataFrame(out, columns=cols).set_index('Description').sort_values('usdTargetNotional', ascending=False)
+    out['usdTargetNotional'] = formatTargetExposure(out['usdTargetNotional'])
 
-    return pd.DataFrame(out, columns=cols).set_index('Description')
+    return out
+
+
+def formatTargetExposure(raw):
+    return ['-${:,}'.format(abs(x)) if np.sign(x) < 0 else '${:,}'.format(x) for x in raw]
 
 
 def createSummaryPaths(sumCSVs, timeSig):
@@ -207,7 +206,7 @@ def sendSummaryEmail(cfgs, fitModels, trades, execMD):
         sumPaths = createSummaryPaths(sumCSVs, timeSig)
         sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
         sendTo = ["matthew.ramanah@sydneyquantitative.com"]
-        sendCC = []
+        sendCC = ["christian.beulen@sydneyquantitative.com"]
         username = sendFrom
         password = "SydQuantPos23"
         subject = f"CSA Summary"

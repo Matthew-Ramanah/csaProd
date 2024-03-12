@@ -21,6 +21,6 @@ md = mdPipe.pullLatestMD(syntheticIncrement=0)
 fitModels = common.updateModels(fitModels, md)
 
 # Generate Output Files
-common.generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save)
+trades, execMD = common.generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, send, save)
 
 lg.info("Completed.")

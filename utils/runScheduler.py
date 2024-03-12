@@ -32,10 +32,21 @@ def dummyJob():
     return
 
 
+def isWeekend(timezone='Australia/Sydney'):
+    localDT = datetime.datetime.now(pytz.timezone(timezone))
+    if ((dayOfWeekMap[localDT.weekday()] == 'Saturday' and localDT.time() > datetime.time(8, 5)) or (
+            dayOfWeekMap[localDT.weekday()] == 'Monday' and localDT.time() < datetime.time(8, 55)) or
+            (dayOfWeekMap[localDT.weekday()] == 'Sunday')):
+        return True
+    return False
+
+
 schedule.every().monday.at("08:55").do(startWeeklyJobs)
 schedule.every().saturday.at("08:05").do(clearWeeklyJobs)
 
 lg.info("Starting scheduler...")
-startWeeklyJobs()
+if not isWeekend():
+    startWeeklyJobs()
+
 while True:
     schedule.run_pending()
