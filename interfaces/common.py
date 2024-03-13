@@ -14,14 +14,26 @@ def detectConfigs(cfgFiles):
     return cfgs
 
 
+def deleteBadInits(cfgs, badInit):
+    for x in badInit:
+        del cfgs[x]
+    return cfgs
+
+
 def initialiseSystems(cfgs):
     initSeeds, initPositions, fitModels = {}, {}, {}
+    badInit = []
     for investor in cfgs:
-        initSeeds[investor] = utility.loadInitSeeds(cfgs[investor])
-        initPositions[investor] = detectPositions(cfgs[investor])
-        fitModels[investor] = initialiseModels(cfgs[investor], seeds=initSeeds[investor],
-                                               positions=initPositions[investor], prod=True)
-    return initSeeds, initPositions, fitModels
+        try:
+            initSeeds[investor] = utility.loadInitSeeds(cfgs[investor])
+            initPositions[investor] = detectPositions(cfgs[investor])
+            fitModels[investor] = initialiseModels(cfgs[investor], seeds=initSeeds[investor],
+                                                   positions=initPositions[investor], prod=True)
+        except:
+            lg.info(f"Can't initialise {investor}, Removing from process.")
+            badInit.append(investor)
+    cfgs = deleteBadInits(cfgs, badInit)
+    return initSeeds, initPositions, fitModels, cfgs
 
 
 def detectPositions(cfg):
@@ -47,12 +59,16 @@ def findRefPrice(md, sym):
 
 def sendTradeFiles(cfgs, trades, fitModels, execMD):
     for investor in cfgs:
-        if investor == "AFBI":
-            AFBI.sendAFBITradeFile(cfgs[investor], trades[investor], fitModels[investor], execMD)
-        elif investor == "Qube":
-            Qube.sendQubeTradeFile(trades[investor], fitModels[investor], execMD)
-        else:
-            raise ValueError("Unknown Investor")
+        try:
+            if investor == "AFBI":
+                AFBI.sendAFBITradeFile(cfgs[investor], trades[investor], fitModels[investor], execMD)
+            elif investor == "Qube":
+                Qube.sendQubeTradeFile(trades[investor], fitModels[investor], execMD)
+            else:
+                raise ValueError("Unknown Investor")
+        except:
+            lg.info(f"Couldn't Send {investor} tradeFile.")
+            continue
     return
 
 

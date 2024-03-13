@@ -11,7 +11,7 @@ save = True
 cfgs = common.detectConfigs(cfgFiles)
 
 # Initialise
-initSeeds, initPositions, fitModels = common.initialiseSystems(cfgs)
+initSeeds, initPositions, fitModels, cfgs = common.initialiseSystems(cfgs)
 
 # Pull Market Data
 mdPipe = dataFeed.feed(cfgs)
