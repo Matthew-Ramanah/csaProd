@@ -1,13 +1,13 @@
 from pyConfig import *
 from modules import pta
 
+cfg_file = root + "config/qubeRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-logDir = logRoot  # paperLogRoot  #
-logs = pta.loadLogs(cfg, logDir)
-alphasLogs = pta.loadAlphasLogs(cfg, logDir)
+logs = pta.loadLogs(cfg)
+alphasLogs = pta.loadAlphasLogs(cfg)
 
-symsToPlot = ["@C#", "@S#"]  # cfg['targets']
+symsToPlot = ["@LE#"]  # cfg['targets']
 pta.plotLogs(cfg, logs, alphasLogs, symsToPlot)
 lg.info("Completed.")
