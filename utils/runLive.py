@@ -2,6 +2,8 @@ from pyConfig import *
 from modules import dataFeed
 from interfaces import common
 
+lg.info("")
+
 # Run-time options
 cfgFiles = ["afbiRecon", "qubeRecon"]
 
