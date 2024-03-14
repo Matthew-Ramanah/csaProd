@@ -43,7 +43,7 @@ def detectQubePositions(cfg, gmailService):
 
 
 def pullQubePositions(gmailService):
-    latestEmail = gmail.pullLatestPosFile(gmailService, searchQuery="", fileQuery="QQSec_Detailed_CB")
+    latestEmail = gmail.pullLatestPosFile(gmailService, searchQuery="QQSec", fileQuery="QQSec_Detailed_CB")
     lastPosTime = findEmailTime(latestEmail['filename'])
     utility.logPositionDelay(lastPosTime, timezone, investor='Qube')
     return latestEmail['data']

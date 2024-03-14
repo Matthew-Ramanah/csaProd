@@ -5,8 +5,8 @@ from interfaces import common
 # Run-time options
 cfgFiles = ["afbiRecon", "qubeRecon"]
 
-send = True
-save = True
+send = False
+save = False
 
 cfgs = common.detectConfigs(cfgFiles)
 
