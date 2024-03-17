@@ -1,10 +1,12 @@
 from pyConfig import *
 from modules import md, utility, recon
+from interfaces import common
 
+cfg_file = root + "config/afbiRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-symsToPlot = cfg['targets'][0:2]
+symsToPlot = cfg['targets'][0:20]
 cfg['targets'] = symsToPlot
 plot = True
 
@@ -12,10 +14,10 @@ plot = True
 researchFeeds = utility.loadResearchFeeds(cfg)
 seeds = utility.constructResearchSeeds(researchFeeds, cfg)
 initPositions = recon.initialisePositions(cfg)
-fitModels = utility.initialiseModels(cfg, seeds=seeds, positions=initPositions, prod=False)
+fitModels = common.initialiseModels(cfg, seeds=seeds, positions=initPositions, prod=False)
 
 # Market Data
-prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=50000)
+prodFeed = md.loadSyntheticMD(cfg, researchFeeds, maxUpdates=10000)
 
 # Models
 fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)

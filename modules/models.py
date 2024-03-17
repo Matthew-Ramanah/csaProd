@@ -14,6 +14,7 @@ class assetModel():
             self.seeding = False
         else:
             self.seeding = True
+            self.tradeVolume = 0
 
         # Params
         self.kappa = params['alphaWeights']['kappa']
