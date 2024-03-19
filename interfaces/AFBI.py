@@ -97,8 +97,7 @@ def createAFBITradeCSV(cfg, fitModels, trades, execMd):
 def sendAFBITradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
     sendTo = ["ann.finaly@afbilp.com", "cem.ulu@afbillc.com"]
-    sendCC = ["matthew.ramanah@sydneyquantitative.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com",
-              "stephen.klein@afbillc.com"]
+    sendCC = ["matthew.ramanah@sydneyquantitative.com", "bill.passias@afbillc.com", "christian.beulen@afbilp.com"]
     username = sendFrom
     password = "SydQuantPos23"
     subject = "CBCT tradeFile"

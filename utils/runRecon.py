@@ -12,7 +12,7 @@ plot = True
 
 # Initialisations
 researchFeeds = utility.loadResearchFeeds(cfg)
-seeds = utility.constructResearchSeeds(researchFeeds, cfg)
+seeds = utility.constructResearchSeeds(researchFeeds, cfg, location=0)
 initPositions = recon.initialisePositions(cfg)
 fitModels = common.initialiseModels(cfg, seeds=seeds, positions=initPositions, prod=False)
 

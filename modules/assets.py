@@ -7,7 +7,6 @@ class asset:
         self.sym = sym
         self.tickSize = utility.findTickSize(sym)
         self.effSpread = utility.findEffSpread(sym)
-        self.volumeCutoff = cfg['fitParams'][target]['volumeCutoff'][sym]
         self.log = []
         self.vol = seeds[f'{sym}_Volatility']
         self.lastClose = seeds[f'{sym}_close']
@@ -16,7 +15,9 @@ class asset:
         self.prod = prod
         if prod:
             self.initialised = True
+            self.volumeCutoff = 1
         else:
+            self.volumeCutoff = cfg['fitParams'][target]['volumeCutoff'][sym]
             self.initialised = False
         self.stale = False
 
@@ -65,7 +66,6 @@ class asset:
             self.firstSaneUpdate(md)
         self.updateContractState(md)
         return
-
 
     def modelUpdate(self, md):
         self.decayCalc()

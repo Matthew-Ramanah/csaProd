@@ -50,7 +50,7 @@ def findSymsNeeded(cfg, target):
     return list(set(symsNeeded))
 
 
-def constructResearchSeeds(resFeed, cfg, location=0):
+def constructResearchSeeds(resFeed, cfg, location):
     """
     Seed in models using researchFeeds
     Location=0 is used for reconciling
@@ -126,7 +126,7 @@ def loadInitSeeds(cfg):
     except:
         lg.info(f"Can't find {cfg['investor']} modelState, seeding with latest research data")
         researchFeeds = loadResearchFeeds(cfg)
-        return constructResearchSeeds(researchFeeds, cfg)
+        return constructResearchSeeds(researchFeeds, cfg, location=-1)
 
 
 def findPositionDelay(lastPosTime, timezone):

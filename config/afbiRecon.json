@@ -1,14 +1,15 @@
 {
   "modelTag": "afbiRecon",
-  "dataTag": "afbiRecon",
+  "dataTag": "RegenSeeds",
   "recon": true,
   "verbose": false,
   "investor": "AFBI",
   "inputParams": {
-    "trainStart": "2023-01-01",
+    "trainStart": "2023-07-01",
     "testStart": "2024-01-01",
-    "testEnd": "2024-03-06",
+    "testEnd": "2024-04-01",
     "volHL": 360,
+    "scoreFactor": 8,
     "horizons": [
       5,
       10,
@@ -6293,5 +6294,6 @@
         "@JY#": 52.6
       }
     }
-  }
+  },
+  "targetsDropped": []
 }

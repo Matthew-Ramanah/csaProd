@@ -121,8 +121,8 @@ class assetModel():
 
         else:
             self.tradeVolume = 0
-            self.maxTradeSize = 0
             self.hOpt = self.h0
+            self.calcMaxTradeSize()
             self.log.append([])
             self.alphasLog.append([])
 
@@ -146,7 +146,6 @@ class assetModel():
     def checkNoTradeZone(self, md):
         if int(md['timeSig'][-2:]) in self.noTradeHours:
             self.noTradeZone = True
-            self.maxTradeSize = 0
             self.tradeVolume = 0
         else:
             self.noTradeZone = False
@@ -197,8 +196,8 @@ class assetModel():
     def calcHoldings(self, md):
         self.checkNoTradeZone(md)
         self.calcHOpt()
+        self.calcMaxTradeSize()
         if not self.noTradeZone:
-            self.calcMaxTradeSize()
             self.calcTradeVolume()
         if not self.prod:
             self.updateReconPosition()
