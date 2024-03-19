@@ -6,7 +6,7 @@ cfg_file = root + "config/afbiRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-symsToPlot = cfg['targets'][0:20]
+symsToPlot = random.sample(cfg['targets'], 5) #cfg['targets'][0:20]
 cfg['targets'] = symsToPlot
 plot = True
 
