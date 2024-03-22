@@ -108,11 +108,25 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     lg.info("Sent AFBI TradeFile")
     return
 
+def sendCemTradeEmail(tradesPath, timeSig):
+    sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
+    sendTo = ["cem.ulu@afbillc.com"]
+    sendCC = ["matthew.ramanah@sydneyquantitative.com"]
+    username = sendFrom
+    password = "SydQuantPos23"
+    subject = "CBCT tradeFile"
+    message = f"CBCT_{timeSig}"
+    filename = f"CBCT_{timeSig}.csv"
+
+    gmail.sendFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
+    lg.info("Sent Cem TradeFile")
+    return
 
 def sendAFBITradeFile(cfg, trades, fitModels, execMd):
     if isDeskManned():
         tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMd)
         tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='AFBI')
+        sendCemTradeEmail(tradesPath, execMd['timeSig'])
         sendAFBITradeEmail(tradesPath, execMd['timeSig'])
 
     return
