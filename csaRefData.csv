@@ -4,7 +4,7 @@ Corn,Commodity,CME,@C#C,@C#,Y,@CK24,C K4 Comdty,C 1 Comdty,Cc1,50,USD,0.25,USD,1
 SOYBEANS,Commodity,CME,@S#C,@S#,Y,@SK24,S K4 Comdty,S 1 Comdty,Sc1,50,USD,0.25,USD,12.5,2,0.5,ZS0
 SOY MEAL,Commodity,CME,@SM#C,@SM#,Y,@SMK24,SMK4 Comdty,SM1 Comdty,ZMc1,100,USD,0.1,USD,10,2,0.2,ZM0
 WHEAT SRW,Commodity,CME,@W#C,@W#,Y,@WK24,W K4 Comdty,W 1 Comdty,Wc1,50,USD,0.25,USD,12.5,2,0.5,ZW0
-WHEAT HRW,Commodity,CME,@KW#C,@KW#,Y,@KWK24,KWK4 Comdty,KW1 Comdty,KWc1,50,USD,0.25,USD,12.5,2,0.5,KE0
+WHEAT HRW,Commodity,CME,@KW#C,@KW#,Y,@KWN24,KWN4 Comdty,KW1 Comdty,KWc1,50,USD,0.25,USD,12.5,2,0.5,KE0
 LIVE CATTLE,Commodity,CME,@LE#C,@LE#,Y,@LEM24,LCM4 Comdty,LC1 Comdty,LCc1,400,USD,0.025,USD,10,2,0.05,LE0
 Feeder Cattle,Commodity,CME,@GF#C,@GF#,Y,@GFK24,FCK4 Comdty,FC1 Comdty,FCc1,500,USD,0.025,USD,12.5,2,0.05,GF0
 Lean Hog,Commodity,CME,@HE#C,@HE#,Y,@HEM24,LHM4 Comdty,LH1 Comdty,LHc1,400,USD,0.025,USD,10,2,0.05,HE0
@@ -22,7 +22,7 @@ SUGAR NO5,Commodity,ICE,QW#C,QW#,Y,QWK24,QWK4 Comdty,QW1 Comdty,,50,USD,0.1,USD,
 Robusta Coffee,Commodity,ICE,LRC#C,LRC#,Y,LRCK24,DFK4 Comdty,DF1 Comdty,,10,USD,1,USD,10,4,4,RC0
 ICE COT 2,Commodity,ICE,@CT#C,@CT#,Y,@CTK24,CTK4 Comdty,CT1 Comdty,CTc1,500,USD,0.01,USD,5,4,0.04,ICE-US_CT0
 Brent Crude,Commodity,ICE,QBZ#C,QBZ#,Y,QBZM24,COM4 Comdty,CO1 Comdty,LCOc1,1000,USD,0.01,USD,10,4,0.04,ICE-EU_BRN0
-London Coca,Commodity,ICE,QC#C,QC#,Y,QCK24,QCK4 Comdty,QC1 Comdty,,10,GBP,1,GBP,10,4,4,ICE-LX_C0
+London Coca,Commodity,ICE,QC#C,QC#,Y,QCN24,QCN4 Comdty,QC1 Comdty,,10,GBP,1,GBP,10,4,4,ICE-LX_C0
 US Cocoa,Commodity,ICE,@CC#C,@CC#,Y,@CCK24,CCK4 Comdty,CC1 Comdty,CCc1,10,USD,1,USD,10,4,4,ICE-US_CC0
 ICE COFFEE,Commodity,ICE,@KC#C,@KC#,Y,@KCK24,KCK4 Comdty,KC1 Comdty,KCc1,375,USD,0.05,USD,18.75,4,0.2,ICE-US_KC0
 Sugar No. 11,Commodity,ICE,@SB#C,@SB#,Y,@SBK24,SBK4 Comdty,SB1 Comdty,,1120,USD,0.01,USD,11.2,4,0.04,ICE-US_SB0
