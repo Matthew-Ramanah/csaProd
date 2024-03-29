@@ -1,31 +1,31 @@
 description,assetClass,exchange,iqfAdjusted,iqfUnadjusted,tradeable,iqfTradedSym,afbiTradedSym,QubeRIC,QubeInternal,notionalMultiplier,notionalCurrency,tickSize,tickCurrency,tickValue,spreadMulti,effSpread,oldSymbol
-Soybean Oil,Commodity,CME,@BO#C,@BO#,Y,@BOK24,BOK4 Comdty,BO1 Comdty,ZLc1,600,USD,0.01,USD,6,2,0.02,ZL0
-Corn,Commodity,CME,@C#C,@C#,Y,@CK24,C K4 Comdty,C 1 Comdty,Cc1,50,USD,0.25,USD,12.5,2,0.5,ZC0
-SOYBEANS,Commodity,CME,@S#C,@S#,Y,@SK24,S K4 Comdty,S 1 Comdty,Sc1,50,USD,0.25,USD,12.5,2,0.5,ZS0
-SOY MEAL,Commodity,CME,@SM#C,@SM#,Y,@SMK24,SMK4 Comdty,SM1 Comdty,ZMc1,100,USD,0.1,USD,10,2,0.2,ZM0
-WHEAT SRW,Commodity,CME,@W#C,@W#,Y,@WK24,W K4 Comdty,W 1 Comdty,Wc1,50,USD,0.25,USD,12.5,2,0.5,ZW0
-WHEAT HRW,Commodity,CME,@KW#C,@KW#,Y,@KWN24,KWN4 Comdty,KW1 Comdty,KWc1,50,USD,0.25,USD,12.5,2,0.5,KE0
-LIVE CATTLE,Commodity,CME,@LE#C,@LE#,Y,@LEM24,LCM4 Comdty,LC1 Comdty,LCc1,400,USD,0.025,USD,10,2,0.05,LE0
-Feeder Cattle,Commodity,CME,@GF#C,@GF#,Y,@GFK24,FCK4 Comdty,FC1 Comdty,FCc1,500,USD,0.025,USD,12.5,2,0.05,GF0
-Lean Hog,Commodity,CME,@HE#C,@HE#,Y,@HEM24,LHM4 Comdty,LH1 Comdty,LHc1,400,USD,0.025,USD,10,2,0.05,HE0
-Copper,Commodity,CME,QHG#C,QHG#,Y,QHGK24,HGK4 Comdty,HG1 Comdty,HGc1,25000,USD,0.0005,USD,12.5,2,0.001,HG0
-Gold,Commodity,CME,QGC#C,QGC#,Y,QGCM24,GCM4 Comdty,GC1 Comdty,GCc1,100,USD,0.1,USD,10,2,0.2,GC0
-Silver,Commodity,CME,QSI#C,QSI#,Y,QSIK24,SIK4 Comdty,SI1 Comdty,SIc1,5000,USD,0.005,USD,25,2,0.01,SI0
-Palladium,Commodity,CME,QPA#C,QPA#,Y,QPAM24,PAM4 Comdty,PA1 Comdty,PAc1,100,USD,0.5,USD,50,2,1,PA0
-Platinum,Commodity,CME,QPL#C,QPL#,Y,QPLN24,PLN4 Comdty,PL1 Comdty,PLc1,50,USD,0.1,USD,5,2,0.2,PL0
-RBOB Gasoline,Commodity,CME,QRB#C,QRB#,Y,QRBK24,XBK4 Comdty,XB1 Comdty,RBc1,42000,USD,0.0001,USD,4.2,10,0.001,RB0
-LIGHT CRUDE,Commodity,CME,QCL#C,QCL#,Y,QCLK24,CLK4 Comdty,CL1 Comdty,CLc1,1000,USD,0.01,USD,10,2,0.02,CL0
-NY H ULSD,Commodity,CME,QHO#C,QHO#,Y,QHOK24,HOK4 Comdty,HO1 Comdty,HOc1,42000,USD,0.0001,USD,4.20,10,0.001,HO0
-Henry Hub Natural Gas,Commodity,CME,QNG#C,QNG#,Y,QNGK24,NGK24 Comdty,NG1 Comdty,NGc1,10000,USD,0.001,USD,10,2,0.002,NG0
-ICE CANOLA,Commodity,ICE,@RS#C,@RS#,Y,@RSN24,RSN4 Comdty,RS1 Comdty,RSc1,20,CAD,0.1,CAD,2,8,0.8,RS0
-SUGAR NO5,Commodity,ICE,QW#C,QW#,Y,QWK24,QWK4 Comdty,QW1 Comdty,,50,USD,0.1,USD,5,8,0.8,W0
-Robusta Coffee,Commodity,ICE,LRC#C,LRC#,Y,LRCK24,DFK4 Comdty,DF1 Comdty,,10,USD,1,USD,10,4,4,RC0
-ICE COT 2,Commodity,ICE,@CT#C,@CT#,Y,@CTK24,CTK4 Comdty,CT1 Comdty,CTc1,500,USD,0.01,USD,5,4,0.04,ICE-US_CT0
-Brent Crude,Commodity,ICE,QBZ#C,QBZ#,Y,QBZM24,COM4 Comdty,CO1 Comdty,LCOc1,1000,USD,0.01,USD,10,4,0.04,ICE-EU_BRN0
-London Coca,Commodity,ICE,QC#C,QC#,Y,QCN24,QCN4 Comdty,QC1 Comdty,,10,GBP,1,GBP,10,4,4,ICE-LX_C0
-US Cocoa,Commodity,ICE,@CC#C,@CC#,Y,@CCK24,CCK4 Comdty,CC1 Comdty,CCc1,10,USD,1,USD,10,4,4,ICE-US_CC0
-ICE COFFEE,Commodity,ICE,@KC#C,@KC#,Y,@KCK24,KCK4 Comdty,KC1 Comdty,KCc1,375,USD,0.05,USD,18.75,4,0.2,ICE-US_KC0
-Sugar No. 11,Commodity,ICE,@SB#C,@SB#,Y,@SBK24,SBK4 Comdty,SB1 Comdty,,1120,USD,0.01,USD,11.2,4,0.04,ICE-US_SB0
+Soybean Oil,BaseCommod,CME,@BO#C,@BO#,Y,@BOK24,BOK4 Comdty,BO1 Comdty,ZLc1,600,USD,0.01,USD,6,2,0.02,ZL0
+Corn,BaseCommod,CME,@C#C,@C#,Y,@CK24,C K4 Comdty,C 1 Comdty,Cc1,50,USD,0.25,USD,12.5,2,0.5,ZC0
+SOYBEANS,BaseCommod,CME,@S#C,@S#,Y,@SK24,S K4 Comdty,S 1 Comdty,Sc1,50,USD,0.25,USD,12.5,2,0.5,ZS0
+SOY MEAL,BaseCommod,CME,@SM#C,@SM#,Y,@SMK24,SMK4 Comdty,SM1 Comdty,ZMc1,100,USD,0.1,USD,10,2,0.2,ZM0
+WHEAT SRW,BaseCommod,CME,@W#C,@W#,Y,@WK24,W K4 Comdty,W 1 Comdty,Wc1,50,USD,0.25,USD,12.5,2,0.5,ZW0
+WHEAT HRW,BaseCommod,CME,@KW#C,@KW#,Y,@KWN24,KWN4 Comdty,KW1 Comdty,KWc1,50,USD,0.25,USD,12.5,2,0.5,KE0
+LIVE CATTLE,BaseCommod,CME,@LE#C,@LE#,Y,@LEM24,LCM4 Comdty,LC1 Comdty,LCc1,400,USD,0.025,USD,10,2,0.05,LE0
+Feeder Cattle,ExpCommod,CME,@GF#C,@GF#,Y,@GFK24,FCK4 Comdty,FC1 Comdty,FCc1,500,USD,0.025,USD,12.5,2,0.05,GF0
+Lean Hog,ExpCommod,CME,@HE#C,@HE#,Y,@HEM24,LHM4 Comdty,LH1 Comdty,LHc1,400,USD,0.025,USD,10,2,0.05,HE0
+Copper,ExpCommod,CME,QHG#C,QHG#,Y,QHGK24,HGK4 Comdty,HG1 Comdty,HGc1,25000,USD,0.0005,USD,12.5,2,0.001,HG0
+Gold,ExpCommod,CME,QGC#C,QGC#,Y,QGCM24,GCM4 Comdty,GC1 Comdty,GCc1,100,USD,0.1,USD,10,2,0.2,GC0
+Silver,ExpCommod,CME,QSI#C,QSI#,Y,QSIK24,SIK4 Comdty,SI1 Comdty,SIc1,5000,USD,0.005,USD,25,2,0.01,SI0
+Palladium,ExpCommod,CME,QPA#C,QPA#,Y,QPAM24,PAM4 Comdty,PA1 Comdty,PAc1,100,USD,0.5,USD,50,2,1,PA0
+Platinum,ExpCommod,CME,QPL#C,QPL#,Y,QPLN24,PLN4 Comdty,PL1 Comdty,PLc1,50,USD,0.1,USD,5,2,0.2,PL0
+RBOB Gasoline,ExpCommod,CME,QRB#C,QRB#,Y,QRBK24,XBK4 Comdty,XB1 Comdty,RBc1,42000,USD,0.0001,USD,4.2,10,0.001,RB0
+LIGHT CRUDE,BaseCommod,CME,QCL#C,QCL#,Y,QCLK24,CLK4 Comdty,CL1 Comdty,CLc1,1000,USD,0.01,USD,10,2,0.02,CL0
+NY H ULSD,BaseCommod,CME,QHO#C,QHO#,Y,QHOK24,HOK4 Comdty,HO1 Comdty,HOc1,42000,USD,0.0001,USD,4.20,10,0.001,HO0
+Henry Hub Natural Gas,ExpCommod,CME,QNG#C,QNG#,Y,QNGK24,NGK24 Comdty,NG1 Comdty,NGc1,10000,USD,0.001,USD,10,2,0.002,NG0
+ICE CANOLA,BaseCommod,ICE,@RS#C,@RS#,Y,@RSN24,RSN4 Comdty,RS1 Comdty,RSc1,20,CAD,0.1,CAD,2,8,0.8,RS0
+SUGAR NO5,ExpCommod,ICE,QW#C,QW#,Y,QWK24,QWK4 Comdty,QW1 Comdty,,50,USD,0.1,USD,5,8,0.8,W0
+Robusta Coffee,ExpCommod,ICE,LRC#C,LRC#,Y,LRCK24,DFK4 Comdty,DF1 Comdty,,10,USD,1,USD,10,4,4,RC0
+ICE COT 2,BaseCommod,ICE,@CT#C,@CT#,Y,@CTK24,CTK4 Comdty,CT1 Comdty,CTc1,500,USD,0.01,USD,5,4,0.04,ICE-US_CT0
+Brent Crude,ExpCommod,ICE,QBZ#C,QBZ#,Y,QBZM24,COM4 Comdty,CO1 Comdty,LCOc1,1000,USD,0.01,USD,10,4,0.04,ICE-EU_BRN0
+London Coca,ExpCommod,ICE,QC#C,QC#,Y,QCN24,QCN4 Comdty,QC1 Comdty,,10,GBP,1,GBP,10,4,4,ICE-LX_C0
+US Cocoa,ExpCommod,ICE,@CC#C,@CC#,Y,@CCK24,CCK4 Comdty,CC1 Comdty,CCc1,10,USD,1,USD,10,4,4,ICE-US_CC0
+ICE COFFEE,BaseCommod,ICE,@KC#C,@KC#,Y,@KCK24,KCK4 Comdty,KC1 Comdty,KCc1,375,USD,0.05,USD,18.75,4,0.2,ICE-US_KC0
+Sugar No. 11,ExpCommod,ICE,@SB#C,@SB#,Y,@SBK24,SBK4 Comdty,SB1 Comdty,,1120,USD,0.01,USD,11.2,4,0.04,ICE-US_SB0
 US 20 Yr Bond,Bond,CME,@US#C,@US#,Y,@USM24,USM4 Comdty,US1 Comdty,ZBc1,1000,USD,0.03125,USD,31.25,4,0.125,ZB0
 10Y TNotes,Bond,CME,@TY#C,@TY#,Y,@TYM24,TYM4 Comdty,TY1 Comdty,ZNc1,1000,USD,0.015625,USD,15.625,4,0.0625,ZN0
 5YR T NOTES,Bond,CME,@FV#C,@FV#,Y,@FVM24,FVM4 Comdty,FV1 Comdty,ZFc1,1000,USD,0.0078125,USD,7.8125,4,0.03125,ZF0
@@ -73,5 +73,5 @@ ZAR=,CashFx,FX,ZARUSD.COMP,ZARUSD.COMP,N,,,,,,,,,,,0,ZAR=
 Amsterdam Index,Index,EURONEXT,AEX#C,AEX#,N,,,,,,,,,,,0,FTI0
 CAC 40 Paris,Index,EURONEXT,MT#C,MT#,N,,,,,,,,,,,0,FCE0
 Brazil Stock Index,Index,BMF,IND#C,IND#,N,,,,,,,,,,,0,IND0
-Rapeseed / Colza,Commodity,EURONEXT,PG#C,PG#,N,,,,,,,,,,,0,ECO0
+Rapeseed / Colza,ExpCommod,EURONEXT,PG#C,PG#,N,,,,,,,,,,,0,ECO0
 Aus 10 Yr Bond,Bond,SFE,XT#C,XT#,N,,,,,,,,,,,0,XT0
