@@ -7,7 +7,7 @@ lg.info("")
 # Run-time options
 cfgFiles = ["afbiRecon", "qubeRecon"]
 
-send = True
+send = False
 save = False
 
 cfgs = common.detectConfigs(cfgFiles)
