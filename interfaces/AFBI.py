@@ -63,13 +63,14 @@ def findAFBITradedSym(sym):
 
 def createAFBITradeCSV(cfg, fitModels, trades, execMd):
     afbiAccount = "CBCTBULK"
-    orderType = "LMT"
-    limitPrices = common.findLimitPrices(cfg, execMd, trades)
+    orderType = "MKT"
+    algoType = "TWAP"
+    # limitPrices = common.findLimitPrices(cfg, execMd, trades)
     cancelTime = common.createCancelTime(execMd)
     stopPrice = ""
     tif = "DAY"
     broker = "MSET"
-    cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker',
+    cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker', "Algo",
             "refPrice", f'refTime', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
             'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
@@ -78,7 +79,7 @@ def createAFBITradeCSV(cfg, fitModels, trades, execMd):
         bbSym = findAFBITradedSym(sym)
         qty = trades[sym]
         side = common.findSide(qty)
-        limitPrice = limitPrices[sym]
+        limitPrice = ""  # limitPrices[sym]
         refPrice = common.findRefPrice(execMd, sym)
         lastTime = execMd[f'{tradedSym}_lastTS']
         initPos = fitModels[sym].initHoldings
@@ -87,8 +88,8 @@ def createAFBITradeCSV(cfg, fitModels, trades, execMd):
         exchange = utility.findExchange(sym)
         maxPos = fitModels[sym].maxPosition
         maxTradeSize = fitModels[sym].maxTradeSize
-        symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, refPrice, lastTime,
-                    cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
+        symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, algoType, refPrice,
+                    lastTime, cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
         out.append(symTrade)
 
     return pd.DataFrame(out, columns=cols).set_index('Account')
@@ -107,6 +108,7 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     gmail.sendFile(tradesPath, sendFrom, sendTo, sendCC, username, password, subject, message, filename)
     lg.info("Sent AFBI TradeFile")
     return
+
 
 def sendAFBITradeFile(cfg, trades, fitModels, execMd):
     if isDeskManned():

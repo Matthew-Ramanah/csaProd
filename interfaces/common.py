@@ -32,6 +32,7 @@ def initialiseSystems(cfgs):
         except:
             lg.info(f"Can't initialise {investor}, Removing from process.")
             badInit.append(investor)
+
     cfgs = deleteBadInits(cfgs, badInit)
     return initSeeds, initPositions, fitModels, cfgs
 
