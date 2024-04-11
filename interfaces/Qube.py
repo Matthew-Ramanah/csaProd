@@ -66,9 +66,8 @@ def findQubeInternal(sym):
 
 
 def sendQubeTradeFile(cfg, trades, fitModels, execMd, md, initPositions):
-    tradeCSV = createQubeTradeCSV(cfg, fitModels, trades, execMd, md, initPositions)
-    print(tradeCSV)
     if isDeskManned():
+        tradeCSV = createQubeTradeCSV(cfg, fitModels, trades, execMd, md, initPositions)
         tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='Qube')
         sendQubeTradeEmail(tradesPath, execMd['timeSig'])
 

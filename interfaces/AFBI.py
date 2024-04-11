@@ -119,9 +119,8 @@ def sendAFBITradeEmail(tradesPath, timeSig):
 
 
 def sendAFBITradeFile(cfg, trades, fitModels, execMD, md, initPositions):
-    tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMD, md, initPositions)
-    print(tradeCSV)
-    if False:#isDeskManned():
+    if isDeskManned():
+        tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMD, md, initPositions)
         tradesPath = common.saveTradeLogs(tradeCSV, execMD['timeSig'], investor='AFBI')
         sendAFBITradeEmail(tradesPath, execMD['timeSig'])
 

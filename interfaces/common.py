@@ -103,6 +103,7 @@ def initialiseModels(cfg, seeds, positions, prod=False):
 
 
 def updateModels(fitModels, md):
+    lg.info("Updating Models...")
     for investor in fitModels:
         for sym in fitModels[investor]:
             fitModels[investor][sym].mdUpdate(md)
