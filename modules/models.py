@@ -217,6 +217,7 @@ class assetModel():
             name = ft.replace('feat_', '')
             ftType = ft.split('_')[-3]
             hl = int(ft.split('_')[-1])
+            scoreHL = cfg['inputParams']['scoreHLs'][cfg['inputParams']['horizons'].index(hl)]
             volHL = cfg['inputParams']['volHL']
             zSeed = seeds[self.target.sym][f'{name}_zSeed']
             smoothSeed = seeds[self.target.sym][f'{name}_smoothSeed']
@@ -225,11 +226,11 @@ class assetModel():
             preds = utility.findFtSyms(self.target.sym, ft)
 
             if ftType == 'Move':
-                self.alphaDict[name] = alphas.move(self.target, self.predictors[preds[0]], name, hl, zSeed, smoothSeed,
-                                                   volHL, volSeed, ncc)
+                self.alphaDict[name] = alphas.move(self.target, self.predictors[preds[0]], name, hl, scoreHL, zSeed,
+                                                   smoothSeed, volHL, volSeed, ncc)
             elif ftType == 'VSR':
-                self.alphaDict[name] = alphas.vsr(self.target, self.predictors[preds[0]], self.predictors[preds[1]],
-                                                  name, hl, zSeed, smoothSeed, volHL, volSeed, ncc)
+                self.alphaDict[name] = alphas.vsr(self.target, self.target, self.predictors[preds[0]],
+                                                  name, hl, scoreHL, zSeed, smoothSeed, volHL, volSeed, ncc)
             else:
                 lg.info(f'{ftType} Alpha Type Not Found')
 

@@ -10,7 +10,8 @@ def mergeOnEndTS(feed, raw):
     """
     Drops ticks in feed before raw has valid values
     """
-    return pd.merge_asof(feed, raw, on='lastTS', direction='backward').dropna()
+    out = pd.concat([feed, raw], axis=1)
+    return out.ffill().dropna()
 
 
 def loadRawData(sym, cfg):
@@ -45,7 +46,6 @@ def dropFeedTimezone(feed):
 
 
 def sampleFeed(feed, researchFeeds, maxUpdates):
-    feed = feed.set_index('lastTS', drop=True)
     start = researchFeeds['recon'].index[0]
     end = researchFeeds['recon'].index[-1]
     feed = feed.loc[(feed.index >= start) & (feed.index <= end)]

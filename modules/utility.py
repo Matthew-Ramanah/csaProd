@@ -74,6 +74,8 @@ def constructResearchSeeds(resFeed, cfg, location):
             seeds[target][f'{name}_zSeed'] = resFeed[target][f'{name}_Z'].iloc[location]
             seeds[target][f'{name}_volSeed'] = resFeed[target][f'{name}_Std'].iloc[location]
 
+    lg.info(f"Seeds Constructed From Research Date: {resFeed['recon'].index[location]}")
+
     return seeds
 
 
@@ -198,6 +200,7 @@ def isAdjSym(sym):
     if sym in adjSyms:
         return True
     return False
+
 
 def findIqfTradedSyms():
     refData = loadRefData()
