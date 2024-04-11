@@ -2848,100 +2848,212 @@
       },
       "riskLimits": {
         "@BO#": {
-          "maxPosition": 303,
-          "maxTradeSize": 76
+          "maxPosition": 298,
+          "maxTradeSize": 30
+        },
+        "@C#": {
+          "maxPosition": 107,
+          "maxTradeSize": 11
         },
         "@S#": {
-          "maxPosition": 85,
-          "maxTradeSize": 22
+          "maxPosition": 57,
+          "maxTradeSize": 6
+        },
+        "@SM#": {
+          "maxPosition": 310,
+          "maxTradeSize": 31
         },
         "@W#": {
-          "maxPosition": 613,
-          "maxTradeSize": 154
+          "maxPosition": 190,
+          "maxTradeSize": 19
         },
         "@KW#": {
-          "maxPosition": 113,
-          "maxTradeSize": 29
+          "maxPosition": 163,
+          "maxTradeSize": 17
         },
         "@LE#": {
-          "maxPosition": 183,
-          "maxTradeSize": 46
+          "maxPosition": 46,
+          "maxTradeSize": 5
+        },
+        "@GF#": {
+          "maxPosition": 13,
+          "maxTradeSize": 2
         },
         "@HE#": {
-          "maxPosition": 154,
-          "maxTradeSize": 39
+          "maxPosition": 278,
+          "maxTradeSize": 28
         },
         "QHG#": {
-          "maxPosition": 92,
-          "maxTradeSize": 23
+          "maxPosition": 135,
+          "maxTradeSize": 14
         },
         "QGC#": {
-          "maxPosition": 71,
-          "maxTradeSize": 18
+          "maxPosition": 61,
+          "maxTradeSize": 7
+        },
+        "QSI#": {
+          "maxPosition": 18,
+          "maxTradeSize": 2
+        },
+        "QPA#": {
+          "maxPosition": 12,
+          "maxTradeSize": 2
+        },
+        "QPL#": {
+          "maxPosition": 218,
+          "maxTradeSize": 22
         },
         "QRB#": {
-          "maxPosition": 45,
-          "maxTradeSize": 12
+          "maxPosition": 66,
+          "maxTradeSize": 7
+        },
+        "QCL#": {
+          "maxPosition": 25,
+          "maxTradeSize": 3
+        },
+        "QHO#": {
+          "maxPosition": 52,
+          "maxTradeSize": 6
+        },
+        "QNG#": {
+          "maxPosition": 278,
+          "maxTradeSize": 28
         },
         "@RS#": {
-          "maxPosition": 2174,
-          "maxTradeSize": 544
+          "maxPosition": 1112,
+          "maxTradeSize": 112
+        },
+        "QW#": {
+          "maxPosition": 459,
+          "maxTradeSize": 46
+        },
+        "LRC#": {
+          "maxPosition": 382,
+          "maxTradeSize": 39
+        },
+        "@CT#": {
+          "maxPosition": 66,
+          "maxTradeSize": 7
+        },
+        "QBZ#": {
+          "maxPosition": 23,
+          "maxTradeSize": 3
+        },
+        "QC#": {
+          "maxPosition": 352,
+          "maxTradeSize": 36
+        },
+        "@CC#": {
+          "maxPosition": 170,
+          "maxTradeSize": 17
+        },
+        "@KC#": {
+          "maxPosition": 153,
+          "maxTradeSize": 16
+        },
+        "@SB#": {
+          "maxPosition": 253,
+          "maxTradeSize": 26
+        },
+        "@US#": {
+          "maxPosition": 17,
+          "maxTradeSize": 2
         },
         "@TY#": {
-          "maxPosition": 100,
-          "maxTradeSize": 25
+          "maxPosition": 70,
+          "maxTradeSize": 7
         },
         "@FV#": {
-          "maxPosition": 89,
-          "maxTradeSize": 23
+          "maxPosition": 47,
+          "maxTradeSize": 5
         },
         "@TU#": {
-          "maxPosition": 42,
-          "maxTradeSize": 11
+          "maxPosition": 29,
+          "maxTradeSize": 3
         },
         "BTP#": {
-          "maxPosition": 60,
-          "maxTradeSize": 15
-        },
-        "BL#": {
-          "maxPosition": 133,
-          "maxTradeSize": 34
-        },
-        "BX#": {
-          "maxPosition": 94,
-          "maxTradeSize": 24
-        },
-        "SPI#": {
-          "maxPosition": 82,
-          "maxTradeSize": 21
-        },
-        "@ES#": {
-          "maxPosition": 41,
-          "maxTradeSize": 11
-        },
-        "@NQ#": {
-          "maxPosition": 29,
+          "maxPosition": 80,
           "maxTradeSize": 8
         },
+        "BD#": {
+          "maxPosition": 37,
+          "maxTradeSize": 4
+        },
+        "BL#": {
+          "maxPosition": 60,
+          "maxTradeSize": 6
+        },
+        "EZ#": {
+          "maxPosition": 19,
+          "maxTradeSize": 2
+        },
+        "BX#": {
+          "maxPosition": 55,
+          "maxTradeSize": 6
+        },
+        "LG#": {
+          "maxPosition": 69,
+          "maxTradeSize": 7
+        },
+        "SPI#": {
+          "maxPosition": 59,
+          "maxTradeSize": 6
+        },
+        "@VX#": {
+          "maxPosition": 105,
+          "maxTradeSize": 11
+        },
+        "@ES#": {
+          "maxPosition": 86,
+          "maxTradeSize": 9
+        },
+        "@NQ#": {
+          "maxPosition": 100,
+          "maxTradeSize": 10
+        },
+        "@YM#": {
+          "maxPosition": 23,
+          "maxTradeSize": 3
+        },
+        "DXM#": {
+          "maxPosition": 3,
+          "maxTradeSize": 1
+        },
+        "EX#": {
+          "maxPosition": 39,
+          "maxTradeSize": 4
+        },
         "SX#": {
-          "maxPosition": 621,
-          "maxTradeSize": 156
+          "maxPosition": 438,
+          "maxTradeSize": 44
         },
         "SW#": {
-          "maxPosition": 128,
-          "maxTradeSize": 32
+          "maxPosition": 121,
+          "maxTradeSize": 13
         },
         "LF#": {
-          "maxPosition": 208,
-          "maxTradeSize": 52
+          "maxPosition": 109,
+          "maxTradeSize": 11
+        },
+        "ALJ#": {
+          "maxPosition": 333,
+          "maxTradeSize": 34
         },
         "@AD#": {
-          "maxPosition": 339,
-          "maxTradeSize": 85
+          "maxPosition": 105,
+          "maxTradeSize": 11
+        },
+        "@BP#": {
+          "maxPosition": 19,
+          "maxTradeSize": 2
+        },
+        "@EU#": {
+          "maxPosition": 37,
+          "maxTradeSize": 4
         },
         "@JY#": {
-          "maxPosition": 132,
-          "maxTradeSize": 33
+          "maxPosition": 111,
+          "maxTradeSize": 12
         }
       },
       "symbolsNeeded": [

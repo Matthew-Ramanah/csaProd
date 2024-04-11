@@ -2,7 +2,7 @@ from pyConfig import *
 from modules import utility, gmail, models
 from interfaces import AFBI, Qube
 
-summaryTimes = [1, 7, 13, 19]
+summaryTimes = [1, 13]
 
 
 def detectConfigs(cfgFiles):
@@ -58,13 +58,15 @@ def findRefPrice(md, sym):
     return md[f'{tradedSym}_close']
 
 
-def sendTradeFiles(cfgs, trades, fitModels, execMD):
+def sendTradeFiles(cfgs, trades, fitModels, execMD, md, initPositions):
     for investor in cfgs:
         try:
             if investor == "AFBI":
-                AFBI.sendAFBITradeFile(cfgs[investor], trades[investor], fitModels[investor], execMD)
+                AFBI.sendAFBITradeFile(cfgs[investor], trades[investor], fitModels[investor], execMD, md,
+                                       initPositions[investor])
             elif investor == "Qube":
-                Qube.sendQubeTradeFile(trades[investor], fitModels[investor], execMD)
+                Qube.sendQubeTradeFile(cfgs[investor], trades[investor], fitModels[investor], execMD, md,
+                                       initPositions[investor])
             else:
                 raise ValueError("Unknown Investor")
         except:
@@ -116,7 +118,7 @@ def generateOutputFiles(cfgs, fitModels, mdPipe, initPositions, initSeeds, md, s
 
     # Send tradeFiles & summary
     if send:
-        sendTradeFiles(cfgs, trades, fitModels, execMD)
+        sendTradeFiles(cfgs, trades, fitModels, execMD, md, initPositions)
         sendSummaryEmail(cfgs, fitModels, trades, execMD)
 
     # Save Models
@@ -165,6 +167,8 @@ def createSummaryCSVs(cfgs, fitModels, trades, execMD):
     sumCSVs = {}
     for investor in cfgs:
         sumCSVs[investor] = createSummaryCSV(fitModels[investor], trades[investor], execMD)
+        print(f"{investor}")
+        print(sumCSVs[investor])
     return sumCSVs
 
 

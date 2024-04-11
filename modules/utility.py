@@ -196,7 +196,7 @@ def findExchange(sym):
 
 def isAdjSym(sym):
     refData = loadRefData()
-    adjSyms = list(refData['iqfAdjusted'].values)
+    adjSyms = refData['iqfAdjusted'].tolist()
     if sym in adjSyms:
         return True
     return False
@@ -204,4 +204,42 @@ def isAdjSym(sym):
 
 def findIqfTradedSyms():
     refData = loadRefData()
-    return list(refData['iqfTradedSym'].dropna().values)
+    return refData.loc[refData['inProd'] == 'Y']['iqfTradedSym'].tolist()
+
+
+def findProdSyms():
+    refData = loadRefData()
+    return refData.loc[refData['inProd'] == 'Y']['iqfUnadjusted'].tolist()
+
+
+def findMaxFlattenQty(initPos, maxTradeSize):
+    if initPos == 0:
+        return 0
+    maxFlattenQty = min(abs(initPos), maxTradeSize)
+    if initPos > 0:
+        return - maxFlattenQty
+    if initPos < 0:
+        return maxFlattenQty
+
+
+def calcNotionalPerLot(targetSym, md):
+    multiplier = findNotionalMultiplier(targetSym)
+    price = md[f'{targetSym}_close']
+    fxRate = calcFxRate(md, targetSym)
+    return int(multiplier * price * fxRate)
+
+
+def calcFxRate(md, targetSym):
+    fx = findNotionalFx(targetSym)
+    if fx == 'USD':
+        return 1
+    else:
+        fxSym = findFxSym(fx)
+    return md[f'{fxSym}_close']
+
+
+def dummyMaxPosition(cfg, target, md, dummyAlloc=0.05):
+    notionalPerLot = calcNotionalPerLot(target, md)
+    totalCap =  cfg['inputParams']['basket']['capitalReq'] * cfg['inputParams']['basket']['leverage']
+    return min(int(totalCap * dummyAlloc / notionalPerLot),
+               cfg['fitParams']['basket']['riskLimits'][target]['maxPosition'])

@@ -18,7 +18,7 @@ class feed():
 
     @staticmethod
     def findSymbolsNeeded(cfgs):
-        symsNeeded = []
+        symsNeeded = utility.findProdSyms()
         for investor in cfgs:
             symsNeeded += cfgs[investor]['fitParams']['basket']['symbolsNeeded']
 
