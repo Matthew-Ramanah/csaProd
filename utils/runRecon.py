@@ -2,7 +2,7 @@ from pyConfig import *
 from modules import md, utility, recon
 from interfaces import common
 
-cfg_file = root + "config/qubeRecon.json"
+cfg_file = root + "config/afbiRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 

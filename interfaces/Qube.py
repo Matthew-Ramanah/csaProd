@@ -137,7 +137,7 @@ def inferQubePosition(initPos, sym, md):
 
 def sendQubeTradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["matthew.ramanah@sydneyquantitative.com"]  # ,"christian.beulen@sydneyquantitative.com"]
+    sendTo = ["matthew.ramanah@sydneyquantitative.com", "christian.beulen@sydneyquantitative.com"]
     sendCC = []
     username = sendFrom
     password = "SydQuantPos23"
