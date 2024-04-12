@@ -222,9 +222,9 @@ def isSummaryTime(timezone='US/Eastern'):
 
 
 def sendSummaryEmail(cfgs, fitModels, trades, execMD):
+    sumCSVs = createSummaryCSVs(cfgs, fitModels, trades, execMD)
     if isSummaryTime():
         timeSig = execMD['timeSig']
-        sumCSVs = createSummaryCSVs(cfgs, fitModels, trades, execMD)
         sumPaths = createSummaryPaths(sumCSVs, timeSig)
         sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
         sendTo = ["matthew.ramanah@sydneyquantitative.com"]
