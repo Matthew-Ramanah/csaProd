@@ -52,7 +52,7 @@
       "leverage": 5,
       "execution": {
         "liquidityHL": 1,
-        "pRate": 0.01
+        "pRate": 0.025
       }
     }
   },
