@@ -28,7 +28,7 @@ def detectQubePositions(cfg, gmailService):
     dfPositions = pullQubePositions(gmailService)
     notDetected = []
     positions = {}
-    for sym in cfg['targets']:
+    for sym in utility.findProdSyms():
         qubeInternal = findQubeInternal(sym)
         if qubeInternal in dfPositions['Instrument'].values:
             row = np.where(dfPositions['Instrument'] == qubeInternal)[0][0]
@@ -65,9 +65,9 @@ def findQubeInternal(sym):
     return refData.loc[refData['iqfUnadjusted'] == sym]['QubeInternal'].values[0]
 
 
-def sendQubeTradeFile(trades, fitModels, execMd):
+def sendQubeTradeFile(cfg, trades, fitModels, execMd, md, initPositions):
     if isDeskManned():
-        tradeCSV = createQubeTradeCSV(fitModels, trades, execMd)
+        tradeCSV = createQubeTradeCSV(cfg, fitModels, trades, execMd, md, initPositions)
         tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='Qube')
         sendQubeTradeEmail(tradesPath, execMd['timeSig'])
 
@@ -92,7 +92,7 @@ def createValueTS(timezone='UTC'):
     return datetime.datetime.now(pytz.timezone(timezone)).strftime('%Y/%m/%d %H:%M')
 
 
-def createQubeTradeCSV(fitModels, trades, execMd):
+def createQubeTradeCSV(cfg, fitModels, trades, execMd, md, initPositions):
     id_specific = "CB"
     value_ts = createValueTS()
     strategy = 'S1'
@@ -100,19 +100,29 @@ def createQubeTradeCSV(fitModels, trades, execMd):
     cols = ['id_specific', 'extra_key', 'value_ts', 'strategy', 'internal_code', 'ric', 'ticker', 'target_notional',
             'currency', "target_contracts", f'ref_price', 'advisor_name', 'desc', 'initPos', 'maxPos', 'maxTradeSize']
     out = []
-    for sym in trades:
+    prodSyms = utility.findProdSyms()
+    for sym in prodSyms:
         internal_code = findQubeInternal(sym)
         extra_key = findExtraKey(strategy, internal_code)
         ric = findQubeRIC(sym)
         ticker = ric
-        target_notional = findQubeTargetNotional(fitModels, sym)
+        desc = utility.findDescription(sym)
         currency = findQubeCurrency(sym)
         ref_price = common.findRefPrice(execMd, sym)
-        target_contracts = fitModels[sym].initHoldings + trades[sym]
-        desc = utility.findDescription(sym)
-        initPos = fitModels[sym].initHoldings
-        maxPos = fitModels[sym].maxPosition
-        maxTradeSize = fitModels[sym].maxTradeSize
+
+        if sym in trades:
+            initPos = fitModels[sym].initHoldings
+            maxPos = fitModels[sym].maxPosition
+            maxTradeSize = fitModels[sym].maxTradeSize
+            target_notional = findQubeTargetNotional(fitModels, sym)
+            target_contracts = fitModels[sym].initHoldings + trades[sym]
+        else:
+            maxPos = utility.dummyMaxPosition(cfg, sym, md)
+            maxTradeSize = np.ceil(maxPos * maxAssetDelta).astype(int)
+            target_contracts = 0
+            target_notional = 0
+            initPos = inferQubePosition(initPositions[sym], sym, md)
+
         symTrade = [id_specific, extra_key, value_ts, strategy, internal_code, ric, ticker, target_notional, currency,
                     target_contracts, ref_price, advisor_name, desc, initPos, maxPos, maxTradeSize]
         out.append(symTrade)
@@ -120,10 +130,15 @@ def createQubeTradeCSV(fitModels, trades, execMd):
     return pd.DataFrame(out, columns=cols).set_index('id_specific')
 
 
+def inferQubePosition(initPos, sym, md):
+    notionalPerLot = utility.calcNotionalPerLot(sym, md)
+    return int(initPos / notionalPerLot)
+
+
 def sendQubeTradeEmail(tradesPath, timeSig):
     sendFrom = "positions.afbi.cbct@sydneyquantitative.com"
-    sendTo = ["christian.beulen@sydneyquantitative.com"]
-    sendCC = ["matthew.ramanah@sydneyquantitative.com"]
+    sendTo = ["matthew.ramanah@sydneyquantitative.com", "christian.beulen@sydneyquantitative.com"]
+    sendCC = []
     username = sendFrom
     password = "SydQuantPos23"
     subject = "Qube tradeFile"

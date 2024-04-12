@@ -6,9 +6,11 @@ cfg_file = root + "config/afbiRecon.json"
 with open(cfg_file, 'r') as f:
     cfg = json.load(f)
 
-symsToPlot = random.sample(cfg['targets'], 5) #cfg['targets'][0:20]
+symsToPlot = cfg['targets'][0:5]
 cfg['targets'] = symsToPlot
 plot = True
+
+lg.info(f"Running Recon for {len(cfg['targets'])} Targets...")
 
 # Initialisations
 researchFeeds = utility.loadResearchFeeds(cfg)
@@ -26,5 +28,6 @@ fitModels = recon.runRecon(prodFeed, fitModels, printRunTimes=False)
 prodLogs = recon.processLogs(fitModels)
 
 if plot:
-    recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot=symsToPlot, model=True, alphas=False, preds=False)
+    recon.plotReconCols(cfg, prodLogs, researchFeeds, fitModels, symsToPlot=symsToPlot, model=True, alphas=False,
+                        preds=False)
     # recon.plotPnLs(prodLogs, researchFeeds, cfg)

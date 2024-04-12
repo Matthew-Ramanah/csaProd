@@ -3,10 +3,10 @@ from modules import utility
 
 
 class alpha:
-    def __init__(self, target, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc):
+    def __init__(self, target, name, hl, scoreHL, zSeed, smoothSeed, volHL, volSeed, ncc):
         self.target = target
         self.name = name
-        self.zInvTau = np.float64(1 / (scoreFactor * hl * logTwo))
+        self.zInvTau = np.float64(1 / (scoreHL * logTwo))
         self.zVal = zSeed
         self.smoothInvTau = np.float64(1 / (hl * logTwo))
         self.smoothVal = smoothSeed
@@ -75,8 +75,8 @@ class alpha:
 
 
 class move(alpha):
-    def __init__(self, target, predictor, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc):
-        super().__init__(target, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc)
+    def __init__(self, target, predictor, name, hl, scoreHL, zSeed, smoothSeed, volHL, volSeed, ncc):
+        super().__init__(target, name, hl, scoreHL, zSeed, smoothSeed, volHL, volSeed, ncc)
         self.predictor = predictor
 
     def calcRawVal(self):
@@ -85,8 +85,8 @@ class move(alpha):
 
 
 class vsr(alpha):
-    def __init__(self, target, pred1, pred2, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc):
-        super().__init__(target, name, hl, zSeed, smoothSeed, volHL, volSeed, ncc)
+    def __init__(self, target, pred1, pred2, name, hl, scoreHL, zSeed, smoothSeed, volHL, volSeed, ncc):
+        super().__init__(target, name, hl,scoreHL, zSeed, smoothSeed, volHL, volSeed, ncc)
         self.pred1 = pred1
         self.pred2 = pred2
 

@@ -28,7 +28,7 @@ def detectAFBIPositions(cfg, gmailService):
     dfPositions = pullAFBIPositions(gmailService)
     notDetected = []
     positions = {}
-    for sym in cfg['targets']:
+    for sym in utility.findProdSyms():
         tradedSym = findAFBITradedSym(sym)
         if tradedSym in dfPositions['BB Yellow Key'].values:
             row = np.where(dfPositions['BB Yellow Key'] == tradedSym)[0][0]
@@ -61,33 +61,41 @@ def findAFBITradedSym(sym):
     return refData.loc[refData['iqfUnadjusted'] == sym]['afbiTradedSym'].values[0]
 
 
-def createAFBITradeCSV(cfg, fitModels, trades, execMd):
+def createAFBITradeCSV(cfg, fitModels, trades, execMD, md, initPositions):
     afbiAccount = "CBCTBULK"
     orderType = "MKT"
     algoType = "TWAP"
-    # limitPrices = common.findLimitPrices(cfg, execMd, trades)
-    cancelTime = common.createCancelTime(execMd)
+    cancelTime = common.createCancelTime(execMD)
     stopPrice = ""
+    limitPrice = ""
     tif = "DAY"
     broker = "MSET"
     cols = ['Account', 'BB Yellow Key', 'Order Type', 'Side', 'Amount', 'Limit', 'Stop Price', 'TIF', 'Broker', "Algo",
             "refPrice", f'refTime', 'Cancel Time', 'Current Position', 'Target Position', 'Description',
             'Exchange', 'maxPosition', 'maxTradeSize']
     out = []
-    for sym in trades:
+    prodSyms = utility.findProdSyms()
+    for sym in prodSyms:
         tradedSym = utility.findIqfTradedSym(sym)
         bbSym = findAFBITradedSym(sym)
-        qty = trades[sym]
-        side = common.findSide(qty)
-        limitPrice = ""  # limitPrices[sym]
-        refPrice = common.findRefPrice(execMd, sym)
-        lastTime = execMd[f'{tradedSym}_lastTS']
-        initPos = fitModels[sym].initHoldings
-        targetPos = fitModels[sym].initHoldings + trades[sym]
+        refPrice = common.findRefPrice(execMD, sym)
+        lastTime = execMD[f'{tradedSym}_lastTS']
         desc = utility.findDescription(sym)
         exchange = utility.findExchange(sym)
-        maxPos = fitModels[sym].maxPosition
-        maxTradeSize = fitModels[sym].maxTradeSize
+        initPos = initPositions[sym]
+        if sym in trades:
+            maxPos = fitModels[sym].maxPosition
+            maxTradeSize = fitModels[sym].maxTradeSize
+            qty = trades[sym]
+            side = common.findSide(qty)
+            targetPos = fitModels[sym].initHoldings + trades[sym]
+        else:
+            maxPos = utility.dummyMaxPosition(cfg, sym, md)
+            maxTradeSize = np.ceil(maxPos * maxAssetDelta).astype(int)
+            qty = utility.findMaxFlattenQty(initPos, maxTradeSize)
+            side = common.findSide(qty)
+            targetPos = initPos + qty
+
         symTrade = [afbiAccount, bbSym, orderType, side, qty, limitPrice, stopPrice, tif, broker, algoType, refPrice,
                     lastTime, cancelTime, initPos, targetPos, desc, exchange, maxPos, maxTradeSize]
         out.append(symTrade)
@@ -110,10 +118,10 @@ def sendAFBITradeEmail(tradesPath, timeSig):
     return
 
 
-def sendAFBITradeFile(cfg, trades, fitModels, execMd):
+def sendAFBITradeFile(cfg, trades, fitModels, execMD, md, initPositions):
     if isDeskManned():
-        tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMd)
-        tradesPath = common.saveTradeLogs(tradeCSV, execMd['timeSig'], investor='AFBI')
-        sendAFBITradeEmail(tradesPath, execMd['timeSig'])
+        tradeCSV = createAFBITradeCSV(cfg, fitModels, trades, execMD, md, initPositions)
+        tradesPath = common.saveTradeLogs(tradeCSV, execMD['timeSig'], investor='AFBI')
+        sendAFBITradeEmail(tradesPath, execMD['timeSig'])
 
     return
